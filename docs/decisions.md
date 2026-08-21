@@ -303,6 +303,59 @@ transform set, a shared preset), or the token source stops being plain DTCG.
 
 ---
 
+## D-015 — The status bar is T2, not the T3 replacement §8.5.1 specifies
+
+**Decided.** `packages/ui-overrides/style/surfaces/status-bar.css` styles core's
+status bar. `@jupyterlab/statusbar-extension:plugin` stays **enabled**.
+
+PRD §8.5.1 classifies the status bar T3 and gives four reasons `IStatusBar`
+cannot deliver §8.5.2. Audited against a running JupyterLab 4.6.3, all four are
+reachable from CSS:
+
+| §8.5.1 claim                                        | Reality on 4.6.3                                                                                           |
+| --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| cannot enforce a consistent item shape              | `.jp-StatusBar-Item` is on **every** item — core adds it in `registerStatusItem`                           |
+| cannot provide separators or grouping               | `::after` on the item                                                                                      |
+| cannot restyle a third-party item's internals       | descendant selectors                                                                                       |
+| cannot distinguish a passive readout from a control | **the DOM already does.** Controls carry `jp-mod-highlighted` or a focusable child; readouts carry neither |
+
+That last row is the one that decides it — it is the reason the PRD gives for
+needing a _wrapper_, and the wrapper turns out to be unnecessary because the
+distinction is already in the markup.
+
+**What replacing the plugin would actually cost.** Core's plugin does far more
+than provide the token: it constructs the widget and gives it `#jp-main-statusbar`,
+adds it to the shell's `bottom` area, connects `labShell.layoutModified`,
+registers the `statusbar:toggle` command with `isToggled` and `describedBy`,
+re-shows the bar on `application:reset-layout`, adds a command-palette entry,
+and loads and syncs a `visible` setting.
+
+And there is a trap. The plugin's **settings schema survives the disable** —
+verified, the settings API still answers 200 for
+`@jupyterlab/statusbar-extension:plugin`. That schema carries a
+`jupyter.lab.menus` block placing `statusbar:toggle` in View ▸ Appearance at
+rank 15. So disabling the plugin without re-registering that exact command id
+leaves a **menu item pointing at a command that does not exist** — a failure
+that appears nowhere near its cause.
+
+Reproducing all of that to change one number is the wrong trade. Appendix C
+argues the same principle in the other direction ("a structural override that
+keeps breaking is a plugin replacement that hasn't happened yet"); the converse
+holds here.
+
+**What genuinely still needs JS**, and is the only thing that does: the overflow
+breakpoint. Core hides `priority: 0` items below **630px** from a private
+`_isWindowNarrow`, and §8.5.2 asks for **1024px** plus a `⋯` trigger. Split out
+as TODO `P2-14`, to be decided on its own merits rather than smuggled in as a
+justification for a token swap.
+
+**Revisit if:** P2-14 concludes the `⋯` trigger is worth a replacement, or an
+upstream change drops `jp-mod-highlighted` — `selectors.json` asserts that class
+specifically so the integrity job reports it rather than the bar quietly losing
+its passive/interactive split.
+
+---
+
 ## Still open
 
 Tracked in `TODO.md`; listed here so the set is visible in one place.

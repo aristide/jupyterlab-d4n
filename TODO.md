@@ -208,13 +208,28 @@ Exit: all §6.1–6.2 surfaces at spec in both modes, Galata green.
       dot, close affordance, 8px split-handle hit area over a 1px visual.
 - [x] **P2-06** Command palette, file browser listing + toolbar, running panel,
       extension manager.
-- [ ] **P2-07** **T3: status bar.** Disable `@jupyterlab/statusbar-extension:plugin`
-      and supply the same `IStatusBar` token so third-party registrations keep
-      working. The wrapper enforces item shape (PRD §8.5.2). Status semantics
-      are never colour-only (A7).
-      _Done when:_ the plugin is added to `jupyter-config/labconfig/page_config.json`
-      **in the same change** as the replacement — never before.
-      Stub: `packages/shell-chrome/src/statusBar.ts`.
+- [x] **P2-07** Status bar — done as **T2**, not the T3 swap §8.5.1 specifies.
+      Audited against a running 4.6.3: all four of §8.5.1's justifications are
+      reachable from CSS, including the one it calls out as needing a wrapper —
+      the DOM already distinguishes controls from readouts. Replacing the plugin
+      would mean reproducing the shell mount, `statusbar:toggle`, the
+      `application:reset-layout` interplay, the settings sync and the palette
+      entry; and core's schema survives the disable, so a swap that missed the
+      command id would leave a View ▸ Appearance item pointing at nothing.
+      Full reasoning and measurements in `docs/decisions.md` D-015.
+      _Verified:_ 24px, surface.raised, 1px top border, Montserrat 11px,
+      tabular figures, separators, and the passive/interactive split measured
+      item by item in both modes.
+      **Core's plugin stays enabled** — nothing added to `page_config.json`.
+- [ ] **P2-14** Status bar overflow (split out of P2-07 — the one part that
+      genuinely needs JS). Core hides `priority: 0` items below **630px** via a
+      private `_isWindowNarrow`; §8.5.2 asks for **1024px** and a `⋯` trigger
+      that collapses items right-to-left into a popover.
+      Decide on its own merits, and note the options honestly: overriding a
+      private field is fragile across minors; a real `⋯` trigger needs
+      measurement and a popover, which is most of a plugin replacement anyway.
+      _Done when:_ items collapse at 1024px and the trigger opens a popover on
+      the `.lm-Menu` surface tokens, or the task is dropped with a reason.
 - [ ] **P2-08** **T3: launcher.** Re-provide `ILauncher` (PRD §8.11). Includes
       the kernel neutral plate (D-010), the launch-target readout (**Q3** —
       decide whether it ships in v1), and the "no kernels" **error** state,

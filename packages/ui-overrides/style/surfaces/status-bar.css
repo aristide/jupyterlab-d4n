@@ -1,0 +1,203 @@
+/* SURFACE: status bar (PRD §6.1, §8.5.2, TODO.md P2-07)
+ *
+ * Upstream selectors verified against:
+ *   @jupyterlab/statusbar            4.6.3  style/base.css, lib/statusbar.js
+ *   @jupyterlab/statusbar-extension  4.6.3  lib/index.js
+ *   (declared range: @jupyterlab/* ^4.5.0)
+ *
+ * Every selector is mirrored in ../selectors.json (PRD §7.4(5)).
+ *
+ * WHY THIS IS A STYLESHEET AND NOT A PLUGIN REPLACEMENT
+ * ----------------------------------------------------
+ * PRD §8.5.1 classifies the status bar T3 and gives four reasons `IStatusBar`
+ * cannot deliver the spec. Audited against a running 4.6.3, four of the four are
+ * reachable from CSS — see docs/decisions.md D-015 for the measurements:
+ *
+ *   "enforce a consistent item shape"      -> `.jp-StatusBar-Item` is on every
+ *                                             item; core adds it in
+ *                                             registerStatusItem.
+ *   "provide separators / grouping"        -> `::after` on the item.
+ *   "restyle a third-party item's internals" -> descendant selectors.
+ *   "distinguish a passive readout from an
+ *    interactive control"                  -> THE DOM ALREADY CARRIES IT. Most
+ *                                             controls are marked
+ *                                             `jp-mod-highlighted`; the rest
+ *                                             (the notification bell) contain a
+ *                                             focusable child. The readouts
+ *                                             (Mode: Command, the trust shield,
+ *                                             "Uploading…") have neither. See
+ *                                             the two-test rule below.
+ *
+ * The one part that genuinely needs JS is the overflow breakpoint: core hides
+ * `priority: 0` items below 630px from a private `_isWindowNarrow`, and §8.5.2
+ * asks for 1024px plus a `⋯` trigger. That is now TODO.md P2-14 rather than a
+ * reason to re-provide the token — swapping the plugin means reproducing the
+ * shell mount, the `statusbar:toggle` command, the `application:reset-layout`
+ * interplay, the settings sync and the palette entry, and core's schema (which
+ * survives the disable) puts that command in View ▸ Appearance, so a swap that
+ * missed the command would leave a menu item pointing at nothing.
+ */
+
+/* --- The bar ------------------------------------------------------------- */
+
+/* stylelint-disable selector-id-pattern -- `jp-main-statusbar` is the id
+ * `@jupyterlab/statusbar-extension:plugin` assigns to the widget. Not ours to
+ * rename, and the id is what gives these rules the specificity to beat core's
+ * own `.jp-StatusBar-Widget` rules without `!important`. */
+body[data-jp-theme-name^='Data4Now'] #jp-main-statusbar {
+  min-height: var(--d4n-status-bar-height);
+  padding: 0;
+  color: var(--d4n-status-bar-fg);
+  font-family: var(--d4n-font-family-ui);
+  font-size: var(--d4n-status-bar-font-size);
+  background: var(--d4n-status-bar-bg);
+  border-top: var(--d4n-border-width-thin) solid var(--d4n-status-bar-border);
+
+  /* Tabular figures across the whole bar. This is the actual requirement behind
+   * §8.5.2's "line·col must not reflow as digits change" — a proportional 1 is
+   * narrower than a 0, so `Ln 9, Col 9` → `Ln 10, Col 10` shifts everything to
+   * its right. One declaration here fixes every numeric item at once, including
+   * third-party ones, which per-item mono families would not. */
+  font-variant-numeric: tabular-nums;
+}
+
+body[data-jp-theme-name^='Data4Now'] #jp-main-statusbar .jp-StatusBar-Left,
+body[data-jp-theme-name^='Data4Now'] #jp-main-statusbar .jp-StatusBar-Middle,
+body[data-jp-theme-name^='Data4Now'] #jp-main-statusbar .jp-StatusBar-Right {
+  align-items: center;
+  gap: 0;
+}
+
+/* --- Items --------------------------------------------------------------- */
+
+/* Zero gap with adjacent hit areas — §8.5.2 asks for no dead zones between
+ * items, so the padding IS the hit area rather than sitting inside a margin. */
+body[data-jp-theme-name^='Data4Now'] #jp-main-statusbar .jp-StatusBar-Item {
+  display: flex;
+  align-items: center;
+  height: var(--d4n-status-bar-height);
+  margin: 0;
+  padding: 0 var(--d4n-status-bar-padding-x);
+  color: inherit;
+  line-height: var(--d4n-status-bar-height);
+}
+
+/* Separators are a border on the item, not a separate element: core gives us no
+ * slot to insert one, and a `::after` would sit inside the item's own hit area.
+ * Inset vertically by one space unit so the rule reads as a divider rather than
+ * as a full-height column edge. `:not(:last-child)` keeps the bar from ending in
+ * a hanging line, and the `.lm-mod-hidden` guard matters because core hides
+ * items rather than removing them — without it a hidden item still contributes
+ * a separator and the bar shows a stray floating line. */
+body[data-jp-theme-name^='Data4Now']
+  #jp-main-statusbar
+  .jp-StatusBar-Item:not(:last-child, .lm-mod-hidden) {
+  position: relative;
+}
+
+body[data-jp-theme-name^='Data4Now']
+  #jp-main-statusbar
+  .jp-StatusBar-Item:not(:last-child, .lm-mod-hidden)::after {
+  position: absolute;
+  top: var(--d4n-space-1);
+  right: 0;
+  bottom: var(--d4n-space-1);
+  width: var(--d4n-border-width-thin);
+  background: var(--d4n-status-bar-separator);
+  content: '';
+}
+
+/* --- Interactive vs passive ---------------------------------------------- */
+
+/* TWO tests, because neither alone is sufficient — this was measured, not
+ * reasoned about.
+ *
+ * `jp-mod-highlighted` is core's own marker for an item that responds to
+ * interaction: the kernel indicator, Ln/Col, the cell counter and the
+ * indentation picker all carry it; `Mode: Command`, the trust shield and the
+ * upload progress do not. Keying off it means third-party items get the right
+ * treatment for free, which is what §8.5.2 wants the wrapper to achieve.
+ *
+ * But the NOTIFICATION BELL does not carry it, and is plainly interactive — it
+ * renders a `<button tabindex="0">` and opens the notification list. A first
+ * version of this file keyed on the class alone and gave the bell
+ * `cursor: default`, which a browser check caught. So the second test is
+ * structural: an item containing a focusable child is a control whatever core
+ * chose to label it.
+ *
+ * `:has()` is safe here — PRD §4.2 floors at Chromium 120 / Firefox 121 /
+ * Safari 17, and all three shipped it. */
+body[data-jp-theme-name^='Data4Now']
+  #jp-main-statusbar
+  .jp-StatusBar-Item:is(
+    .jp-mod-highlighted,
+    :has(:is(button, [role='button'], [tabindex]))
+  ) {
+  color: var(--d4n-status-bar-fg);
+  cursor: pointer;
+}
+
+body[data-jp-theme-name^='Data4Now']
+  #jp-main-statusbar
+  .jp-StatusBar-Item:is(
+    .jp-mod-highlighted,
+    :has(:is(button, [role='button'], [tabindex]))
+  ):hover {
+  color: var(--d4n-status-bar-fg-hover);
+  background: var(--d4n-status-bar-bg-hover);
+}
+
+/* Passive readouts: quieter, and explicitly NOT clickable-looking. §8.5.1 calls
+ * the readout/control distinction one of the four things the API cannot express;
+ * on 4.6 it can, and this is the half of it that carries the meaning. */
+body[data-jp-theme-name^='Data4Now']
+  #jp-main-statusbar
+  .jp-StatusBar-Item:not(
+    .jp-mod-highlighted,
+    :has(:is(button, [role='button'], [tabindex]))
+  ) {
+  color: var(--d4n-status-bar-fg-passive);
+  cursor: default;
+}
+
+/* --- Focus --------------------------------------------------------------- */
+
+/* Inset rather than outset: an outset ring on a 24px bar at the very bottom of
+ * the viewport is clipped by the window edge (§8.4.2 makes the same call for the
+ * menu bar against the top edge). The ring goes on the focusable CHILD, because
+ * that is what core makes tabbable — the item div itself never receives focus. */
+body[data-jp-theme-name^='Data4Now']
+  #jp-main-statusbar
+  .jp-StatusBar-Item
+  :is(button, [role='button'], [tabindex]):focus-visible {
+  outline: var(--d4n-focus-ring-width) var(--d4n-focus-ring-style)
+    var(--d4n-focus-ring-color);
+  outline-offset: calc(-1 * var(--d4n-focus-ring-width));
+  border-radius: var(--d4n-radius-sm);
+}
+
+/* --- Icons --------------------------------------------------------------- */
+
+/* Status glyphs inherit the item's foreground so they follow the passive/
+ * interactive split above rather than staying at core's dark fill. */
+body[data-jp-theme-name^='Data4Now']
+  #jp-main-statusbar
+  .jp-StatusBar-Item
+  :is(.jp-icon0, .jp-icon1, .jp-icon2, .jp-icon3)[fill] {
+  fill: currentcolor;
+}
+
+/* --- Hover popovers ------------------------------------------------------- */
+
+/* The kernel picker and the running-sessions list open as `.jp-Statusbar-HoverItem`.
+ * §8.5.2 wants them on the MENU surface tokens rather than a third overlay
+ * style, so a popover launched from the status bar reads as the same object as
+ * a menu launched from the menu bar. */
+body[data-jp-theme-name^='Data4Now'] .jp-Statusbar-HoverItem {
+  color: var(--d4n-menu-item-fg);
+  background: var(--d4n-menu-surface);
+  border: var(--d4n-border-width-thin) solid var(--d4n-menu-border);
+  border-radius: var(--d4n-menu-radius);
+  box-shadow: var(--d4n-menu-elevation);
+}
+/* stylelint-enable selector-id-pattern */

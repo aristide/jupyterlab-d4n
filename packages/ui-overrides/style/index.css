@@ -49,6 +49,7 @@
 @import url('./surfaces/extension-manager.css');
 @import url('./surfaces/command-palette.css');
 @import url('./surfaces/log-console.css');
+@import url('./surfaces/status-bar.css');
 @import url('./surfaces/notifications.css');
 @import url('./surfaces/focus.css');
 @import url('./surfaces/motion.css');

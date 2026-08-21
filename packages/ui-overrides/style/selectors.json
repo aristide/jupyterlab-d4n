@@ -1512,6 +1512,56 @@
         ".Toastify__toast--success",
         ".Toastify__toast--info"
       ]
+    },
+    {
+      "file": "style/surfaces/status-bar.css",
+      "upstream": [
+        "@jupyterlab/statusbar 4.6.3 style/base.css, lib/statusbar.js",
+        "@jupyterlab/statusbar-extension 4.6.3 lib/index.js"
+      ],
+      "note": "Styled as T2 rather than the T3 replacement PRD 8.5.1 specifies -- four of its four justifications are reachable from CSS on 4.6.3. See docs/decisions.md D-015. The jp-mod-highlighted entry below is the load-bearing one: it is CORE's marker for an interactive item, and the whole passive/interactive split keys off it, so if upstream drops it this job is what tells us.",
+      "selectors": [
+        {
+          "selector": "#jp-main-statusbar",
+          "state": "boot"
+        },
+        {
+          "selector": "#jp-main-statusbar .jp-StatusBar-Left",
+          "state": "boot"
+        },
+        {
+          "selector": "#jp-main-statusbar .jp-StatusBar-Middle",
+          "state": "boot"
+        },
+        {
+          "selector": "#jp-main-statusbar .jp-StatusBar-Right",
+          "state": "boot"
+        },
+        {
+          "selector": "#jp-main-statusbar .jp-StatusBar-Item",
+          "state": "boot"
+        },
+        {
+          "selector": "#jp-main-statusbar .jp-StatusBar-Item.jp-mod-highlighted",
+          "state": "boot",
+          "note": "Core marks every interactive item with this. The passive/interactive distinction in status-bar.css depends on it entirely."
+        },
+        {
+          "selector": "#jp-main-statusbar .jp-StatusBar-Item:not(.jp-mod-highlighted)",
+          "state": "boot"
+        },
+        {
+          "selector": ".jp-Statusbar-HoverItem",
+          "state": "boot",
+          "optional": true,
+          "note": "Opens only when a hover item (kernel picker, running sessions) is clicked."
+        }
+      ],
+      "nonQueryable": [
+        "#jp-main-statusbar .jp-StatusBar-Item:not(:last-child, .lm-mod-hidden)::after",
+        "#jp-main-statusbar .jp-StatusBar-Item.jp-mod-highlighted:hover",
+        "#jp-main-statusbar .jp-StatusBar-Item :is(button, [role='button'], [tabindex]):focus-visible"
+      ]
     }
   ]
 }
