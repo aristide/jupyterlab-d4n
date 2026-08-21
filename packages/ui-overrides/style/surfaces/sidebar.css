@@ -36,6 +36,40 @@ body[data-jp-theme-name^='Data4Now']
   padding: var(--d4n-space-4) 0;
 }
 
+/* THE RESTING STATE, which is the one that was missing.
+ *
+ * Setting the rail's own background is not enough: core paints each TAB with
+ * its own light plate, so a dark rail with unstyled tabs renders as light
+ * squares floating on navy — measured at rgb(244,246,250) on rgb(11,31,56).
+ * The rail reads as broken rather than as themed, and it is easy to miss
+ * because the icons themselves stay legible.
+ *
+ * Transparent rather than a repeat of the rail colour, so the hover and current
+ * washes below composite over the rail instead of over a second opaque plate.
+ * The foreground is the chrome ramp (D-007: the rails are dark in BOTH modes),
+ * never the canvas text ramp. */
+body[data-jp-theme-name^='Data4Now'] .jp-SideBar .lm-TabBar-tab {
+  color: var(--d4n-sidebar-rail-fg);
+  background: transparent;
+}
+
+/* LabIcon renders the rail glyphs as inlined SVG whose paths carry the
+ * jp-icon-* classes, so the colour has to reach `fill`/`stroke` — `color`
+ * alone leaves them at core's dark fill, i.e. invisible on navy. */
+body[data-jp-theme-name^='Data4Now']
+  .jp-SideBar
+  .lm-TabBar-tab
+  :is(.jp-icon0, .jp-icon1, .jp-icon2, .jp-icon3, .jp-icon-selectable)[fill] {
+  fill: var(--d4n-sidebar-rail-fg);
+}
+
+body[data-jp-theme-name^='Data4Now']
+  .jp-SideBar
+  .lm-TabBar-tab.lm-mod-current
+  :is(.jp-icon0, .jp-icon1, .jp-icon2, .jp-icon3, .jp-icon-selectable)[fill] {
+  fill: var(--d4n-sidebar-rail-fg-active);
+}
+
 body[data-jp-theme-name^='Data4Now']
   .jp-SideBar
   .lm-TabBar-tabIcon.jp-SideBar-tabIcon {

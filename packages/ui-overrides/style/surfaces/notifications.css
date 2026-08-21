@@ -1,0 +1,138 @@
+/* SURFACE: notifications / toasts (PRD §6.5, §8.3-adjacent)
+ *
+ * Upstream selectors verified against:
+ *   @jupyterlab/apputils  4.7.3  (notification manager)
+ *   react-toastify        9.x    (the actual renderer)
+ *   (declared range: @jupyterlab/* ^4.5.0)
+ *
+ * THE PRD IS WRONG ABOUT THIS SURFACE, AND IT MATTERS.
+ *
+ * PRD §6.5 lists toasts as "`.jp-Notification-*` (JupyterLab 4.2+)". Those
+ * classes do exist — but only on the STATUS BAR item (`.jp-Notification-Status`)
+ * and its counter. The popup itself is rendered by **react-toastify**, whose DOM
+ * carries `Toastify__toast`, `Toastify__toast-body`, `Toastify__close-button`
+ * and a `Toastify__toast-theme--light` modifier that hardcodes a white plate.
+ *
+ * Measured in a running JupyterLab 4.6.3 before this file existed: the toast
+ * painted white with `--jp-ui-font-color1` text, so in light mode the body copy
+ * was near-invisible and in dark mode it would be a white slab. Styling only the
+ * `.jp-Notification-*` names — which is what the PRD's inventory would lead you
+ * to do — reaches the status-bar counter and nothing a user actually reads.
+ *
+ * The `theme--light` modifier is the one that ships regardless of our mode,
+ * because core picks it from its own theme detection rather than from ours; the
+ * rules below therefore override it directly instead of relying on mode scoping
+ * to avoid it. Every selector is mirrored in ../selectors.json (PRD §7.4(5)).
+ */
+
+/* The container is positioned by react-toastify; only the plate is ours. */
+body[data-jp-theme-name^='Data4Now'] .Toastify__toast {
+  padding: var(--d4n-space-3);
+  color: var(--d4n-color-text-primary);
+  font-family: var(--d4n-font-family-ui);
+  font-size: var(--d4n-font-size-ui-sm);
+  background: var(--d4n-color-surface-overlay);
+  border: var(--d4n-border-width-thin) solid var(--d4n-color-border-subtle);
+  border-radius: var(--d4n-radius-md);
+  box-shadow: var(--d4n-elevation-3);
+}
+
+/* react-toastify's own light theme sets background and color on the same
+ * element; the modifier is a sibling class, not a descendant, so it ties on
+ * specificity with the rule above and would win on source order alone. */
+body[data-jp-theme-name^='Data4Now']
+  .Toastify__toast.Toastify__toast-theme--light {
+  color: var(--d4n-color-text-primary);
+  background: var(--d4n-color-surface-overlay);
+}
+
+body[data-jp-theme-name^='Data4Now'] .Toastify__toast-body {
+  color: var(--d4n-color-text-primary);
+  font-family: var(--d4n-font-family-ui);
+  line-height: var(--d4n-font-line-height-normal);
+}
+
+/* Links inside a toast — the privacy-policy notice ships one, and without this
+ * it renders browser-default blue on the overlay surface. */
+body[data-jp-theme-name^='Data4Now'] .Toastify__toast-body a {
+  color: var(--d4n-color-text-link);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* The action buttons ("Open privacy policy", "Yes", "No") are plain buttons
+ * inside the toast body, so they inherit nothing useful. Secondary variant:
+ * these are never the primary action of the application. */
+body[data-jp-theme-name^='Data4Now'] .Toastify__toast button {
+  height: var(--d4n-button-height-compact);
+  padding: 0 var(--d4n-button-padding-x);
+  color: var(--d4n-button-secondary-fg);
+  font-family: var(--d4n-font-family-ui);
+  font-size: var(--d4n-button-font-size);
+  font-weight: var(--d4n-button-font-weight);
+  background: var(--d4n-button-secondary-bg);
+  border: var(--d4n-border-width-thin) solid var(--d4n-button-secondary-border);
+  border-radius: var(--d4n-button-radius);
+  cursor: pointer;
+}
+
+body[data-jp-theme-name^='Data4Now'] .Toastify__toast button:hover {
+  background: var(--d4n-button-secondary-bg-hover);
+}
+
+body[data-jp-theme-name^='Data4Now'] .Toastify__close-button {
+  color: var(--d4n-color-text-muted);
+  opacity: 1;
+}
+
+body[data-jp-theme-name^='Data4Now'] .Toastify__close-button:hover {
+  color: var(--d4n-color-text-primary);
+}
+
+/* The progress bar is the auto-dismiss timer. Core tints it per intent; we take
+ * the accent for the neutral case and let the intent modifiers below win. */
+body[data-jp-theme-name^='Data4Now'] .Toastify__progress-bar {
+  background: var(--d4n-color-action-default);
+}
+
+body[data-jp-theme-name^='Data4Now'] .Toastify__progress-bar--error {
+  background: var(--d4n-color-danger-default);
+}
+
+body[data-jp-theme-name^='Data4Now'] .Toastify__progress-bar--warning {
+  background: var(--d4n-color-warning-default);
+}
+
+body[data-jp-theme-name^='Data4Now'] .Toastify__progress-bar--success {
+  background: var(--d4n-color-success-default);
+}
+
+/* Intent is carried by a left border rather than by a tinted plate: a tinted
+ * background would have to clear 4.5:1 against body copy in four variants and
+ * two modes, and PRD A7 wants the signal not to be colour alone anyway — the
+ * icon in the toast body carries the shape. */
+body[data-jp-theme-name^='Data4Now'] .Toastify__toast--error {
+  border-left: var(--d4n-border-width-thick) solid
+    var(--d4n-color-danger-default);
+}
+
+body[data-jp-theme-name^='Data4Now'] .Toastify__toast--warning {
+  border-left: var(--d4n-border-width-thick) solid
+    var(--d4n-color-warning-default);
+}
+
+body[data-jp-theme-name^='Data4Now'] .Toastify__toast--success {
+  border-left: var(--d4n-border-width-thick) solid
+    var(--d4n-color-success-default);
+}
+
+body[data-jp-theme-name^='Data4Now'] .Toastify__toast--info {
+  border-left: var(--d4n-border-width-thick) solid var(--d4n-color-info-default);
+}
+
+/* The status-bar counter — the part the PRD's `.jp-Notification-*` names DO
+ * reach. Included here so the whole notification story lives in one file. */
+body[data-jp-theme-name^='Data4Now'] .jp-Notification-Status {
+  color: var(--d4n-status-bar-fg);
+  font-size: var(--d4n-status-bar-font-size);
+}
