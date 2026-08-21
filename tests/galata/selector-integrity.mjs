@@ -84,20 +84,67 @@ if (manifests.length === 0) {
 
 const entries = [];
 for (const m of manifests) {
-  for (const [surface, group] of Object.entries(m.data)) {
-    if (surface.startsWith('$')) {
-      continue;
-    }
+  // The manifest is {package, scope, verifiedAgainst, states, surfaces: [...]}.
+  // An earlier version of this loop walked Object.entries(m.data) looking for a
+  // `.selectors` on each top-level key — which matches NONE of them, so it
+  // collected zero selectors and the job passed vacuously. A verification job
+  // that silently verifies nothing is worse than no job at all: it reports
+  // green on exactly the upstream breakage it exists to catch. Hence the
+  // explicit `surfaces` read and the guards below.
+  const surfaces = m.data.surfaces;
+  if (!Array.isArray(surfaces)) {
+    console.error(
+      `${m.file}: expected a top-level "surfaces" array, found ` +
+        `${surfaces === undefined ? 'nothing' : typeof surfaces}. ` +
+        'Refusing to pass on a manifest this job cannot read.'
+    );
+    process.exit(1);
+  }
+  for (const group of surfaces) {
     for (const raw of group.selectors ?? []) {
       const entry = typeof raw === 'string' ? { selector: raw } : raw;
       entries.push({
         ...entry,
         package: m.package,
-        surface,
-        upstream: group.upstream ?? 'unspecified',
+        surface: group.file,
+        upstream: Array.isArray(group.upstream)
+          ? group.upstream.join('; ')
+          : (group.upstream ?? 'unspecified'),
         manifest: m.file
       });
     }
+  }
+}
+
+if (entries.length === 0) {
+  console.error(
+    'Manifests parsed but contributed zero selectors. That is the vacuous-pass ' +
+      'failure mode this job exists to avoid — treating it as an error.'
+  );
+  process.exit(1);
+}
+
+// COVERAGE: a stylesheet with no manifest entry is unowned. PRD §7.4(5) makes
+// the manifest the record of what we depend on upstream, so a surface file that
+// never appears in it is invisible to the integrity job — which is exactly how
+// seven new stylesheets shipped unregistered (and, as it happened, unimported).
+for (const m of manifests) {
+  const dir = join(PACKAGES, m.package, 'style', 'surfaces');
+  if (!existsSync(dir)) {
+    continue;
+  }
+  const declared = new Set(m.data.surfaces.map(s => s.file));
+  const missing = readdirSync(dir)
+    .filter(f => f.endsWith('.css'))
+    .map(f => `style/surfaces/${f}`)
+    .filter(f => !declared.has(f));
+  if (missing.length) {
+    console.error(
+      `\n${missing.length} stylesheet(s) in ${m.package} have no entry in ` +
+        `${m.file}:\n    ${missing.join('\n    ')}\n` +
+        'Add a surfaces[] entry naming the upstream selectors each depends on.'
+    );
+    process.exit(1);
   }
 }
 

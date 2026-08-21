@@ -36,5 +36,19 @@
 @import url('./surfaces/notebook.css');
 @import url('./surfaces/inputs.css');
 @import url('./surfaces/buttons.css');
+
+/* These seven must stay AFTER inputs.css. command-palette.css is the one with a
+ * hard requirement rather than a preference: inputs.css styles
+ * `.lm-CommandPalette-input` as one of the six search mounts (PRD §8.8), at the
+ * identical (0,2,1) specificity, and both declare padding — so source order is
+ * the only thing deciding whether the search glyph overlaps the typed text. */
+@import url('./surfaces/toolbar.css');
+@import url('./surfaces/bottom-dock.css');
+@import url('./surfaces/file-browser.css');
+@import url('./surfaces/running.css');
+@import url('./surfaces/extension-manager.css');
+@import url('./surfaces/command-palette.css');
+@import url('./surfaces/log-console.css');
+@import url('./surfaces/notifications.css');
 @import url('./surfaces/focus.css');
 @import url('./surfaces/motion.css');
