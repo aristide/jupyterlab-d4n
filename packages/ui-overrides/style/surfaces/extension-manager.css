@@ -1,0 +1,331 @@
+/* SURFACE: extension manager (PRD §6.2, §6.7)
+ *
+ * Upstream selectors verified against:
+ *   @jupyterlab/extensionmanager   4.6.3  style/base.css
+ *   @jupyter/web-components        0.16.6 jp-search (shadow parts)
+ *   (declared range: @jupyterlab/* ^4.5.0)
+ *
+ * Every selector is mirrored in ../selectors.json (PRD §7.4(5)).
+ *
+ * WHAT THIS PANEL ACTUALLY IS
+ *
+ * A search field, a consent banner, and two accordion sections of result rows.
+ * Core renders the rows as `<li>`s separated by a hairline, which is the right
+ * shape for a list of names but the wrong shape for what these rows contain: a
+ * logo, a title, a version, two lines of prose and a button row. Below the
+ * hairline becomes a card — surface, border, radius — because a bordered block
+ * is what tells the reader where one extension's description stops and the next
+ * one's begins. That is the §6.2 "card layout" line item.
+ *
+ * THE SEARCH FIELD IS NOT STYLED HERE
+ *
+ * `.jp-FilterBox` is a `<jp-search>` web component and its input lives in a
+ * shadow root — the same component the file browser filter mounts, and the same
+ * reason it is left alone in file-browser.css and inputs.css. This file styles
+ * only the field's MOUNT (its margin and width inside the panel header).
+ * Reaching into it from here would give §8.8 a sixth search implementation
+ * instead of removing one (S1); the shared `::part()` mapping is P3-12.
+ *
+ * STATES THAT EXIST AND STATES THAT DO NOT
+ *
+ * Core puts `jp-extensionmanager-entry-{ok|warning|error}` on an entry, plus
+ * `-should-be-uninstalled` when the extension is no longer allowed. Those four
+ * are styled. "Installed vs enabled vs disabled" is NOT expressed as a class in
+ * 4.6 — it is carried entirely by which buttons the entry renders — so there is
+ * no selector to hang a treatment on, and inventing one against `:has()` over
+ * button labels would break on the first translation. See the P2-06 report.
+ */
+
+body[data-jp-theme-name^='Data4Now'] .jp-extensionmanager-view {
+  background: var(--d4n-color-surface-canvas);
+  color: var(--d4n-color-text-primary);
+  font-family: var(--d4n-font-family-ui);
+  font-size: var(--d4n-font-size-ui-sm);
+}
+
+/* --- Header — title, install path, search mount ---------------------------- */
+
+body[data-jp-theme-name^='Data4Now'] .jp-extensionmanager-title {
+  align-items: center;
+  gap: var(--d4n-space-1);
+  margin: var(--d4n-space-2) var(--d4n-space-3) var(--d4n-space-0);
+  color: var(--d4n-color-text-secondary);
+  font-size: var(--d4n-font-size-ui-sm);
+  font-weight: var(--d4n-font-weight-semibold);
+}
+
+/* The install path is a diagnostic, not a heading — muted, and the icon that
+ * carries its tooltip is sized to the toolbar glyph so it does not outweigh the
+ * title beside it. */
+body[data-jp-theme-name^='Data4Now'] .jp-extensionmanager-path {
+  align-items: center;
+  color: var(--d4n-color-text-muted);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-extensionmanager-path > svg {
+  width: var(--d4n-toolbar-icon-size);
+  height: var(--d4n-toolbar-icon-size);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-extensionmanager-header .jp-FilterBox {
+  margin: var(--d4n-space-2) var(--d4n-space-3) var(--d4n-space-0);
+  width: calc(100% - 2 * var(--d4n-space-3));
+}
+
+/* --- Warning banner (the third-party consent notice) ----------------------- */
+
+/* Core renders the disclaimer as bare paragraph text in a collapsed accordion
+ * section called "Warning" — a warning whose only warning-ness is the word in
+ * the section title. It becomes a banner: warning tint, a thick leading rule,
+ * and body text on the normal ramp so the prose stays readable rather than
+ * being tinted along with the plate.
+ *
+ * The tint is `warning.faint`, not `warning.default`: this is a notice the user
+ * must read once, not an error, and a saturated plate behind six lines of prose
+ * is unreadable in both modes. The leading rule is what makes it a warning at a
+ * glance, and it is a shape, not a colour, so it survives A7. */
+body[data-jp-theme-name^='Data4Now'] .jp-extensionmanager-disclaimer {
+  padding: var(--d4n-space-3);
+  background: var(--d4n-color-warning-faint);
+  color: var(--d4n-color-text-primary);
+  font-size: var(--d4n-font-size-ui-sm);
+  line-height: var(--d4n-font-line-height-normal);
+  border-left: var(--d4n-space-1) solid var(--d4n-color-warning-default);
+  border-radius: var(--d4n-radius-sm);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-extensionmanager-disclaimer a {
+  color: var(--d4n-color-text-link);
+}
+
+body[data-jp-theme-name^='Data4Now']
+  .jp-extensionmanager-disclaimer
+  .jp-Button {
+  margin: var(--d4n-space-0) var(--d4n-space-2) var(--d4n-space-0)
+    var(--d4n-space-0);
+}
+
+/* The two consent buttons. Core paints BOTH of them red — "Yes" in
+ * `--jp-error-color1` and "No, disable" in `--jp-reject-color-normal` — with
+ * hardcoded `white` text, so the affirmative and the refusal are the same
+ * colour and neither looks like the default. They become an ordinary
+ * primary/secondary pair: one thing to do, one way out.
+ *
+ * `!important` is unavoidable here and is the sanctioned case (§7.4(4)): the
+ * upstream declarations in `.jp-extensionmanager-disclaimer-enable` and
+ * `-disable` (@jupyterlab/extensionmanager 4.6.3, style/base.css) are
+ * themselves `!important`, so no amount of specificity reaches them. Each
+ * declaration below names the one it beats. */
+body[data-jp-theme-name^='Data4Now'] .jp-extensionmanager-disclaimer-enable {
+  /* the next three each beat .jp-extensionmanager-disclaimer-enable's own
+     !important declaration in @jupyterlab/extensionmanager 4.6.3 style/base.css */
+  background-color: var(--d4n-button-primary-bg) !important;
+  color: var(--d4n-button-primary-fg) !important;
+
+  /* beats .jp-extensionmanager-disclaimer-enable in
+     @jupyterlab/extensionmanager 4.6.3 style/base.css */
+  background-image: none !important;
+  border-radius: var(--d4n-button-radius);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-extensionmanager-disclaimer-disable {
+  /* the next three each beat .jp-extensionmanager-disclaimer-disable's own
+     !important declaration in @jupyterlab/extensionmanager 4.6.3 style/base.css */
+  background-color: var(--d4n-button-secondary-bg) !important;
+  color: var(--d4n-button-secondary-fg) !important;
+
+  /* beats .jp-extensionmanager-disclaimer-disable in
+     @jupyterlab/extensionmanager 4.6.3 style/base.css */
+  background-image: none !important;
+  border: var(--d4n-border-width-thin) solid var(--d4n-button-secondary-border);
+  border-radius: var(--d4n-button-radius);
+}
+
+/* --- Entry cards ----------------------------------------------------------- */
+
+body[data-jp-theme-name^='Data4Now'] .jp-extensionmanager-listview {
+  padding: var(--d4n-space-2);
+}
+
+/* The `border` shorthand is deliberate rather than four `border-*` longhands:
+ * core sets `border-bottom` alone as a row divider, and a shorthand is the only
+ * form that both draws the card and overwrites that divider in one declaration.
+ * Adding the other three edges as longhands would leave core's bottom line in
+ * place, 1px inside our own — which is the visual tell that a list was turned
+ * into cards and the divider was left behind. */
+body[data-jp-theme-name^='Data4Now'] .jp-extensionmanager-entry {
+  gap: var(--d4n-space-2);
+  padding: var(--d4n-space-3);
+  margin-bottom: var(--d4n-space-2);
+  background: var(--d4n-color-surface-raised);
+  border: var(--d4n-border-width-thin) solid var(--d4n-color-border-subtle);
+  border-radius: var(--d4n-radius-md);
+  box-shadow: var(--d4n-elevation-1);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-extensionmanager-entry-title {
+  gap: var(--d4n-space-2);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-extensionmanager-entry-name {
+  color: var(--d4n-color-text-strong);
+  font-size: var(--d4n-font-size-ui-md);
+  font-weight: var(--d4n-font-weight-semibold);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-extensionmanager-entry-name a:link,
+body[data-jp-theme-name^='Data4Now'] .jp-extensionmanager-entry-name a:visited {
+  color: var(--d4n-color-text-link);
+}
+
+/* The version is a fact about the package, not part of its name: a mono chip on
+ * the sunken surface, so a column of cards has its versions in one readable
+ * strip instead of a ragged run of digits at heading weight. */
+body[data-jp-theme-name^='Data4Now'] .jp-extensionmanager-entry-version {
+  flex: 0 0 auto;
+  padding: var(--d4n-space-0) var(--d4n-space-1);
+  background: var(--d4n-color-surface-sunken);
+  color: var(--d4n-color-text-muted);
+  font-family: var(--d4n-font-family-mono);
+  font-size: var(--d4n-font-size-ui-xs);
+  border-radius: var(--d4n-radius-pill);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-extensionmanager-entry-description {
+  color: var(--d4n-color-text-secondary);
+  font-size: var(--d4n-font-size-ui-sm);
+  line-height: var(--d4n-font-line-height-normal);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-extensionmanager-entry-buttons {
+  gap: var(--d4n-space-2);
+  padding-block-start: var(--d4n-space-2);
+}
+
+/* The approval mark from the deployment's security team. It is the one piece of
+ * positive status in the card, so it gets the success colour rather than the
+ * icon ramp — otherwise it reads as decoration next to the title. */
+body[data-jp-theme-name^='Data4Now'] .jp-extensionmanager-is-approved {
+  color: var(--d4n-color-success-default);
+}
+
+/* --- Entry status ---------------------------------------------------------- */
+
+/* Three severities, one shape: a thick leading rule in the intent colour, which
+ * is the same device the warning banner uses. Core has a rule for `-error` only
+ * (an 8px `--jp-error-color2` border) and paints `-should-be-uninstalled` as a
+ * full `--jp-error-color3` plate; a plate under prose is the readability
+ * problem described above, so all four use the rule instead.
+ *
+ * `padding-left` is reduced by the rule's width so the card's text still lines
+ * up with the cards above and below it — a status card that is 4px narrower
+ * inside is visible as a jog down the column. */
+body[data-jp-theme-name^='Data4Now'] .jp-extensionmanager-entry-warning,
+body[data-jp-theme-name^='Data4Now'] .jp-extensionmanager-entry-error,
+body[data-jp-theme-name^='Data4Now']
+  .jp-extensionmanager-entry-should-be-uninstalled {
+  padding-left: calc(var(--d4n-space-3) - var(--d4n-space-1));
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-extensionmanager-entry-warning {
+  border-left: var(--d4n-space-1) solid var(--d4n-color-warning-default);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-extensionmanager-entry-error,
+body[data-jp-theme-name^='Data4Now']
+  .jp-extensionmanager-entry-should-be-uninstalled {
+  background: var(--d4n-color-danger-faint);
+  border-left: var(--d4n-space-1) solid var(--d4n-color-danger-default);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-extensionmanager-entry-error pre {
+  padding: var(--d4n-space-2);
+  background: var(--d4n-color-surface-code);
+  color: var(--d4n-color-text-primary);
+  font-family: var(--d4n-font-family-mono);
+  font-size: var(--d4n-font-size-code-compact);
+  border-radius: var(--d4n-radius-sm);
+}
+
+/* --- Pagination ------------------------------------------------------------ */
+
+body[data-jp-theme-name^='Data4Now'] .jp-extensionmanager-pagination {
+  padding: var(--d4n-space-2);
+  color: var(--d4n-color-text-secondary);
+  font-size: var(--d4n-font-size-ui-sm);
+  text-align: center;
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-extensionmanager-pagination li > a {
+  display: inline-block;
+  min-width: var(--d4n-space-6);
+  padding: var(--d4n-space-0) var(--d4n-space-2);
+  border-radius: var(--d4n-radius-sm);
+}
+
+body[data-jp-theme-name^='Data4Now']
+  .jp-extensionmanager-pagination
+  li
+  > a:hover {
+  background: var(--d4n-color-surface-hover);
+}
+
+body[data-jp-theme-name^='Data4Now']
+  .jp-extensionmanager-pagination
+  li.active
+  > a {
+  background: var(--d4n-color-action-default);
+  color: var(--d4n-color-text-on-action);
+  font-weight: var(--d4n-font-weight-semibold);
+}
+
+/* --- Loading, error and empty states (PRD §6.7) ---------------------------- */
+
+/* The indeterminate progress bar core animates while an install runs. Only the
+ * colour changes here; the animation itself is core's, and the
+ * reduced-motion override in motion.css already reaches it. */
+body[data-jp-theme-name^='Data4Now']
+  .jp-extensionmanager-pending.jp-mod-hasPending::before {
+  background-color: var(--d4n-color-action-default);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-extensionmanager-loader {
+  padding: var(--d4n-space-4);
+  color: var(--d4n-color-text-muted);
+  font-size: var(--d4n-font-size-ui-sm);
+  text-align: center;
+}
+
+/* The error state is the one users hit most: this panel needs network access to
+ * a package index, and in an air-gapped deployment it never gets it. Danger
+ * foreground and the same leading rule as an error card, so a failed fetch does
+ * not read as an empty result set. */
+body[data-jp-theme-name^='Data4Now'] .jp-extensionmanager-error {
+  padding: var(--d4n-space-3);
+  margin: var(--d4n-space-2);
+  background: var(--d4n-color-danger-faint);
+  color: var(--d4n-color-text-primary);
+  font-size: var(--d4n-font-size-ui-sm);
+  border-left: var(--d4n-space-1) solid var(--d4n-color-danger-default);
+  border-radius: var(--d4n-radius-sm);
+}
+
+/* Core's own empty state, and it already carries translated copy ("No entries")
+ * from the widget — so this retokens and centres it rather than replacing the
+ * string from CSS, which would drop the translation. */
+body[data-jp-theme-name^='Data4Now'] .jp-extensionmanager-listview-message {
+  padding: var(--d4n-space-6) var(--d4n-space-3);
+  color: var(--d4n-color-text-muted);
+  font-size: var(--d4n-font-size-ui-sm);
+  text-align: center;
+}
+
+/* --- Uninstall confirmation dialog ----------------------------------------- */
+
+body[data-jp-theme-name^='Data4Now']
+  .jp-extensionmanager-dialog
+  .jp-extensionmanager-dialog-subheader {
+  color: var(--d4n-color-text-strong);
+  font-size: var(--d4n-font-size-ui-sm);
+  font-weight: var(--d4n-font-weight-semibold);
+}

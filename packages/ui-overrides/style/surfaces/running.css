@@ -1,0 +1,225 @@
+/* SURFACE: running terminals and kernels (PRD §6.2, §6.7)
+ *
+ * Upstream selectors verified against:
+ *   @jupyterlab/running            4.6.3  style/base.css
+ *   @jupyterlab/running-extension  4.6.3  (SearchableSessions modal)
+ *   @jupyter/web-components        0.16.6 jp-tree-item (shadow parts)
+ *   (declared range: @jupyterlab/* ^4.5.0)
+ *
+ * Every selector is mirrored in ../selectors.json (PRD §7.4(5)).
+ *
+ * A ROW IN THIS PANEL IS A SHADOW ROOT
+ *
+ * `.jp-RunningSessions-item` is not a `<li>`. It is a `<jp-tree-item>` web
+ * component, and the box a user perceives as "the row" — the thing that takes
+ * the hover wash, the padding and the height — is `part="positioning-region"`
+ * INSIDE its shadow root. A descendant selector cannot reach it: writing
+ * `.jp-RunningSessions-item { background: … }` compiles, ships, and paints
+ * nothing, because the shadow tree paints over the host.
+ *
+ * So every geometry and surface rule below is written against `::part()`. Two
+ * consequences worth knowing before editing this file:
+ *
+ *   1. `::part()` from the outer document beats the shadow tree's own rules for
+ *      normal declarations, so the toolkit's `--neutral-fill-stealth-hover`
+ *      styling loses without `!important`.
+ *   2. `::part()` cannot be combined with a descendant on the right-hand side.
+ *      State goes on the HOST (`…-item:hover::part(positioning-region)`), never
+ *      inside the part.
+ *
+ * The list-vs-tree toggle changes indentation, not the row: both views render
+ * the same `jp-tree-item`, so nothing here needs a per-view branch.
+ *
+ * SECTION HEADERS ARE NOT STYLED HERE
+ *
+ * "Open Tabs", "Kernels", "Terminals" etc. are `.jp-AccordionPanel-title`
+ * elements owned by sidebar.css, which styles them once for every accordion in
+ * the application (Debugger, Property Inspector, this panel). Restating them
+ * here would be a second spec for the same element that drifts on the first
+ * change to either file. The only section title this file owns is the modal
+ * session switcher's, which is a different element.
+ */
+
+body[data-jp-theme-name^='Data4Now'] .jp-RunningSessions {
+  background: var(--d4n-color-surface-canvas);
+  color: var(--d4n-color-text-primary);
+  font-family: var(--d4n-font-family-ui);
+  font-size: var(--d4n-font-size-ui-sm);
+}
+
+/* Core indents the tree by a bare 14px. Rounding to the spacing scale keeps the
+ * indent on the same 4px grid as the row padding, so the icon column of an
+ * indented child lines up with the label column of its parent. */
+body[data-jp-theme-name^='Data4Now'] .jp-RunningSessions-sectionList {
+  padding-left: var(--d4n-space-3);
+}
+
+/* --- Rows ------------------------------------------------------------------ */
+
+/* Same density token as the file browser listing and the command palette, so
+ * the three list surfaces are one height and a compact mode moves them together
+ * (D-009). The plate is transparent at rest: these rows sit directly on the
+ * panel canvas and a second surface here would band the panel. */
+body[data-jp-theme-name^='Data4Now']
+  .jp-RunningSessions-item::part(positioning-region) {
+  min-height: var(--d4n-density-comfortable-row-height);
+  padding: var(--d4n-space-0) var(--d4n-space-2);
+  background: transparent;
+  border-radius: var(--d4n-radius-sm);
+}
+
+body[data-jp-theme-name^='Data4Now']
+  .jp-RunningSessions-item:hover::part(positioning-region) {
+  background: var(--d4n-color-surface-hover);
+}
+
+/* `.jp-mod-active` is the row whose document is the one in front — it is a
+ * selection, not a hover, and it uses the same plate-plus-accent treatment as a
+ * selected file browser row so "current" reads identically in both panels.
+ * Core paints the host and then blanks the part; the pair below has to stay a
+ * pair for the same reason (a background on the host alone is covered by the
+ * part, a background on the part alone is covered by core's host rule). */
+body[data-jp-theme-name^='Data4Now'] .jp-RunningSessions-item.jp-mod-active {
+  background-color: var(--d4n-color-selection-active);
+  outline: var(--d4n-border-width-thin) solid var(--d4n-color-action-default);
+  outline-offset: calc(-1 * var(--d4n-border-width-thick));
+  border-radius: var(--d4n-radius-sm);
+}
+
+body[data-jp-theme-name^='Data4Now']
+  .jp-RunningSessions-item.jp-mod-active::part(positioning-region) {
+  background: transparent;
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-RunningSessions-itemLabel {
+  color: var(--d4n-color-text-primary);
+  font-size: var(--d4n-font-size-ui-sm);
+}
+
+/* The detail column carries the path or the connection count — supporting
+ * information for the label, so it drops to the muted ramp and one size down
+ * rather than competing at the same weight. */
+body[data-jp-theme-name^='Data4Now'] .jp-RunningSessions-itemDetail {
+  padding: var(--d4n-space-0) var(--d4n-space-1);
+  color: var(--d4n-color-text-muted);
+  font-size: var(--d4n-font-size-ui-xs);
+}
+
+/* A kernel id is a UUID. It is read character by character when someone is
+ * matching it against a log line, which is what the mono ramp is for. */
+body[data-jp-theme-name^='Data4Now'] .jp-RunningSessions-item-label-kernel-id {
+  color: var(--d4n-color-text-muted);
+  font-family: var(--d4n-font-family-mono);
+  font-size: var(--d4n-font-size-ui-xs);
+}
+
+/* Kernel logos here are the same server-served rasters the launcher gets, and
+ * they carry the same dark-mode halo. D-010's answer is a neutral plate behind
+ * the mark rather than a replacement asset; the plate is applied to `img` only,
+ * because the `span` variant is an inline `LabIcon` that already follows the
+ * theme and would gain a plate it does not need. */
+body[data-jp-theme-name^='Data4Now'] img.jp-RunningSessions-icon {
+  background: var(--d4n-launcher-kernel-plate-bg);
+  border-radius: var(--d4n-radius-sm);
+}
+
+body[data-jp-theme-name^='Data4Now'] span.jp-RunningSessions-icon > svg {
+  color: var(--d4n-color-text-secondary);
+}
+
+/* --- Shutdown — the destructive affordance --------------------------------- */
+
+/* The per-row kill button is `visibility: hidden` until the row is hovered.
+ * Core reveals it on `.jp-RunningSessions-item:focus-visible` too, but that is
+ * the wrong element: tabbing moves focus to the BUTTON, and when the button has
+ * focus the item does not match `:focus-visible`. The result upstream is a
+ * focused, operable, invisible control — WCAG 2.4.11, and the control it hides
+ * is the one that kills a running kernel.
+ *
+ * `:focus-within` on the item is the missing case. It is added, not swapped,
+ * so core's two reveal paths keep working exactly as they do today. */
+body[data-jp-theme-name^='Data4Now']
+  .jp-RunningSessions-item:focus-within
+  > .jp-RunningSessions-itemShutdown {
+  visibility: visible;
+}
+
+/* Muted at rest, danger on approach. A kill control that is red before you
+ * point at it turns every row into a warning; a kill control that never turns
+ * red does not say what it does. */
+body[data-jp-theme-name^='Data4Now'] .jp-RunningSessions-itemShutdown {
+  color: var(--d4n-color-text-muted);
+  border-radius: var(--d4n-toolbar-button-radius);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-RunningSessions-itemShutdown:hover {
+  background: var(--d4n-color-danger-faint);
+  color: var(--d4n-color-danger-default);
+}
+
+/* "Shut down all" is the section-wide version of the same action and stays
+ * danger-coloured permanently, because it is in a toolbar where nothing else
+ * is destructive and there is no row context to make it obvious. */
+body[data-jp-theme-name^='Data4Now']
+  .jp-RunningSessions-shutdownAll.jp-ToolbarButtonComponent {
+  color: var(--d4n-color-danger-default);
+}
+
+body[data-jp-theme-name^='Data4Now']
+  .jp-RunningSessions-shutdownAll.jp-ToolbarButtonComponent[disabled] {
+  color: var(--d4n-color-text-muted);
+  opacity: var(--d4n-button-disabled-opacity);
+}
+
+/* --- Empty state (PRD §6.7) ------------------------------------------------ */
+
+/* An empty section is the normal state of this panel — most of the time nothing
+ * is running, and that is good news, not a missing feature. Core renders an
+ * expanded section with nothing in it, which reads as a failed load.
+ *
+ * The copy is per-section-agnostic for the same reason as the file browser's:
+ * `content` cannot interpolate the section name and is not translatable. It is
+ * the accordion title directly above that says WHICH thing is not running, so
+ * the line only has to supply the "none".
+ *
+ * NOT hung off `.jp-mod-empty`, which is the obvious hook and does not work:
+ * measured in 4.6.3, that class is only ever applied inside the searchable
+ * sessions MODAL — the sidebar's sections never carry it, so a rule keyed on it
+ * matches nothing and fails silently. What is reliably true in both mounts is
+ * that an empty section renders an empty `<jp-tree-view>`, so `:has()` on the
+ * container is the condition that actually holds.
+ *
+ * The pseudo-element goes on the plain `<div>` container, never on the
+ * `<jp-tree-view>` itself: a shadow host's `::before`/`::after` are subject to
+ * slotting, and whether they render at all depends on the component's shadow
+ * template. That is not something to bet an empty state on. */
+body[data-jp-theme-name^='Data4Now']
+  .jp-RunningSessions-sectionContainer:has(> .jp-TreeView:empty)::after {
+  content: 'None running';
+  display: block;
+  padding: var(--d4n-space-3) var(--d4n-space-2);
+  color: var(--d4n-color-text-muted);
+  font-family: var(--d4n-font-family-ui);
+  font-size: var(--d4n-font-size-ui-sm);
+}
+
+/* --- Searchable sessions modal --------------------------------------------- */
+
+/* The same session list, mounted in a dialog as a switcher. Its own section
+ * titles are `<h3 class="jp-SearchableSessions-title">` — not accordion titles —
+ * so they need the eyebrow treatment restated to match the sidebar's. */
+body[data-jp-theme-name^='Data4Now'] .jp-SearchableSessions-title {
+  padding: var(--d4n-space-1) var(--d4n-space-0);
+  color: var(--d4n-sidebar-header-fg);
+  font-size: var(--d4n-sidebar-header-font-size);
+  font-weight: var(--d4n-font-weight-semibold);
+  letter-spacing: var(--d4n-sidebar-header-letter-spacing);
+}
+
+/* This one is core's own empty state and only needs retokening — it already
+ * says the right thing, in the right place, and it is translated. */
+body[data-jp-theme-name^='Data4Now'] .jp-SearchableSessions-emptyIndicator {
+  padding: var(--d4n-space-4);
+  color: var(--d4n-color-text-muted);
+  font-size: var(--d4n-font-size-ui-sm);
+}

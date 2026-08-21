@@ -1,0 +1,382 @@
+/* SURFACE: file browser — listing, breadcrumbs, filter mount (PRD §6.2, §6.7)
+ *
+ * Upstream selectors verified against:
+ *   @jupyterlab/filebrowser            4.6.3  style/base.css,
+ *                                             style/pathnavigator.css
+ *   @jupyterlab/filebrowser-extension  4.6.3  style/base.css
+ *   (declared range: @jupyterlab/* ^4.5.0)
+ *
+ * Every selector is mirrored in ../selectors.json (PRD §7.4(5)).
+ *
+ * THE SELECTION MODEL, AND WHY IT IS NOT CORE'S
+ *
+ * Core paints the selected row `--jp-brand-color1` and flips the label to
+ * `--jp-ui-inverse-font-color1`. That inversion drags three other things with
+ * it, and core has a rule for each: the filter-match `<mark>`, the green
+ * "kernel running" dot, and the focus ring — all restated in an inverse colour
+ * so they survive the brand fill. Four coupled rules to express one state.
+ *
+ * The design system has a token for exactly this — `color.selection.active` —
+ * and it is a tinted plate, not a fill. On a plate the text ramp still applies,
+ * so the mark, the dot and the ring keep their normal colours and the three
+ * inverse rules below exist only to UNDO core's inversion. That is why they
+ * look redundant; they are not. Without them the running dot is white on pale
+ * teal (invisible in light mode) and the focus ring is canvas-on-canvas.
+ *
+ * Selection is not colour-only (A7): the row also carries an inset accent bar
+ * on its leading edge, which is the same signal the dock tab bar uses for the
+ * current tab.
+ *
+ * THE FILTER BOX IS NOT STYLED HERE
+ *
+ * `.jp-FilterBox` is a `<jp-search>` web component from `@jupyter/web-components`
+ * and its input lives in a shadow root — see the note at the top of inputs.css.
+ * What this file styles is the MOUNT: the toolbar row the component sits in and
+ * the width it is given. Restyling the control itself from here would be a
+ * fifth bespoke search input, which is precisely what §8.8/S1 exists to stop.
+ * The component exposes `part="root|control|clear-button|start"`, so the fix
+ * belongs in inputs.css as one `::part()` block covering all mounts (P3-12).
+ */
+
+body[data-jp-theme-name^='Data4Now'] .jp-FileBrowser {
+  background: var(--d4n-color-surface-canvas);
+  color: var(--d4n-color-text-primary);
+  font-family: var(--d4n-font-family-ui);
+  font-size: var(--d4n-font-size-ui-sm);
+}
+
+/* Mounts for the two toolbars and the filter box. Core hand-picks 8px/12px/6px
+ * margins here; they collapse onto the spacing scale without moving anything
+ * more than 2px. */
+body[data-jp-theme-name^='Data4Now'] .jp-FileBrowser-toolbar.jp-Toolbar {
+  margin: var(--d4n-space-2) var(--d4n-space-3) var(--d4n-space-0);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-FileBrowser-filterToolbar.jp-Toolbar {
+  margin: var(--d4n-space-0) var(--d4n-space-3) var(--d4n-space-2);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-FileBrowser-filterBox {
+  padding: var(--d4n-space-0);
+}
+
+/* --- Breadcrumbs ----------------------------------------------------------- */
+
+/* The whole breadcrumb strip is a click target — clicking it swaps in the path
+ * editor — so core washes it on hover. Kept, retokened; without it the "you can
+ * type a path here" affordance has no visible cue at all. */
+body[data-jp-theme-name^='Data4Now'] .jp-BreadCrumbs {
+  margin: var(--d4n-space-2) var(--d4n-space-3);
+  color: var(--d4n-color-text-secondary);
+  font-size: var(--d4n-font-size-ui-sm);
+  border-radius: var(--d4n-radius-sm);
+}
+
+body[data-jp-theme-name^='Data4Now']
+  .jp-BreadCrumbs:hover:not(:has(.jp-BreadCrumbs-content:hover)) {
+  background: var(--d4n-color-surface-hover);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-BreadCrumbs-item {
+  padding: var(--d4n-space-0) var(--d4n-space-1);
+  border-radius: var(--d4n-radius-sm);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-BreadCrumbs-item:hover {
+  background: var(--d4n-color-surface-active);
+  color: var(--d4n-color-text-primary);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-BreadCrumbs-separator {
+  color: var(--d4n-color-text-muted);
+}
+
+/* Drop target on a crumb means "release here to move the file into that
+ * directory". Core signals it with `--jp-brand-color2` at `opacity: 0.7`, which
+ * fades the label along with the plate; the outline carries the signal here
+ * instead so the text stays at full contrast while being dragged over. */
+body[data-jp-theme-name^='Data4Now'] .jp-BreadCrumbs-item.jp-mod-dropTarget {
+  background: var(--d4n-color-selection-active);
+  outline: var(--d4n-border-width-thick) dashed var(--d4n-color-action-default);
+  outline-offset: calc(-1 * var(--d4n-border-width-thin));
+  opacity: 1;
+}
+
+/* The path editor and its suggestion list. `.jp-PathNavigator > input` is a
+ * plain text input with no `.jp-mod-styled` class, so inputs.css never sees it;
+ * it consumes the same `--d4n-input-*` component tokens rather than inventing a
+ * second text-field spec. */
+body[data-jp-theme-name^='Data4Now'] .jp-PathNavigator > input {
+  height: var(--d4n-input-height-compact);
+  padding: var(--d4n-space-0) var(--d4n-input-padding-x);
+  background: var(--d4n-input-bg);
+  color: var(--d4n-input-fg);
+  font-family: var(--d4n-font-family-ui);
+  font-size: var(--d4n-input-font-size);
+  border: var(--d4n-border-width-thin) solid var(--d4n-input-border);
+  border-radius: var(--d4n-input-radius);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-PathNavigator > input:focus {
+  background: var(--d4n-input-bg-active);
+  border-color: var(--d4n-input-border-active);
+}
+
+/* A floating list over content: overlay surface and elevation, same as a menu.
+ * Radius `md` rather than the menu's own token because this is not a menu and
+ * should not inherit menu geometry if that changes. */
+body[data-jp-theme-name^='Data4Now'] .jp-PathNavigator-suggestions {
+  padding: var(--d4n-space-1) var(--d4n-space-0);
+  background: var(--d4n-color-surface-overlay);
+  border: var(--d4n-border-width-thin) solid var(--d4n-color-border-subtle);
+  border-radius: var(--d4n-radius-md);
+  box-shadow: var(--d4n-elevation-3);
+}
+
+/* `:hover` and `.jp-mod-active` are one declaration block on purpose: the
+ * keyboard-highlighted suggestion and the pointed-at suggestion are the same
+ * state, and splitting them is how arrow-key navigation goes invisible (R12). */
+body[data-jp-theme-name^='Data4Now'] .jp-PathNavigator-suggestions > li {
+  min-height: var(--d4n-density-comfortable-row-height);
+  padding: var(--d4n-space-1) var(--d4n-space-2);
+  color: var(--d4n-color-text-primary);
+  font-size: var(--d4n-font-size-ui-sm);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-PathNavigator-suggestions > li:hover,
+body[data-jp-theme-name^='Data4Now']
+  .jp-PathNavigator-suggestions
+  > li.jp-mod-active {
+  background: var(--d4n-color-surface-hover);
+}
+
+/* --- Listing — column header ----------------------------------------------- */
+
+/* The column header is a header, not a toolbar: eyebrow type on the sunken
+ * surface, one hairline underneath. `box-shadow: none` removes core's
+ * `--jp-toolbar-box-shadow`, which draws a second, softer line directly under
+ * the border and reads as a rendering artefact at 1x. */
+body[data-jp-theme-name^='Data4Now'] .jp-DirListing-header {
+  background: var(--d4n-color-surface-sunken);
+  color: var(--d4n-color-text-muted);
+  border-top: var(--d4n-border-width-thin) solid var(--d4n-color-border-faint);
+  border-bottom: var(--d4n-border-width-thin) solid
+    var(--d4n-color-border-subtle);
+  box-shadow: none;
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-DirListing-headerItem {
+  padding: var(--d4n-space-1) var(--d4n-space-3);
+  font-size: var(--d4n-font-size-ui-xs);
+  font-weight: var(--d4n-font-weight-semibold);
+  letter-spacing: var(--d4n-font-letter-spacing-wide);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-DirListing-headerItem:hover {
+  background: var(--d4n-color-surface-hover);
+  color: var(--d4n-color-text-primary);
+}
+
+/* The sorted column. Core's only signal is `font-weight: 600`, which is a
+ * weight bump on text that is already semibold — invisible. The foreground
+ * moves to full-strength text as well, so the sort column is legible as the
+ * sort column without relying on the caret glyph alone (A7). */
+body[data-jp-theme-name^='Data4Now'] .jp-DirListing-headerItem.jp-mod-selected {
+  color: var(--d4n-color-text-strong);
+  font-weight: var(--d4n-font-weight-bold);
+}
+
+/* Column resize handle: a hairline that thickens to the accent while dragging.
+ * The `border` is core's hit-area padding, not a visible edge, so it is painted
+ * in the listing background rather than in a border colour. */
+body[data-jp-theme-name^='Data4Now'] .jp-DirListing-resizeHandle {
+  background: var(--d4n-color-border-default);
+  border-color: var(--d4n-color-surface-canvas);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-DirListing-resizeHandle:hover {
+  background: var(--d4n-color-border-strong);
+  border-color: var(--d4n-color-surface-canvas);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-DirListing-resizeHandle.jp-mod-active,
+body[data-jp-theme-name^='Data4Now']
+  .jp-DirListing-resizeHandle.jp-mod-active:hover {
+  background: var(--d4n-color-action-default);
+  border-color: var(--d4n-color-action-default);
+}
+
+/* --- Listing — rows -------------------------------------------------------- */
+
+body[data-jp-theme-name^='Data4Now'] .jp-DirListing-content {
+  background: var(--d4n-color-surface-canvas);
+}
+
+/* Row density comes from the density scale, not from a per-surface number, so
+ * the listing, the running panel and the palette are all the same height and a
+ * future compact mode moves all three together (D-009). Core's 4px vertical
+ * padding is dropped in favour of `min-height` + centring: padding-driven rows
+ * grow when a row happens to contain a taller glyph, and a listing whose rows
+ * are not all the same height is very visible when scrolling. */
+body[data-jp-theme-name^='Data4Now'] .jp-DirListing-item {
+  min-height: var(--d4n-density-comfortable-row-height);
+  padding: var(--d4n-space-0) var(--d4n-space-3);
+  color: var(--d4n-color-text-primary);
+  font-size: var(--d4n-font-size-ui-sm);
+}
+
+/* File-type icon column. Fixed width so names start on one vertical line
+ * regardless of glyph, with the glyph itself smaller than the column — the
+ * inset is what keeps a 20px column from reading as an icon strip. */
+body[data-jp-theme-name^='Data4Now'] .jp-DirListing-itemIcon {
+  flex: 0 0 var(--d4n-space-5);
+  margin-right: var(--d4n-space-2);
+  color: var(--d4n-color-text-secondary);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-DirListing-itemIcon > svg {
+  width: var(--d4n-toolbar-icon-size);
+  height: var(--d4n-toolbar-icon-size);
+}
+
+/* The three metadata columns are numeric and right-aligned upstream, so they
+ * take the muted ramp and drop back from the file name. Tabular figures keep
+ * the digits in a column rather than ragged. */
+body[data-jp-theme-name^='Data4Now'] .jp-DirListing-itemModified,
+body[data-jp-theme-name^='Data4Now'] .jp-DirListing-itemCreated,
+body[data-jp-theme-name^='Data4Now'] .jp-DirListing-itemFileSize {
+  color: var(--d4n-color-text-muted);
+  font-size: var(--d4n-font-size-ui-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+body[data-jp-theme-name^='Data4Now']
+  .jp-DirListing-item:hover:not(.jp-mod-selected) {
+  background: var(--d4n-color-surface-hover);
+}
+
+/* Selection: tinted plate + leading accent bar, text ramp unchanged. The bar is
+ * an inset box-shadow rather than a border so it costs no layout — a border
+ * would shift every selected row's content by its width. */
+body[data-jp-theme-name^='Data4Now'] .jp-DirListing-item.jp-mod-selected {
+  background: var(--d4n-color-selection-active);
+  color: var(--d4n-color-text-primary);
+  box-shadow: inset var(--d4n-border-width-thick) 0 0 0
+    var(--d4n-color-action-default);
+}
+
+/* A selected row in a panel that no longer has focus. Same shape, no accent —
+ * the accent is what says "this is where your next keystroke lands". */
+body[data-jp-theme-name^='Data4Now']
+  .jp-DirListing:not(:focus-within)
+  .jp-DirListing-item.jp-mod-selected {
+  background: var(--d4n-color-selection-inactive);
+  box-shadow: none;
+}
+
+/* Undo #1 — the filter `<mark>`. Weight and a stronger foreground, no tint: a
+ * filtered listing can have a mark on every visible row, and a background tint
+ * repeated twenty times down a 200px column is noise, not emphasis. Weight
+ * alone also means the highlight is not colour-only (A7). */
+body[data-jp-theme-name^='Data4Now'] .jp-DirListing-content mark,
+body[data-jp-theme-name^='Data4Now']
+  .jp-DirListing-content
+  .jp-DirListing-item.jp-mod-selected
+  mark {
+  background: transparent;
+  color: var(--d4n-color-text-strong);
+  font-weight: var(--d4n-font-weight-bold);
+}
+
+/* Undo #2 — the "kernel running" dot. Core inverts it to white on the selected
+ * row; on a tinted plate that is invisible, so both states are the success
+ * colour. */
+body[data-jp-theme-name^='Data4Now']
+  .jp-DirListing-item.jp-mod-running
+  .jp-DirListing-itemIcon::before,
+body[data-jp-theme-name^='Data4Now']
+  .jp-DirListing-item.jp-mod-running.jp-mod-selected
+  .jp-DirListing-itemIcon::before {
+  color: var(--d4n-color-success-default);
+}
+
+/* Undo #3 — the focus ring. Core sets `outline-color: var(--jp-layout-color1)`
+ * on a focused selected row so a light ring shows against the brand fill. Our
+ * plate is light already, so that ring disappears into it; the ring returns to
+ * the one focus colour focus.css owns. */
+body[data-jp-theme-name^='Data4Now']
+  .jp-DirListing-item.jp-mod-selected:focus-within {
+  outline-color: var(--d4n-focus-ring-color);
+}
+
+/* Inline rename editor — same component tokens as any other text field. */
+body[data-jp-theme-name^='Data4Now'] .jp-DirListing-editor {
+  background: var(--d4n-input-bg-active);
+  color: var(--d4n-input-fg);
+  font-family: var(--d4n-font-family-ui);
+  font-size: var(--d4n-input-font-size);
+}
+
+/* --- Drag and drop --------------------------------------------------------- */
+
+/* Two different drops, two different signals, and they are easy to confuse:
+ *   - `.jp-mod-dropTarget` on a ROW — dropping into that directory.
+ *   - `.jp-mod-native-drop` on the LISTING — an OS file drag, i.e. an upload
+ *     into the current directory.
+ * The row gets a plate, the listing gets a dashed border around the whole
+ * region, so "into this folder" and "into here" never look alike. */
+body[data-jp-theme-name^='Data4Now'] .jp-DirListing-item.jp-mod-dropTarget {
+  background: var(--d4n-color-selection-active);
+  box-shadow: inset 0 0 0 var(--d4n-border-width-thick)
+    var(--d4n-color-action-default);
+}
+
+body[data-jp-theme-name^='Data4Now']
+  .jp-DirListing.jp-mod-native-drop
+  .jp-DirListing-content {
+  outline: var(--d4n-border-width-thick) dashed var(--d4n-color-action-default);
+  outline-offset: calc(-1 * var(--d4n-space-2));
+  background: var(--d4n-color-action-faint);
+}
+
+/* The chip that follows the cursor while dragging rows. It floats over the
+ * application, so it takes overlay surface and elevation like any other
+ * floating object; core gives it `--jp-ui-inverse-font-color2` as a background,
+ * which is a foreground token used as a surface. */
+body[data-jp-theme-name^='Data4Now'] .jp-DirListing-item.lm-mod-drag-image,
+body[data-jp-theme-name^='Data4Now']
+  .jp-DirListing-item.jp-mod-selected.lm-mod-drag-image {
+  padding: var(--d4n-space-1) var(--d4n-space-2);
+  background: var(--d4n-color-surface-overlay);
+  color: var(--d4n-color-text-primary);
+  font-size: var(--d4n-font-size-ui-sm);
+  border: var(--d4n-border-width-thin) solid var(--d4n-color-border-subtle);
+  border-radius: var(--d4n-radius-sm);
+  box-shadow: var(--d4n-elevation-2);
+}
+
+/* --- Empty state (PRD §6.7) ------------------------------------------------ */
+
+/* An empty directory currently renders as a blank rectangle with a column
+ * header floating above it, which reads as "still loading" rather than "there
+ * is nothing here". One line of muted text is enough to tell those apart.
+ *
+ * Two things this deliberately does NOT do:
+ *
+ *   - It does not name the folder or offer an action. `content` cannot hold a
+ *     variable, and a CSS-generated string is not translatable — anything
+ *     longer or more specific than this belongs in the widget, not here
+ *     (see the report against P2-06).
+ *   - It does not distinguish "empty folder" from "filter matched nothing".
+ *     `DirListing` re-renders the same empty `<ul>` for both and puts no class
+ *     on the host to tell them apart, so a message claiming the folder is empty
+ *     would be a lie half the time. The copy is true in both cases. */
+body[data-jp-theme-name^='Data4Now'] .jp-DirListing-content:empty::after {
+  content: 'Nothing to show here';
+  display: block;
+  padding: var(--d4n-space-6) var(--d4n-space-3);
+  color: var(--d4n-color-text-muted);
+  font-family: var(--d4n-font-family-ui);
+  font-size: var(--d4n-font-size-ui-sm);
+  text-align: center;
+}

@@ -1,0 +1,284 @@
+/* SURFACE: command palette (PRD §6.2, §8.8, §6.7)
+ *
+ * Upstream selectors verified against:
+ *   @lumino/widgets       2.9.0  style/commandpalette.css
+ *   @jupyterlab/apputils  4.7.3  style/commandpalette.css
+ *   (declared ranges: @lumino/* ^2.0.0, @jupyterlab/* ^4.5.0)
+ *
+ * Every selector is mirrored in ../selectors.json (PRD §7.4(5)).
+ *
+ * THIS FILE MUST BE IMPORTED AFTER inputs.css
+ *
+ * `.lm-CommandPalette-input` is one of the four plain-DOM mounts of the §8.8
+ * base input, and inputs.css already gives it its height, surface, border,
+ * radius and placeholder. Nothing here re-specifies any of that. What is left
+ * for this file is the SHAPE OF THE MOUNT: core wraps the input in a
+ * `.lm-CommandPalette-wrapper` that draws its own 30px-tall inset-shadow
+ * "border" and its own background, so without stripping that wrapper the base
+ * input renders inside a second, differently sized field.
+ *
+ * The one property this file does restate is `padding-right`, to clear the
+ * search glyph. inputs.css sets `padding` as a shorthand, so the two rules tie
+ * on specificity and source order decides — hence the import-order requirement
+ * above rather than an `!important`.
+ *
+ * WHAT "MATCH HIGHLIGHT" IS HERE, AND WHY IT IS NOT THE SEARCH TINT
+ *
+ * The `--d4n-color-search-*-match-*` tokens are for matches inside a DOCUMENT,
+ * where a handful of hits sit in a page of unrelated text. A palette is the
+ * opposite: after two keystrokes every visible row carries a `<mark>`, and a
+ * tinted background repeated down the whole list is stripe noise that also
+ * collides with the selected row's plate. Weight plus the strong end of the
+ * text ramp is the treatment, and being weight-led it is not colour-only (A7).
+ * The file browser's filter marks are styled the same way for the same reason.
+ */
+
+/* The modal palette floats over the whole application, so it is an overlay in
+ * the same family as a dialog or a menu: overlay surface, `elevation.3`, a
+ * subtle hairline. `top` is pinned to the top panel height rather than core's
+ * bare 38px so the palette hangs off the bottom edge of the chrome instead of
+ * near it — the two are the same number today only by coincidence. */
+body[data-jp-theme-name^='Data4Now']
+  .jp-ModalCommandPalette.jp-ThemedContainer {
+  top: var(--d4n-top-panel-height);
+  padding: var(--d4n-space-1);
+  background: var(--d4n-color-surface-overlay);
+  border: var(--d4n-border-width-thin) solid var(--d4n-color-border-subtle);
+  border-radius: var(--d4n-radius-lg);
+  box-shadow: var(--d4n-elevation-3);
+}
+
+body[data-jp-theme-name^='Data4Now'] .lm-CommandPalette {
+  background: transparent;
+  color: var(--d4n-color-text-primary);
+  font-family: var(--d4n-font-family-ui);
+  font-size: var(--d4n-font-size-ui-sm);
+}
+
+body[data-jp-theme-name^='Data4Now'] .lm-CommandPalette-content {
+  background: transparent;
+}
+
+/* --- Search row ------------------------------------------------------------ */
+
+body[data-jp-theme-name^='Data4Now'] .lm-CommandPalette-search {
+  padding: var(--d4n-space-1);
+  background: transparent;
+}
+
+/* Strip the wrapper back to a positioning context. Every declaration here is
+ * removing something core draws, not adding anything:
+ *   `height`        — core's 30px, which fights the base input's 28px;
+ *   `background`    — core's `--jp-input-active-background`, a second field;
+ *   `box-shadow`    — core's inset border, a second outline;
+ *   `padding`       — core's 9px side inset, which pushes the input off-centre;
+ *   `overflow`      — core's `overlay`, which clips the input's focus ring. */
+body[data-jp-theme-name^='Data4Now'] .lm-CommandPalette-wrapper {
+  position: relative;
+  height: auto;
+  padding: var(--d4n-space-0);
+  background-color: transparent;
+  box-shadow: none;
+  overflow: visible;
+}
+
+/* Core keys the focus treatment off `.lm-mod-focused` on the palette and draws
+ * a doubled inset shadow on the wrapper. The input's own `:focus` styling in
+ * inputs.css plus the ring from focus.css already cover it, and leaving both in
+ * place produces a ring inside a ring. */
+body[data-jp-theme-name^='Data4Now']
+  .lm-CommandPalette.lm-mod-focused
+  .lm-CommandPalette-wrapper {
+  box-shadow: none;
+}
+
+/* `float: left` is core's; it takes the input out of flow so the wrapper
+ * collapses and the glyph lands in the wrong place once the wrapper is no
+ * longer a fixed 30px box. */
+body[data-jp-theme-name^='Data4Now'] .lm-CommandPalette-input {
+  display: block;
+  float: none;
+  width: 100%;
+  padding-right: calc(var(--d4n-input-icon-size) + var(--d4n-space-3));
+}
+
+/* The search glyph. Core sets `color: white` on the group and then repairs it
+ * with an `--jp-inverse-layout-color3` fill on the icon class — two rules that
+ * disagree, of which only the second is visible. One muted foreground replaces
+ * both, and the icon inherits it via `currentColor`. */
+body[data-jp-theme-name^='Data4Now'] .jp-SearchIconGroup {
+  top: var(--d4n-space-1);
+  right: var(--d4n-space-1);
+  padding: var(--d4n-space-1);
+  color: var(--d4n-color-text-muted);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-SearchIconGroup svg {
+  width: var(--d4n-input-icon-size);
+  height: var(--d4n-input-icon-size);
+}
+
+/* --- Category headers ------------------------------------------------------ */
+
+/* Categories are section labels inside a scrolling list, so they take the same
+ * eyebrow treatment as a sidebar panel header — uppercase, tracked out, muted,
+ * one size below body. Core already uppercases them; the letter-spacing moves
+ * from a bare 1px onto the eyebrow tracking token so all the eyebrows in the
+ * application track identically. */
+body[data-jp-theme-name^='Data4Now'] .lm-CommandPalette-header {
+  align-items: center;
+  min-height: var(--d4n-density-comfortable-row-height);
+  padding: var(--d4n-space-2) var(--d4n-space-2) var(--d4n-space-1);
+  margin-top: var(--d4n-space-2);
+  color: var(--d4n-color-text-muted);
+  font-size: var(--d4n-font-size-ui-xs);
+  font-weight: var(--d4n-font-weight-semibold);
+  letter-spacing: var(--d4n-font-letter-spacing-eyebrow);
+  border-bottom: var(--d4n-border-width-thin) solid
+    var(--d4n-color-border-faint);
+}
+
+/* A header is clickable — it filters to its category — so it has a keyboard
+ * active state as well as a pointer one. `.lm-mod-active` is Lumino's KEYBOARD
+ * highlight, not `:hover` and not `:focus`; the two are written as one
+ * declaration block so they cannot drift apart (M1, R12). */
+body[data-jp-theme-name^='Data4Now'] .lm-CommandPalette-header:hover,
+body[data-jp-theme-name^='Data4Now'] .lm-CommandPalette-header.lm-mod-active {
+  background: var(--d4n-color-surface-hover);
+  color: var(--d4n-color-text-primary);
+}
+
+body[data-jp-theme-name^='Data4Now'] .lm-CommandPalette-header > mark {
+  background: transparent;
+  color: var(--d4n-color-text-strong);
+  font-weight: var(--d4n-font-weight-bold);
+}
+
+/* --- Result rows ----------------------------------------------------------- */
+
+/* Same density token as the file browser listing and the running panel (D-009).
+ * The row is a flex line upstream with a stray 12px right / 4px left padding;
+ * it becomes symmetric so the keybinding chip on the right and the icon on the
+ * left have equal margins. */
+body[data-jp-theme-name^='Data4Now'] .lm-CommandPalette-item {
+  align-items: center;
+  gap: var(--d4n-space-2);
+  min-height: var(--d4n-density-comfortable-row-height);
+  padding: var(--d4n-space-0) var(--d4n-space-2);
+  color: var(--d4n-color-text-primary);
+  font-size: var(--d4n-font-size-ui-sm);
+  border-radius: var(--d4n-radius-sm);
+}
+
+/* `.lm-mod-active` is the row Enter will run. It is the palette's selection —
+ * arrow keys move it and the pointer does not — so it gets the plate-plus-accent
+ * treatment used for a selected file browser row, and it is deliberately
+ * STRONGER than hover rather than identical to it: in a list where the pointer
+ * and the keyboard address different rows at the same time, giving both the
+ * same treatment leaves the user unable to tell which one Enter will fire. */
+body[data-jp-theme-name^='Data4Now'] .lm-CommandPalette-item.lm-mod-active,
+body[data-jp-theme-name^='Data4Now']
+  .lm-CommandPalette-item.lm-mod-active:hover:not(.lm-mod-disabled) {
+  background: var(--d4n-color-selection-active);
+  color: var(--d4n-color-text-primary);
+  box-shadow: inset var(--d4n-border-width-thick) 0 0 0
+    var(--d4n-color-action-default);
+}
+
+body[data-jp-theme-name^='Data4Now']
+  .lm-CommandPalette-item:hover:not(.lm-mod-active, .lm-mod-disabled) {
+  background: var(--d4n-color-surface-hover);
+}
+
+body[data-jp-theme-name^='Data4Now'] .lm-CommandPalette-item.lm-mod-disabled {
+  color: var(--d4n-color-text-muted);
+}
+
+/* Core inverts the label mark on the active row to survive a brand-filled
+ * selection. The selection here is a tinted plate that the text ramp still
+ * reads against, so both states take the same mark treatment — see the header
+ * note on why it is weight-led rather than tinted. */
+body[data-jp-theme-name^='Data4Now'] .lm-CommandPalette-itemLabel > mark,
+body[data-jp-theme-name^='Data4Now']
+  .lm-CommandPalette-item.lm-mod-active
+  .lm-CommandPalette-itemLabel
+  > mark {
+  background: transparent;
+  color: var(--d4n-color-text-strong);
+  font-weight: var(--d4n-font-weight-bold);
+}
+
+body[data-jp-theme-name^='Data4Now']
+  .lm-CommandPalette-item.lm-mod-disabled
+  mark {
+  color: var(--d4n-color-text-muted);
+}
+
+body[data-jp-theme-name^='Data4Now']
+  .lm-CommandPalette-item
+  .lm-CommandPalette-itemIcon {
+  width: var(--d4n-toolbar-icon-size);
+  height: var(--d4n-toolbar-icon-size);
+  margin: var(--d4n-space-0);
+  top: var(--d4n-space-0);
+  color: var(--d4n-color-text-secondary);
+}
+
+/* --- Keybinding chips ------------------------------------------------------ */
+
+/* A chip, not plain text: the shortcut is a key to press, and giving it a
+ * bordered mono plate is what separates "Ctrl Shift C" from the end of the
+ * command's label. Mono because the glyphs are read individually, and tabular
+ * so a column of chips does not shimmer.
+ *
+ * `:empty` is not defensive tidying — Lumino renders the element on EVERY row
+ * whether or not the command has a binding, and most do not. Without the
+ * `:empty` rule the majority of rows carry a 2px-wide bordered box floating at
+ * their right edge. */
+body[data-jp-theme-name^='Data4Now']
+  .lm-CommandPalette-item
+  .lm-CommandPalette-itemShortcut {
+  margin-left: auto;
+  padding: var(--d4n-space-0) var(--d4n-space-1);
+  background: var(--d4n-color-surface-sunken);
+  color: var(--d4n-color-text-muted);
+  font-family: var(--d4n-font-family-mono);
+  font-size: var(--d4n-font-size-ui-xs);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  border: var(--d4n-border-width-thin) solid var(--d4n-color-border-faint);
+  border-radius: var(--d4n-radius-sm);
+}
+
+body[data-jp-theme-name^='Data4Now']
+  .lm-CommandPalette-item
+  .lm-CommandPalette-itemShortcut:empty {
+  display: none;
+}
+
+/* --- No-results state (PRD §6.7) ------------------------------------------- */
+
+/* There are two candidate hooks here and only one of them can ever fire.
+ *
+ * `.lm-CommandPalette-content:empty::after { content: 'No results' }` in
+ * @jupyterlab/apputils 4.7.3 is the obvious one, and it is dead: Lumino 2.9's
+ * `renderEmptyMessage` always appends an `<li class="lm-CommandPalette-emptyMessage">`
+ * when a query matches nothing, so `.lm-CommandPalette-content` is never
+ * `:empty` and the pseudo-element never renders. Verified in the browser —
+ * the node is there, and the generated content computes to `none`. Styling it
+ * would have looked correct in review and shipped a no-results state nobody
+ * would ever see, which is the same failure mode selectors.json exists to
+ * catch, so it is deliberately not styled.
+ *
+ * The live state is the `<li>`, and its copy is already the specific version
+ * §6.7 asks for — Lumino formats it as "No commands found that match '<query>'",
+ * naming what was searched. That is better than anything a `content` string
+ * could say, so this rule is typography only and invents no copy. */
+body[data-jp-theme-name^='Data4Now'] .lm-CommandPalette-emptyMessage {
+  margin-top: var(--d4n-space-6);
+  padding: var(--d4n-space-0) var(--d4n-space-3);
+  color: var(--d4n-color-text-muted);
+  font-size: var(--d4n-font-size-ui-sm);
+  line-height: var(--d4n-font-line-height-normal);
+  text-align: center;
+}
