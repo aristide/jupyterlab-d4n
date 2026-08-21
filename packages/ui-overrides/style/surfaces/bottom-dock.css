@@ -1,0 +1,144 @@
+/* SURFACE: the bottom dock area, JupyterLab's `'down'` shell area (PRD §8.5.3)
+ *
+ * Upstream selectors verified against:
+ *   @jupyterlab/application  4.6.3  style/core.css, style/tabs.css
+ *                                   lib/shell.js (`#jp-down-stack` is a TabPanel)
+ *   @lumino/widgets          2.9.0  style/tabpanel.css, style/splitpanel.css
+ *   (declared ranges: @jupyterlab/* ^4.5.0, @lumino/* ^2.0.0)
+ *
+ * Every selector is mirrored in ../selectors.json (PRD §7.4(5)).
+ *
+ * WHAT THIS AREA ACTUALLY IS
+ *
+ * `#jp-down-stack` is a Lumino `TabPanel` — not a `DockPanel` — sitting as the
+ * second child of the vertical `#jp-main-vsplit-panel`, with the main dock as
+ * the first. Core ships it with exactly one declaration (a bottom border in
+ * `core.css`), so everything below is net-new rather than a restyle.
+ *
+ * Three consequences follow from "TabPanel, not DockPanel", and each one is a
+ * rule core does not have:
+ *
+ *   1. Core's active-tab accent (`tabs.css` L110) is written against
+ *      `.lm-DockPanel-tabBar … .jp-mod-current::before`. A TabPanel tab bar
+ *      never matches it, and `jp-mod-current` is never applied down here in the
+ *      first place — LabShell only tracks it for the main area. The indicator
+ *      is therefore built from scratch, and it hangs off `.lm-mod-current`,
+ *      which is Lumino's per-tab-bar current tab. Exactly one tab bar exists in
+ *      this area, so per-bar and per-app current are the same tab.
+ *
+ *   2. Core caps the TabPanel tab bar at 26px
+ *      (`.lm-TabPanel-tabBar[data-orientation='horizontal']`, `tabs.css` L28).
+ *      That number is what Lumino reads back as the area's minimum height, so
+ *      it — not the tab's own `min-height` from tab-bar.css — decides how far
+ *      the area can collapse and how tall the bar renders. It has to be raised
+ *      here or the 32px tab from tab-bar.css is simply clipped.
+ *
+ *   3. The area's height is owned by the split panel, which writes an inline
+ *      `height` on this node. `--d4n-bottom-dock-default-height` (240px) cannot
+ *      be applied from CSS for that reason; see the note on the collapse floor
+ *      below for what CSS *can* guarantee.
+ */
+
+/* Background and the top border, which is the seam against the main dock.
+ * Core draws a border on the *bottom* edge instead, between the dock and the
+ * status bar, where the status bar's own top border already separates them —
+ * so it is turned off rather than doubled. */
+body[data-jp-theme-name^='Data4Now'] #jp-down-stack {
+  background: var(--d4n-bottom-dock-bg);
+  border-top: var(--d4n-border-width-thin) solid var(--d4n-bottom-dock-border);
+  border-bottom: none;
+}
+
+/* NEVER AN EMPTY BOTTOM BAR (PRD §8.5.3, empty state).
+ *
+ * `LabShell._onTabPanelChanged` already hides this panel when its last widget
+ * is removed, and hides it at boot, so in a healthy build this rule never
+ * fires. It is here as an assertion, not as the mechanism: an empty tab bar
+ * pinned to the bottom of the window is a 33px strip of chrome that offers
+ * nothing and cannot be dismissed, and it is the exact failure mode that
+ * appears if a future shell change loses one of those two hide calls.
+ *
+ * `:has()` is the only way to say it in CSS. The id gives this enough
+ * specificity to beat anything short of Lumino's `!important` hide, which is
+ * the one rule that should still win. */
+body[data-jp-theme-name^='Data4Now']
+  #jp-down-stack:has(> .lm-TabBar > .lm-TabBar-content:empty) {
+  display: none;
+}
+
+/* --- Tab bar --------------------------------------------------------------- */
+
+/* THE COLLAPSE FLOOR.
+ *
+ * `--d4n-bottom-dock-collapsed-height` (32px) is set on the BAR, not on
+ * `#jp-down-stack`, because Lumino writes the area's `min-height` inline from
+ * its children's measured limits — a stylesheet rule on the area itself is
+ * overridden the moment the panel fits. Raising the bar's floor is what
+ * actually reaches the layout: the area then reports 33px (32 + this file's top
+ * border) as its minimum, so dragging the resize handle all the way down leaves
+ * the tab bar and nothing else, which is the collapsed state §8.5.3 asks for.
+ *
+ * It is also the same 32px as `--d4n-tab-height`, so the tab that tab-bar.css
+ * sizes fits the bar it sits in instead of being clipped by core's 26px cap. */
+body[data-jp-theme-name^='Data4Now']
+  #jp-down-stack
+  > .lm-TabPanel-tabBar[data-orientation='horizontal'] {
+  min-height: var(--d4n-bottom-dock-collapsed-height);
+}
+
+/* Surface, tab plate, hover and current-tab fill all come from tab-bar.css,
+ * which specs `.lm-TabPanel-tabBar` alongside the main dock's bar — §8.5.3 asks
+ * for "the same `.lm-TabBar` spec as the main dock", and the cheapest way to be
+ * the same as something is to not restate it. Only the accent below is added.
+ *
+ * TOP EDGE, AND IT HAS TO BE INSIDE THE TAB.
+ *
+ * The accent is inset to the tab's padding box — `top/left/right: 0`, not the
+ * negative border-width offsets that would let it sit over the tab's own
+ * border. Lumino writes `contain: strict` inline on every widget node,
+ * including this tab bar, and paint containment clips to the padding box: an
+ * indicator drawn one pixel above the tab is one pixel above the BAR too, so it
+ * is simply not painted. That failure is silent and it looks exactly like a
+ * missing rule — the computed style still reports the right colour and the
+ * right 2px height. Verified by pixel, not by `getComputedStyle`.
+ *
+ * Core lands in the same place for the main dock by a different route: its
+ * `top: calc(-1 * var(--jp-border-width) + 1px)` cancels to zero. Same result,
+ * so "the same spec as the main dock" holds. */
+body[data-jp-theme-name^='Data4Now']
+  #jp-down-stack
+  .lm-TabBar-tab.lm-mod-current::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: var(--d4n-tab-indicator-width);
+  background: var(--d4n-tab-indicator);
+}
+
+/* --- Resize handle --------------------------------------------------------- */
+
+/* The bottom dock's resize handle is the vertical handle of
+ * `#jp-main-vsplit-panel`. tab-bar.css already draws every vertical split
+ * handle as an 8px hit target over a 1px `color.border.subtle` line, and this
+ * handle is one of them, so the visible line is deliberately NOT restated here:
+ * one painted pixel, one rule.
+ *
+ * Two things are specific to this handle. §8.5.3 gives the bottom dock its own
+ * hit-area knob, so the hit target is re-declared from that token — same 8px
+ * today, but a design change to the bottom dock moves this handle and not the
+ * sidebar splits. And Lumino ships `ns-resize` here, which is the "move this
+ * thing up and down" cursor; `row-resize` is the "resize the row below" cursor,
+ * and it is what §8.5.3 names. */
+body[data-jp-theme-name^='Data4Now']
+  #jp-main-vsplit-panel
+  > .lm-SplitPanel-handle {
+  cursor: row-resize;
+}
+
+body[data-jp-theme-name^='Data4Now']
+  #jp-main-vsplit-panel
+  > .lm-SplitPanel-handle::after {
+  min-height: var(--d4n-bottom-dock-resize-handle-hit);
+}
