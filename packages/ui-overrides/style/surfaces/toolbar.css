@@ -1,0 +1,147 @@
+/* SURFACE: toolbar chrome (PRD §8.1 "Toolbar variant", §8.10.4)
+ *
+ * Upstream selectors verified against:
+ *   @jupyterlab/ui-components  4.6.3  style/toolbar.css, style/sidepanel.css
+ *   @jupyterlab/apputils       4.7.3  style/toolbar.css
+ *   @jupyterlab/notebook       4.6.3  style/toolbar.css
+ *   (declared range: ^4.5.0)
+ *
+ * Every selector is mirrored in ../selectors.json (PRD §7.4(5)).
+ *
+ * WHERE THE LINE BETWEEN THIS FILE AND buttons.css FALLS
+ *
+ *   toolbar.css   the bar itself — plate, bottom edge, item gap — plus the
+ *                 GEOMETRY of the button well (24px square, radius.sm), the
+ *                 separator and the micro variant.
+ *   buttons.css   the button's COLOUR and states — ghost at rest, the hover
+ *                 and active washes, disabled, and the New Launcher button
+ *                 that core paints as a primary button.
+ *
+ * Geometry and colour are split rather than kept together because the same
+ * 24px well is drawn on two different plates: the canvas toolbars (notebook,
+ * file browser, side panels) and the navy frame (`#jp-top-panel`, styled in
+ * top-panel.css, D-007). The size is the same on both; the wash is not.
+ *
+ * NOTHING HERE STATES A FOREGROUND COLOUR.
+ *
+ * A toolbar is one of the few surfaces that appears on both plates, so a
+ * literal `color` would be wrong on one of them by construction. The plate
+ * rule below inherits instead, and the icon fills follow `currentColor`, so a
+ * toolbar lands correctly wherever it is mounted: on canvas it picks up the
+ * text ramp from `body.jp-ThemedContainer`, and inside `#jp-top-panel` it
+ * picks up the chrome ramp that file sets one level up.
+ *
+ * WHY THE PLATE RULE IS GATED WITH `:where()`
+ *
+ * `:where()` contributes zero specificity, so
+ * `:where(body[data-jp-theme-name^='Data4Now']) .jp-Toolbar` weighs exactly
+ * what core's own `.jp-Toolbar` weighs — it replaces that rule on source order
+ * and nothing else. That matters because SIX upstream rules deliberately opt a
+ * toolbar OUT of the plate, and every one of them is a single extra class:
+ *
+ *   .jp-FileBrowser-toolbar.jp-Toolbar          no border, own margins
+ *   .jp-FileBrowser-filterToolbar.jp-Toolbar    same
+ *   .lm-AccordionPanel .jp-AccordionPanel-toolbar   transparent, no border
+ *   .jp-InlineCompleter > .jp-Toolbar           transparent, no border
+ *   .jp-cell-toolbar                            floats over the cell
+ *   #jp-main-dock-panel[data-mode='single-document'] … .jp-Toolbar
+ *
+ * Written with the ordinary `body[…]` gate, the rule would weigh (0,3,1) and
+ * silently win all six — a hairline under the floating cell toolbar, a white
+ * slab inside the inline completer, a second border across the file browser.
+ * Gated with `:where()` it wins only where core's base rule was winning, which
+ * is precisely the set of toolbars that are meant to be plates.
+ *
+ * `.jp-cell-toolbar` is excluded explicitly on top of that, because it opts
+ * out at (0,1,0) — a tie with the base rule that source order would hand to
+ * us. The exclusion is itself wrapped in `:where()` so it costs nothing and
+ * the rule stays at (0,1,0).
+ *
+ * If the tie ever flipped the other way — a build that emitted our CSS before
+ * core's — nothing would break: core's own rule resolves `--jp-toolbar-*`
+ * through the Tier-4 adapter to the same three tokens named here.
+ */
+
+:where(body[data-jp-theme-name^='Data4Now'])
+  .jp-Toolbar:not(:where(.jp-cell-toolbar)) {
+  color: inherit;
+  background: var(--d4n-toolbar-bg);
+  border-bottom: var(--d4n-border-width-thin) solid var(--d4n-toolbar-border);
+}
+
+/* The one thing the Tier-4 adapter cannot carry. `<jp-toolbar>` lays its
+ * children out inside a shadow root and exposes `--toolbar-item-gap` as the
+ * only handle on the spacing between them; core sets it to 0, which is what
+ * makes a stock toolbar read as one undifferentiated run of glyphs. */
+body[data-jp-theme-name^='Data4Now'] .jp-Toolbar {
+  --toolbar-item-gap: var(--d4n-toolbar-gap);
+}
+
+/* THE BUTTON WELL
+ *
+ * `ToolbarButtonComponent` renders `<jp-button appearance="stealth">` from
+ * `@jupyter/react-components` — a custom element whose real control lives in a
+ * shadow root. Sizing the host does nothing to the control; `::part(control)`
+ * is the element's declared styling hook and is what core itself reaches for
+ * (`.jp-ToolbarButtonComponent::part(control):focus-visible`), so it is what
+ * is used here.
+ *
+ * `min-width` rather than `width` so a button that carries a label (Run,
+ * Restart Kernel) still grows to fit its text while an icon-only button stays
+ * square at the PRD's 24px. */
+body[data-jp-theme-name^='Data4Now'] .jp-ToolbarButtonComponent::part(control) {
+  min-width: var(--d4n-toolbar-button-size);
+  height: var(--d4n-toolbar-button-size);
+  border-radius: var(--d4n-toolbar-button-radius);
+}
+
+/* The plain-DOM path. Core marks `button.jp-ToolbarButtonComponent`
+ * deprecated, but third-party toolbar items still render it and it is cheaper
+ * to style than to shim (§10.4). No shadow root, so the geometry lands on the
+ * element itself. */
+body[data-jp-theme-name^='Data4Now'] button.jp-ToolbarButtonComponent {
+  min-width: var(--d4n-toolbar-button-size);
+  height: var(--d4n-toolbar-button-size);
+  border-radius: var(--d4n-toolbar-button-radius);
+}
+
+/* THE SEPARATOR
+ *
+ * The vertical hairline that breaks a long toolbar into groups — file actions,
+ * then run actions, then the cell-type selector — as drawn in the imported
+ * mockup (`.jp-tb-sep`).
+ *
+ * JupyterLab 4.6 has no separator item: `Toolbar` ships a spacer and nothing
+ * else, and `jupyter.lab.toolbars` cannot name one. This rule is therefore the
+ * receiving end of TODO P2-12 (declarative toolbar restructuring), which is
+ * where the item that carries the class gets added; it is inert until then and
+ * is marked `optional` in selectors.json for that reason. It is stated now so
+ * that the grouping arrives with the restructuring rather than after it.
+ *
+ * Height is the icon size rather than the mockup's 18px: a rule as tall as the
+ * glyphs it sits between reads as part of the same row, and 18px is not on any
+ * scale (D-012 makes the same argument about radius). */
+body[data-jp-theme-name^='Data4Now'] .jp-Toolbar .jp-Toolbar-separator {
+  flex: 0 0 auto;
+  align-self: center;
+  width: var(--d4n-border-width-thin);
+  height: var(--d4n-toolbar-icon-size);
+  margin: var(--d4n-space-0) var(--d4n-space-1);
+  background: var(--d4n-toolbar-border);
+}
+
+/* THE MICRO VARIANT
+ *
+ * `Toolbar` adds `jp-Toolbar-micro` to itself the moment its last visible item
+ * is removed, which is the state every output-area and simple-document toolbar
+ * boots into. Core keeps the plate on it and only collapses the height, so an
+ * empty toolbar still draws its background and its bottom border — a hairline
+ * across the top of an output with nothing above it.
+ *
+ * Height is left to core: `--jp-toolbar-micro-height` is already a Tier-4 row
+ * (`space.2`), and restating it here would be the same number twice. */
+body[data-jp-theme-name^='Data4Now'] .jp-Toolbar.jp-Toolbar-micro {
+  background: transparent;
+  border-bottom: none;
+  box-shadow: none;
+}

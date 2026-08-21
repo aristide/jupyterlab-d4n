@@ -149,21 +149,59 @@ body[data-jp-theme-name^='Data4Now'] .jp-Button.jp-mod-minimal:hover {
 
 /* TOOLBAR VARIANT
  *
+ * The bar, the button well's geometry, the separator and the micro variant are
+ * in toolbar.css. What is here is the variant: a toolbar button is a GHOST
+ * button (PRD §8.1 "Toolbar variant: ghost, 24px, 4px radius, active state
+ * uses --jp-toolbar-active-background"), so this section is its colour and its
+ * four states and nothing else.
+ *
  * `ToolbarButtonComponent` renders `<jp-button appearance="stealth">` from
  * `@jupyter/react-components` — a custom element whose real control lives in a
- * shadow root. A `background` on the host paints BEHIND that control and is
- * invisible. `::part(control)` is the element's declared styling hook and is
- * what core itself uses for the focus ring, so it is what is used here.
+ * shadow root. The state washes go on `::part(control)`, the element's
+ * declared styling hook and the one core itself uses for the focus ring; the
+ * host is cleared separately below, because a background there paints BEHIND
+ * the control and shows around it.
  *
- * The bare `button.jp-ToolbarButtonComponent` rules that follow cover the
+ * The bare `button.jp-ToolbarButtonComponent` rules at the end cover the
  * plain-DOM path: core marks it deprecated, but third-party toolbar items still
  * render it and it is cheaper to style than to shim (§10.4).
  */
-body[data-jp-theme-name^='Data4Now'] .jp-ToolbarButtonComponent::part(control) {
-  min-width: var(--d4n-toolbar-button-size);
-  height: var(--d4n-toolbar-button-size);
+
+/* The host. Two upstream rules paint it and both have to be answered here
+ * rather than on the part:
+ *
+ *   .jp-FileBrowser-toolbar .jp-ToolbarButtonComponent[data-command='launcher:create']
+ *       (@jupyterlab/filebrowser-extension) — see the block below;
+ *   button.jp-ToolbarButtonComponent { background: var(--jp-layout-color1) }
+ *       (@jupyterlab/ui-components 4.6.3 style/toolbar.css) — the deprecated
+ *       path, answered at the end.
+ *
+ * `.jp-Toolbar` is in the selector only to carry specificity past the first of
+ * those (three compound selectors, no element); the descendant scope is not
+ * meant to be meaningful, since a toolbar button outside a toolbar has no
+ * defined appearance anyway. */
+body[data-jp-theme-name^='Data4Now'] .jp-Toolbar .jp-ToolbarButtonComponent {
   background: var(--d4n-button-ghost-bg);
-  border-radius: var(--d4n-toolbar-button-radius);
+}
+
+/* The glyph follows the surrounding foreground rather than a ramp chosen here.
+ * Core pins it: `.jp-Toolbar .jp-ToolbarButtonComponent { color:
+ * var(--jp-ui-font-color1) }` is the canvas text ramp, which is correct over a
+ * notebook and wrong on the navy frame (D-007) — and it is half of the reported
+ * bug, because a dark glyph is what made the navy launcher button unreadable.
+ * Inheriting lets one rule serve both plates: top-panel.css sets the chrome
+ * ramp on `#jp-top-panel .jp-Toolbar`, canvas toolbars inherit the text ramp
+ * from `body.jp-ThemedContainer`, and the icons follow through `currentColor`.
+ *
+ * The exclusion is the one core toolbar button that carries a semantic colour
+ * of its own — `.jp-RunningSessions-shutdownAll` is warn-tinted by
+ * @jupyterlab/running 4.6.3 at a specificity this rule would otherwise clear,
+ * and "Shut Down All" quietly losing its warning tint is a worse bug than the
+ * one being fixed. */
+body[data-jp-theme-name^='Data4Now']
+  .jp-Toolbar
+  .jp-ToolbarButtonComponent:not(.jp-RunningSessions-shutdownAll) {
+  color: inherit;
 }
 
 body[data-jp-theme-name^='Data4Now']
@@ -184,23 +222,115 @@ body[data-jp-theme-name^='Data4Now']
   background: var(--d4n-toolbar-bg-active);
 }
 
-body[data-jp-theme-name^='Data4Now'] button.jp-ToolbarButtonComponent {
-  min-width: var(--d4n-toolbar-button-size);
-  height: var(--d4n-toolbar-button-size);
+/* Disabled at the documented 40% (§8.1), and with the hover wash withdrawn:
+ * a control that still lights up under the pointer reads as interactive.
+ *
+ * Four spellings because the two DOM paths disagree. `<jp-button>` reflects the
+ * disabled property to `[disabled]` and mirrors it as `aria-disabled` and a
+ * `.disabled` class on the host; JupyterLab's own widgets mark the wrapper
+ * `.jp-mod-disabled`. Missing one leaves a button that looks enabled and does
+ * nothing. */
+body[data-jp-theme-name^='Data4Now'] .jp-ToolbarButtonComponent[disabled],
+body[data-jp-theme-name^='Data4Now']
+  .jp-ToolbarButtonComponent[aria-disabled='true'],
+body[data-jp-theme-name^='Data4Now'] .jp-ToolbarButtonComponent.disabled,
+body[data-jp-theme-name^='Data4Now']
+  .jp-ToolbarButtonComponent.jp-mod-disabled {
+  opacity: var(--d4n-button-disabled-opacity);
+  cursor: not-allowed;
+}
+
+body[data-jp-theme-name^='Data4Now']
+  .jp-ToolbarButtonComponent[disabled]:hover::part(control),
+body[data-jp-theme-name^='Data4Now']
+  .jp-ToolbarButtonComponent[aria-disabled='true']:hover::part(control),
+body[data-jp-theme-name^='Data4Now']
+  .jp-ToolbarButtonComponent.disabled:hover::part(control),
+body[data-jp-theme-name^='Data4Now']
+  .jp-ToolbarButtonComponent.jp-mod-disabled:hover::part(control) {
   background: var(--d4n-button-ghost-bg);
-  border-radius: var(--d4n-toolbar-button-radius);
+}
+
+/* THE NEW LAUNCHER BUTTON — the reported bug.
+ *
+ * `@jupyterlab/filebrowser-extension` singles out one toolbar button and makes
+ * it a primary button:
+ *
+ *   .jp-FileBrowser-toolbar .jp-ToolbarButtonComponent[data-command='launcher:create'] {
+ *     width: 72px;
+ *     background: var(--jp-accept-color-normal, var(--jp-brand-color1));
+ *   }
+ *   …:hover          { background-color: var(--jp-accept-color-hover); }
+ *   …:focus-visible  { background-color: var(--jp-accept-color-active,
+ *                                            var(--jp-brand-color0)); }
+ *   … .jp-icon3      { fill: var(--jp-layout-color1); }
+ *
+ * That works in stock JupyterLab because `--jp-brand-color1` is a mid blue and
+ * `--jp-layout-color1` is white, so it reads as a blue slab with a white glyph.
+ * Under this theme `--jp-brand-color1` is brand navy (#0F3D6E) while the glyph
+ * inherits the canvas text ramp — measured on a stock boot as navy `rgb(15, 61,
+ * 110)` behind `rgb(44, 62, 85)`, a contrast ratio of 1.4:1. The "+" was
+ * invisible.
+ *
+ * Neither half is worth rescuing by recolouring: PRD §8.1 puts toolbar buttons
+ * on the ghost variant, and one accent slab in a row of ghosts is a hierarchy
+ * claim the design does not make. So the whole treatment comes off — including
+ * `width`, or a 72px transparent button leaves a hole in the row — and the
+ * button becomes what every other button in that toolbar is.
+ *
+ * `--jp-accept-color-*` is deliberately absent from the Tier-4 adapter (see the
+ * head of this file), so the hover declaration is invalid at computed-value
+ * time and would already resolve to transparent; it is answered anyway rather
+ * than relying on a variable's continued absence. The focus-visible one has a
+ * live fallback and genuinely repaints navy on keyboard focus. */
+body[data-jp-theme-name^='Data4Now']
+  .jp-FileBrowser-toolbar
+  .jp-ToolbarButtonComponent[data-command='launcher:create'],
+body[data-jp-theme-name^='Data4Now']
+  .jp-FileBrowser-toolbar
+  .jp-ToolbarButtonComponent[data-command='launcher:create']:hover,
+body[data-jp-theme-name^='Data4Now']
+  .jp-FileBrowser-toolbar
+  .jp-ToolbarButtonComponent[data-command='launcher:create']:focus-visible {
+  width: var(--d4n-toolbar-button-size);
+  background: var(--d4n-button-ghost-bg);
+}
+
+/* The white glyph that went with the slab. `currentColor` hands it back to the
+ * button's own foreground, which is the inherited one two rules up. Stated for
+ * the whole `jp-icon0..3` set rather than the `jp-icon3` core names, so it
+ * still holds if the icon is replaced (P0-04) with one that fills from a
+ * different slot. */
+body[data-jp-theme-name^='Data4Now']
+  .jp-FileBrowser-toolbar
+  .jp-ToolbarButtonComponent[data-command='launcher:create']
+  :is(.jp-icon0, .jp-icon1, .jp-icon2, .jp-icon3)[fill] {
+  fill: currentcolor;
+}
+
+/* The plain-DOM path. Core gives it `--jp-layout-color1`, an opaque plate that
+ * is one step off whatever toolbar it sits in; the ghost states below are the
+ * same four the custom element gets, minus the shadow part. */
+body[data-jp-theme-name^='Data4Now'] button.jp-ToolbarButtonComponent {
+  background: var(--d4n-button-ghost-bg);
 }
 
 body[data-jp-theme-name^='Data4Now'] button.jp-ToolbarButtonComponent:hover {
   background: var(--d4n-button-ghost-bg-hover);
 }
 
-/* The toolbar bar itself — background, border, shadow, height — is entirely
- * Tier-4 (`--jp-toolbar-background`, `--jp-toolbar-border-color`,
- * `--jp-toolbar-box-shadow`, `--jp-toolbar-micro-height`) and is deliberately
- * not restated here. The one thing the adapter cannot carry is the spacing
- * between items, because `<jp-toolbar>` lays its children out inside a shadow
- * root and exposes `--toolbar-item-gap` as the only handle. */
-body[data-jp-theme-name^='Data4Now'] .jp-Toolbar {
-  --toolbar-item-gap: var(--d4n-toolbar-gap);
+body[data-jp-theme-name^='Data4Now'] button.jp-ToolbarButtonComponent:active {
+  background: var(--d4n-button-ghost-bg-active);
+}
+
+/* Core dims this path at a hardcoded 0.4; the value is the same, the token is
+ * the point. */
+body[data-jp-theme-name^='Data4Now'] button.jp-ToolbarButtonComponent:disabled {
+  opacity: var(--d4n-button-disabled-opacity);
+  cursor: not-allowed;
+}
+
+body[data-jp-theme-name^='Data4Now']
+  button.jp-ToolbarButtonComponent:disabled:hover {
+  background: var(--d4n-button-ghost-bg);
 }
