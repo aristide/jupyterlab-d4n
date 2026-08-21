@@ -66,6 +66,14 @@ function prefersReducedMotion(): boolean {
   );
 }
 
+/**
+ * Inject the keyframes once and LEAVE them in place.
+ *
+ * Not a leak, and not an oversight: the theme manager raises the splash on every
+ * theme change, so this element is needed again on any switch. It is three lines
+ * of fixed-size CSS with no colour and no geometry; removing and re-injecting it
+ * per boot would be churn for nothing.
+ */
 function ensureKeyframes(): void {
   if (document.getElementById(KEYFRAMES_ID)) {
     return;

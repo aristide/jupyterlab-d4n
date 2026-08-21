@@ -41,6 +41,26 @@ const BASE =
     ? process.argv[argUrl + 1]
     : (process.env.JUPYTER_URL ?? 'http://localhost:8890');
 
+/**
+ * The committed notebook the `notebook-open` state opens.
+ *
+ * It OPENS a fixture rather than creating a notebook, and that is the whole
+ * point. The precondition used to run "New Notebook" from the command palette,
+ * which left an `Untitled.ipynb` behind on EVERY run — the server log showed one
+ * "Creating new notebook in" per invocation, and twelve of them accumulated in
+ * the repo looking like somebody's stray work. Worse, they were not inert: the
+ * file browser assertions read that directory, so each leftover changed the
+ * state the next run measured, and the job grew flakier the more often it ran.
+ *
+ * Deleting them afterwards was the obvious fix and the wrong one. It needs a
+ * DELETE through the contents API, which Jupyter Server rejects with 403 without
+ * an XSRF token — and a cleanup step that silently fails is worse than none,
+ * because it looks handled.
+ *
+ * Opening a fixed, committed file creates nothing, so there is nothing to clean.
+ */
+const NOTEBOOK_FIXTURE = 'fixture.ipynb';
+
 /** Preconditions this script can create before checking a selector. */
 const PRECONDITIONS = {
   'menu-open': async page => {
@@ -48,10 +68,16 @@ const PRECONDITIONS = {
     await page.waitForSelector('.lm-Menu', { timeout: 5_000 });
   },
   'notebook-open': async page => {
-    await page.keyboard.press('Control+Shift+C');
-    await page.fill('#modal-command-palette input', 'New Notebook');
-    await page.keyboard.press('Enter');
-    await page.waitForSelector('.jp-Notebook', { timeout: 20_000 });
+    const row = page
+      .locator('.jp-DirListing-item', { hasText: NOTEBOOK_FIXTURE })
+      .first();
+    await row.waitFor({ timeout: 20_000 });
+    await row.dblclick();
+    await page.waitForSelector('.jp-Notebook', { timeout: 30_000 });
+    // Put a cell in the active state so the cell toolbar, input area and prompt
+    // are rendered rather than merely present in the model.
+    await page.locator('.jp-Notebook .jp-Cell').first().click();
+    await page.waitForTimeout(300);
   }
 };
 
@@ -170,7 +196,15 @@ const failed = [];
 const skipped = [];
 
 try {
-  await page.goto(`${BASE}/lab`, { waitUntil: 'networkidle', timeout: 60_000 });
+  // `?reset=1` discards the saved workspace. Without it the run inherits
+  // whatever was last left open — this job was restoring twelve dead notebook
+  // tabs from an earlier session, each firing a 404 and changing which
+  // selectors happened to be present. A verification job has to start from a
+  // known state or it measures the previous run instead of the build.
+  await page.goto(`${BASE}/lab?reset=1`, {
+    waitUntil: 'networkidle',
+    timeout: 60_000
+  });
   await page.waitForSelector('#main', { timeout: 60_000 });
 
   // `#main` exists before the shell has finished populating. The dock panel

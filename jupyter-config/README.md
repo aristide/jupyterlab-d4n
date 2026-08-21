@@ -50,10 +50,32 @@ early does not degrade gracefully — it removes the launcher, or the status bar
 from the application entirely, and the symptom (a missing surface) points
 nowhere near the cause (a config file).
 
-Two tokens are involved for the splash and both matter. `ISplashScreen` is a
-`provides`, so if core's plugin were left enabled alongside ours JupyterLab
-would refuse to start: two plugins cannot provide the same token. Disabling
-core's is what makes ours resolvable, not merely preferable.
+For the splash, disabling core's plugin is **required, not preferable**:
+`ISplashScreen` is a `provides`, and two plugins cannot provide the same token —
+JupyterLab refuses to start with both enabled.
+
+### JupyterLab writes back to this file
+
+Verified after a container restart: the installed copy at
+`etc/jupyter/labconfig/page_config.json` gains a `lockedExtensions` key we do
+not ship, mirroring whatever is in `disabledExtensions`. JupyterLab adds it at
+startup — an extension disabled at the sys-prefix level is treated as locked, so
+the extension manager will not offer to re-enable it.
+
+Two consequences worth knowing:
+
+- **The installed file is not byte-identical to the shipped one.** Do not write
+  a CI check that compares them; compare `disabledExtensions` only.
+- **The lock is correct here rather than a trap.** PRD AC10 forbids trapping a
+  user in our UI, and normally a locked extension would be exactly that. But
+  re-enabling core's splash alongside ours would break startup outright, so
+  there is nothing useful to allow. Users who want stock JupyterLab have the
+  whole-distribution opt-out (`JUPYTERLAB_D4N=0`), which is the escape hatch
+  AC10 actually asks for.
+
+That reasoning does **not** transfer to the launcher or the status bar (P2-08,
+P2-07). Those replace surfaces a user might reasonably prefer stock, so check
+what locking implies before disabling them.
 
 `docker/entrypoint.sh` writes a _user-level_ `page_config.json` when
 `JUPYTERLAB_D4N=0`, which merges over this one and turns every `@d4n` extension
