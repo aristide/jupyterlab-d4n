@@ -1,0 +1,234 @@
+/* SURFACE: launcher (PRD §6.2, §8.11, TODO.md P2-08)
+ *
+ * Upstream selectors verified against:
+ *   @jupyterlab/launcher            4.6.3  style/base.css, lib/index.js
+ *   @jupyterlab/launcher-extension  4.6.3  lib/index.js
+ *   (declared range: @jupyterlab/* ^4.5.0)
+ *
+ * Every selector is mirrored in ../selectors.json (PRD §7.4(5)).
+ *
+ * SCOPE: this file is the PRESENTATION half of §8.11. The behavioural half —
+ * fixed section order, the root-directory copy, the no-kernels error state, the
+ * >12-kernel search — is TODO.md P2-15 and needs a plugin. The audit behind that
+ * split is in docs/decisions.md D-016; the short version is that card geometry,
+ * the responsive grid, the kernel plate and every state treatment ARE reachable
+ * here, and `launcher:create` is wired to every "+" affordance in the
+ * application, so re-providing the token is not something to do casually.
+ *
+ * One correction to §8.11.4 while implementing: it says the launch directory is
+ * "invisible in stock" and calls the readout net-new. Not on 4.6 — core renders
+ * a `.jp-Launcher-cwd` heading and puts the path in it. What is actually missing
+ * is the ROOT case, where the path is empty and the heading renders blank. That
+ * is the P2-15 part.
+ */
+
+/* --- Container ------------------------------------------------------------ */
+
+body[data-jp-theme-name^='Data4Now'] .jp-Launcher {
+  background: var(--d4n-launcher-bg);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-Launcher-content {
+  max-width: var(--d4n-launcher-max-width);
+  margin: 0 auto;
+  padding: var(--d4n-launcher-padding);
+}
+
+/* §8.11.2: the page scrolls, sections do not scroll independently. Core already
+ * scrolls the body; this stops a section ever growing its own scroller. */
+body[data-jp-theme-name^='Data4Now'] .jp-Launcher-section {
+  margin-bottom: var(--d4n-launcher-section-gap);
+  overflow: visible;
+}
+
+/* --- Launch target readout ------------------------------------------------ */
+
+/* The heading core puts the cwd into. Quiet by design: it is orientation, not a
+ * title — the user came here to launch something, not to read a path. Truncated
+ * from the LEFT because the leaf directory is what identifies the location and
+ * the mount prefix is noise. */
+body[data-jp-theme-name^='Data4Now'] .jp-Launcher-cwd > h3 {
+  overflow: hidden;
+  margin: 0 0 var(--d4n-space-4);
+  color: var(--d4n-color-text-muted);
+  font-family: var(--d4n-font-family-ui);
+  font-size: var(--d4n-font-size-ui-xs);
+  font-weight: var(--d4n-font-weight-regular);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  direction: rtl;
+  text-align: left;
+}
+
+/* --- Section headers ------------------------------------------------------ */
+
+body[data-jp-theme-name^='Data4Now'] .jp-Launcher-sectionHeader {
+  align-items: center;
+  margin-bottom: var(--d4n-space-3);
+  color: var(--d4n-color-text-primary);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-Launcher-sectionTitle {
+  color: var(--d4n-color-text-primary);
+  font-family: var(--d4n-font-family-ui);
+  font-size: var(--d4n-font-size-ui-sm);
+  font-weight: var(--d4n-font-weight-semibold);
+}
+
+/* --- Card grid ------------------------------------------------------------ */
+
+/* `auto-fill` with a 160px floor gives §8.11.2's column counts without a single
+ * media query, and it keys off the CONTENT width rather than the viewport —
+ * which is the part worth stating plainly, because §8.11.2 writes its bands in
+ * viewport terms and the two are not the same number. The left sidebar is ~250px
+ * and the launcher does not know or care: a 1600px window gives 6 columns
+ * (measured: 1047px of grid, 164px tracks), the same window with the file
+ * browser open gives 5, and a 1280px window with it open gives 4. Media queries
+ * on the viewport would get every one of those wrong in the same direction,
+ * because they cannot see the sidebar. Track maths, measured:
+ * `floor((grid + 12) / 172)`.
+ *
+ * The 160px floor is what guarantees the spec's "never a single column" — a
+ * one-column launcher reads as a list and the card affordance stops earning its
+ * space.
+ *
+ * The `min()` is what actually enforces that, and it was added after measuring:
+ * a bare 160px floor gave ONE column at a 700px viewport, because the sidebar
+ * and padding leave the content area under 320px and auto-fill then cannot place
+ * a second track. Clamping the floor to half the available width (less the gap)
+ * keeps two columns at any width while leaving the 160px floor in charge
+ * everywhere it fits. */
+body[data-jp-theme-name^='Data4Now'] .jp-Launcher-cardContainer {
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fill,
+    minmax(
+      min(
+        var(--d4n-launcher-card-width),
+        calc(50% - var(--d4n-launcher-card-gap))
+      ),
+      1fr
+    )
+  );
+  gap: var(--d4n-launcher-card-gap);
+  margin: 0;
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-LauncherCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  /* border-box, because core leaves the card on content-box: a 112px height
+   * plus 12px padding either side and a 1px border computed to 138px, so the
+   * spec's card height silently became the card's CONTENT height. */
+  box-sizing: border-box;
+  width: auto;
+  height: var(--d4n-launcher-card-height);
+  margin: 0;
+  padding: var(--d4n-space-3);
+  background: var(--d4n-launcher-card-bg);
+  border: var(--d4n-border-width-thin) solid var(--d4n-launcher-card-border);
+  border-radius: var(--d4n-launcher-card-radius);
+
+  /* §8.11.2 is explicit: 120ms on background and border ONLY. Never transform.
+   * A hover lift on a twenty-card grid promotes twenty elements to their own
+   * composited layers, and the launcher is the first thing painted every
+   * session — the one surface where that cost is guaranteed to be paid. */
+  transition:
+    background var(--d4n-launcher-transition) var(--d4n-motion-easing-standard),
+    border-color var(--d4n-launcher-transition)
+      var(--d4n-motion-easing-standard);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-LauncherCard:hover {
+  background: var(--d4n-launcher-card-bg-hover);
+  border-color: var(--d4n-launcher-card-border-hover);
+  box-shadow: var(--d4n-launcher-card-elevation-hover);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-LauncherCard:active {
+  background: var(--d4n-launcher-card-bg-active);
+  box-shadow: none;
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-LauncherCard:focus-visible {
+  outline: var(--d4n-focus-ring-width) var(--d4n-focus-ring-style)
+    var(--d4n-focus-ring-color);
+  outline-offset: var(--d4n-focus-ring-offset);
+}
+
+/* --- Card icon, and the kernel-logo plate --------------------------------- */
+
+/* THE PLATE IS THE ANSWER TO Q9 (docs/decisions.md D-010), and this is the one
+ * surface where the kernel-logo problem is visible rather than theoretical.
+ *
+ * Two kinds of icon sit side by side in this grid at the same size: kernel cards
+ * get `kernelIconUrl`, a RASTER served by the Jupyter server (confirmed on 4.6 —
+ * the icon element's child is an <img>), while everything else is a LabIcon
+ * whose SVG fills with currentColor. So a kernel logo exported on white shows a
+ * halo on a dark card, stays soft at 2x, and keeps its own palette across a
+ * theme switch, while its neighbours do none of those things.
+ *
+ * The plate makes that difference read as deliberate — "a language" versus "an
+ * action" — instead of as an inconsistency, and it costs nothing: no asset
+ * replacement, no server extension, no trademark question, and it works for a
+ * kernel installed after the image was built. */
+body[data-jp-theme-name^='Data4Now'] .jp-LauncherCard-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--d4n-launcher-icon-size);
+  height: var(--d4n-launcher-icon-size);
+  margin-bottom: var(--d4n-space-3);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-LauncherCard-icon > img {
+  width: 100%;
+  height: 100%;
+  padding: var(--d4n-space-1);
+  background: var(--d4n-launcher-kernel-plate-bg);
+  border-radius: var(--d4n-launcher-kernel-plate-radius);
+  object-fit: contain;
+}
+
+/* LabIcon mounts its SVG inside a wrapper DIV rather than as a direct child —
+ * measured, after a `> svg` rule here matched nothing. Sizing the wrapper and
+ * the svg separately keeps both the vector and raster paths at the same 32px. */
+body[data-jp-theme-name^='Data4Now'] .jp-LauncherCard-icon > div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-LauncherCard-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* --- Card label ----------------------------------------------------------- */
+
+/* Two-line clamp with the full text in `title` (core sets it). A card that grows
+ * taller than its neighbours breaks the grid's rhythm, which is L8. */
+body[data-jp-theme-name^='Data4Now'] .jp-LauncherCard-label {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--d4n-color-text-primary);
+  font-family: var(--d4n-font-family-ui);
+  font-size: var(--d4n-font-size-ui-sm);
+  line-height: var(--d4n-font-line-height-normal);
+  text-align: center;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+/* --- Reduced motion ------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  body[data-jp-theme-name^='Data4Now'] .jp-LauncherCard {
+    transition: none;
+  }
+}

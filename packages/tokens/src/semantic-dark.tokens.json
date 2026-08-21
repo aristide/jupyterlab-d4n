@@ -116,6 +116,10 @@
       "faint": { "$value": "#0F3436", "$type": "color" }
     },
 
+    "plate": {
+      "$description": "THE RASTER PLATE DELIBERATELY DOES NOT FOLLOW THE MODE, and is identical in light and dark on purpose.\n\nIt exists for one job (PRD Q9 / docs/decisions.md D-010): a kernel logo is a raster the SERVER serves from the kernelspec - `logo-64x64.png` - so it cannot follow the theme, cannot be recoloured, and is frequently exported matted on white. On a dark card such a logo shows a white halo.\n\nThe first version pointed `launcher.kernelPlateBg` at `{color.surface.sunken}`, which is mode-scoped - so in dark mode the plate computed to #0B1F38 on a #122A47 card and REPRODUCED the exact halo it was added to remove. A plate that darkens with the theme is not a plate, it is a slightly different dark rectangle.\n\nSo: a fixed light neutral in both modes, the same move `color.chrome.*` makes in the other direction (D-007). It is a SEMANTIC token rather than a primitive referenced straight from Tier 3, so the build's Tier-1-leak check stays honest about what is intentional. `tests/contrast/audit.mjs` carries a VIS pairing for it against `launcher.cardBg` so it cannot silently go dark again.",
+      "raster": { "$value": "{color.palette.neutral.50}", "$type": "color" }
+    },
     "chrome": {
       "$description": "See the long note in semantic-light. Dark mode DEEPENS the frame rather than flipping it: the top panel and rails go to near-black so the frame still reads as a frame against a dark canvas, instead of collapsing into it.",
       "topPanelBg": {

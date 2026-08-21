@@ -230,12 +230,34 @@ Exit: all §6.1–6.2 surfaces at spec in both modes, Galata green.
       measurement and a popover, which is most of a plugin replacement anyway.
       _Done when:_ items collapse at 1024px and the trigger opens a popover on
       the `.lm-Menu` surface tokens, or the task is dropped with a reason.
-- [ ] **P2-08** **T3: launcher.** Re-provide `ILauncher` (PRD §8.11). Includes
-      the kernel neutral plate (D-010), the launch-target readout (**Q3** —
-      decide whether it ships in v1), and the "no kernels" **error** state,
-      which is not an empty state.
-      _Done when:_ L1–L9 hold, and the core plugin is disabled in the same change.
-      Stub: `packages/shell-chrome/src/launcher.ts`.
+- [x] **P2-08** Launcher — **presentation half, done as T2**. The audit landed
+      the opposite way from P2-07: here the T2/T3 split is real, so the task
+      split with it rather than being reclassified. Card geometry, the responsive
+      grid, the kernel plate (D-010) and the launch-target readout are all
+      reachable from CSS and are done; the four behavioural requirements are
+      **P2-15** below. Reasoning in `docs/decisions.md` D-016.
+      _Verified in both modes:_ 112px cards (core is on `content-box`, so the
+      spec height needed `box-sizing`), 6 columns at 1600px and never fewer than
+      2, hover on background + border with `transform: none`, and the plate at
+      `#F4F6FA` on a `#122A47` card — it had been pointed at a mode-scoped
+      surface and was reinstating the dark-mode halo it exists to remove.
+      Selecting a stock theme restores core's launcher (AC10).
+      **Core's plugin stays enabled** — nothing added to `page_config.json`.
+- [ ] **P2-15** **T3: launcher behaviour** (split out of P2-08). The four parts
+      of §8.11 that CSS cannot reach: **fixed section order** (core orders by the
+      category rank other plugins pass to `ILauncher.add`), the **root-directory
+      copy** (core renders the cwd string, and at root that string is empty, so
+      the heading renders blank — §8.11.4 is wrong that the readout is net-new;
+      only this case is), the **no-kernels error state** (core renders an empty
+      section, not a message), and **search above ~12 kernels**.
+      Weigh it honestly first: `launcher:create` is wired to the file browser
+      toolbar `+`, File ▸ New Launcher, the dock panel `+` tab button and the
+      palette, all resolving the command **by id**. A replacement that provides
+      `ILauncher` but misses that id leaves four dead affordances in four
+      places, none of which look like the launcher's fault.
+      _Done when:_ L1–L9 hold with the four behaviours above, and the core plugin
+      is disabled **in the same change** (two `ILauncher` providers and
+      JupyterLab refuses to start). Stub: `packages/shell-chrome/src/launcher.ts`.
 - [x] **P2-09** **T3: splash screen.** Replace via `ISplashScreen`.
       **Not blocked by P0-02** — an earlier note here said the markup was lost
       and to recover the file first. That overstated it: the splash SPEC is

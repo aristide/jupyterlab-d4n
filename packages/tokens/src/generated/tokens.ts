@@ -99,6 +99,9 @@ export const d4n = {
         "subtle": "#4FB7B7",
         "faint": "#DDF1F1"
       },
+      "plate": {
+        "raster": "#F4F6FA"
+      },
       "chrome": {
         "topPanelBg": "#0F3D6E",
         "topPanelBorder": "#082B52",
@@ -809,6 +812,9 @@ export const d4n = {
         "subtle": "#1FA0A0",
         "faint": "#0F3436"
       },
+      "plate": {
+        "raster": "#F4F6FA"
+      },
       "chrome": {
         "topPanelBg": "#050F1D",
         "topPanelBorder": "#000000",
@@ -1192,7 +1198,7 @@ export const d4n = {
       "cardBorderHover": "#1B385C",
       "cardElevationHover": "0 1px 2px rgba(0, 0, 0, 0.24)",
       "iconSize": "32px",
-      "kernelPlateBg": "#0B1F38",
+      "kernelPlateBg": "#F4F6FA",
       "kernelPlateRadius": "4px",
       "transition": "120ms"
     },

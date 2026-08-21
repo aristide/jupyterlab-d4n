@@ -618,6 +618,21 @@ function buildChecks(mode, t) {
     'grid.rowStripe visible on grid.background'
   );
 
+  // --- Launcher kernel plate (PRD Q9, D-010) -----------------------------
+  // The plate is DECORATIVE — nothing is read off it, so 1.4.11 does not
+  // apply and VIS is the right gate. It is checked in both modes because the
+  // bug it guards against is mode-specific: the plate was pointed at a
+  // mode-scoped surface and computed to #0B1F38 on a #122A47 card, a ratio of
+  // ~1.2 that is technically "visible" and practically a dark square on a dark
+  // square — with a white-matted PNG haloing on top of it.
+  add(
+    'VIS',
+    1.02,
+    t['launcher.kernelPlateBg'],
+    t['launcher.cardBg'],
+    'launcher.kernelPlateBg visible on launcher.cardBg'
+  );
+
   // --- TOC depth ramp (PRD TC2) ------------------------------------------
   // Levels 4-6 drop to text.secondary; this is exactly where a colour-decay
   // ramp fails, so it is checked against both TOC row states.

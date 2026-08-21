@@ -356,6 +356,80 @@ its passive/interactive split.
 
 ---
 
+## D-016 — The launcher splits: presentation is T2 now, behaviour is T3 later
+
+**Decided.** `packages/ui-overrides/style/surfaces/launcher.css` styles core's
+launcher. `@jupyterlab/launcher-extension:plugin` stays **enabled**. The four
+behavioural requirements of §8.11 that CSS genuinely cannot reach are TODO.md
+**P2-15**, and they are the only thing that would justify re-providing
+`ILauncher`.
+
+This lands the opposite way from D-015, and the difference is the point: for the
+status bar, all four of §8.5.1's "impossible in CSS" claims turned out to be
+reachable, so the tier was simply wrong. Here the split is real. Audited against
+a running 4.6.3:
+
+| §8.11 requirement                                  | Reachable from CSS?                                                              |
+| -------------------------------------------------- | -------------------------------------------------------------------------------- |
+| card geometry, radius, border, hover/active/focus  | yes                                                                              |
+| responsive column count, never single-column       | yes — `auto-fill` + `minmax`, no media query                                     |
+| the kernel-logo plate (Q9 / D-010)                 | yes — `.jp-LauncherCard-icon > img`                                              |
+| launch-directory readout styling and truncation    | yes                                                                              |
+| **fixed section order** (Notebook, Console, Other) | **no** — core orders by the category rank other plugins pass to `ILauncher.add`  |
+| **the root-directory copy**                        | **no** — core renders the cwd string; when it is empty the heading renders blank |
+| **the no-kernels error state**                     | **no** — core renders an empty section, not a message                            |
+| **search above ~12 kernels**                       | **no** — there is no input to style                                              |
+
+**Why not re-provide `ILauncher` now.** `launcher:create` is wired to every `+`
+affordance in the application: the file browser toolbar button, File ▸ New
+Launcher, the dock panel's own `+` tab button, and the command palette. Those
+call sites live in other plugins and resolve the command **by id, not by token**
+— so a replacement that provides `ILauncher` but misses the command id leaves
+four visible affordances doing nothing, in four different places, none of which
+look like the launcher's fault. That is the same shape as the surviving settings
+schema D-015 found in the status bar, and it is why both decisions land on
+"style it now, replace it deliberately."
+
+**Two corrections to the PRD, found while implementing.**
+
+1. §8.11.4 says the launch directory is "invisible in stock" and calls the
+   readout net-new. Not on 4.6 — core already renders a `.jp-Launcher-cwd`
+   heading and puts the path in it. What is actually missing is the **root**
+   case, where the path is empty and the heading renders blank. That is the part
+   P2-15 has to build; the styling is done.
+2. §8.11.2 states the responsive bands in **viewport** widths. The grid keys off
+   **content** width — better behaviour, different number: a 1600px window gives
+   6 columns, the same window with the file browser open gives 5, and 1280px with
+   it open gives 4. Viewport media queries cannot see the sidebar and would get
+   all three wrong in the same direction.
+
+**Two things this got wrong first, both caught by measuring rather than reading.**
+
+- The card was set to `height: 112px` per spec and computed to **138px**, because
+  core leaves `.jp-LauncherCard` on `content-box` — the spec's card height had
+  silently become the card's _content_ height, plus 24px of padding and 2px of
+  border. Fixed with `box-sizing: border-box`.
+- `--d4n-launcher-kernel-plate-bg` pointed at `{color.surface.sunken}`, which is
+  mode-scoped, so in dark mode the plate computed to `#0B1F38` on a `#122A47`
+  card — **reinstating the exact halo the plate exists to remove**. It now points
+  at `{color.plate.raster}`, a fixed light neutral in _both_ modes (the same move
+  `color.chrome.*` makes in the other direction, D-007), and
+  `tests/contrast/audit.mjs` carries a VIS pairing for it so it cannot quietly go
+  dark again.
+
+A third, smaller one: `.jp-LauncherCard-icon > svg` matched **nothing**. LabIcon
+mounts its SVG inside a wrapper `div`, so every non-kernel icon was unsized and
+only the raster path was being tested. The manifest entry was wrong in the same
+way, which is why the selector job did not catch it — a reminder that
+`selectors.json` is only as good as the DOM it was written against.
+
+**Verified in a browser, both modes.** Card 112px; 6 columns at 1600px and never
+fewer than 2; hover changes background and border with `transform: none` (§8.11.2
+forbids a lift — twenty composited layers on the first surface painted every
+session); plate `#F4F6FA` on a `#122A47` card in dark. Selecting _JupyterLab
+Light_ returns the launcher to `display: flex`, 102px cards and core greys —
+AC10 holds.
+
 ## Still open
 
 Tracked in `TODO.md`; listed here so the set is visible in one place.

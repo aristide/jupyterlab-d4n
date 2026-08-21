@@ -1562,6 +1562,79 @@
         "#jp-main-statusbar .jp-StatusBar-Item.jp-mod-highlighted:hover",
         "#jp-main-statusbar .jp-StatusBar-Item :is(button, [role='button'], [tabindex]):focus-visible"
       ]
+    },
+    {
+      "file": "style/surfaces/launcher.css",
+      "upstream": [
+        "@jupyterlab/launcher 4.6.3 style/base.css, lib/index.js",
+        "@jupyterlab/launcher-extension 4.6.3 lib/index.js"
+      ],
+      "note": "Presentation half of PRD 8.11. The behavioural half (fixed section order, root-directory copy, no-kernels error state, >12-kernel search) is TODO P2-15; see docs/decisions.md D-016. Note .jp-Launcher-cwd EXISTS on 4.6 -- 8.11.4 calls the readout net-new, which is wrong; only the empty-path root case is missing.",
+      "selectors": [
+        {
+          "selector": ".jp-Launcher",
+          "state": "boot"
+        },
+        {
+          "selector": ".jp-Launcher-content",
+          "state": "boot"
+        },
+        {
+          "selector": ".jp-Launcher-cwd",
+          "state": "boot"
+        },
+        {
+          "selector": ".jp-Launcher-cwd > h3",
+          "state": "boot"
+        },
+        {
+          "selector": ".jp-Launcher-section",
+          "state": "boot"
+        },
+        {
+          "selector": ".jp-Launcher-sectionHeader",
+          "state": "boot"
+        },
+        {
+          "selector": ".jp-Launcher-sectionTitle",
+          "state": "boot"
+        },
+        {
+          "selector": ".jp-Launcher-cardContainer",
+          "state": "boot"
+        },
+        {
+          "selector": ".jp-LauncherCard",
+          "state": "boot"
+        },
+        {
+          "selector": ".jp-LauncherCard-icon",
+          "state": "boot"
+        },
+        {
+          "selector": ".jp-LauncherCard-icon > img",
+          "state": "boot",
+          "note": "Kernel cards only -- the raster kernelIconUrl the neutral plate exists for (D-010)."
+        },
+        {
+          "selector": ".jp-LauncherCard-label",
+          "state": "boot"
+        },
+        {
+          "selector": ".jp-LauncherCard-icon > div",
+          "state": "boot",
+          "note": "LabIcon mounts its svg inside a wrapper div, not as a direct child."
+        },
+        {
+          "selector": ".jp-LauncherCard-icon svg",
+          "state": "boot"
+        }
+      ],
+      "nonQueryable": [
+        ".jp-LauncherCard:hover",
+        ".jp-LauncherCard:active",
+        ".jp-LauncherCard:focus-visible"
+      ]
     }
   ]
 }

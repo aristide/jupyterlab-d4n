@@ -275,9 +275,9 @@
     "cardElevationHover": { "$value": "{elevation.1}", "$type": "shadow" },
     "iconSize": { "$value": "32px", "$type": "dimension" },
     "kernelPlateBg": {
-      "$value": "{color.surface.sunken}",
+      "$value": "{color.plate.raster}",
       "$type": "color",
-      "$description": "The neutral plate behind raster kernel logos (PRD 8.11.3). Kernel logos are server-served PNGs and cannot follow the theme; a plate kills the dark-mode halo and reframes the raster/vector split as a deliberate 'a language vs an action' distinction. This is the recommended default answer to PRD Q9 and it costs nothing."
+      "$description": "The neutral plate behind raster kernel logos (PRD 8.11.3). Kernel logos are server-served PNGs and cannot follow the theme; a plate kills the dark-mode halo and reframes the raster/vector split as a deliberate 'a language vs an action' distinction. This is the recommended default answer to PRD Q9 and it costs nothing. It resolves to {color.plate.raster}, which is the SAME light neutral in both modes - pointing it at a mode-scoped surface made the plate go dark in dark mode and reinstated the halo."
     },
     "kernelPlateRadius": { "$value": "{radius.sm}", "$type": "dimension" },
     "transition": { "$value": "{motion.duration.fast}", "$type": "duration" }

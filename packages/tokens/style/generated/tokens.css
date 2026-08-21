@@ -206,6 +206,7 @@ body[data-jp-theme-name^='Data4Now'] {
   --d4n-color-info-default: var(--d4n-color-palette-teal-500);
   --d4n-color-info-subtle: var(--d4n-color-palette-teal-300);
   --d4n-color-info-faint: #DDF1F1;
+  --d4n-color-plate-raster: var(--d4n-color-palette-neutral-50);
   --d4n-color-chrome-top-panel-bg: var(--d4n-color-palette-navy-500);
   --d4n-color-chrome-top-panel-border: var(--d4n-color-palette-navy-600);
   --d4n-color-chrome-top-panel-fg: var(--d4n-color-palette-neutral-50);
@@ -368,6 +369,7 @@ body[data-jp-theme-name^='Data4Now'][data-jp-theme-light='false'] {
   --d4n-color-info-default: var(--d4n-color-palette-teal-200);
   --d4n-color-info-subtle: var(--d4n-color-palette-teal-400);
   --d4n-color-info-faint: #0F3436;
+  --d4n-color-plate-raster: var(--d4n-color-palette-neutral-50);
   --d4n-color-chrome-top-panel-bg: var(--d4n-color-palette-deep-navy-900);
   --d4n-color-chrome-top-panel-border: #000000;
   --d4n-color-chrome-top-panel-fg: var(--d4n-color-palette-neutral-50);
@@ -615,7 +617,7 @@ body[data-jp-theme-name^='Data4Now'] {
   --d4n-launcher-card-border-hover: var(--d4n-color-border-default);
   --d4n-launcher-card-elevation-hover: var(--d4n-elevation-1);
   --d4n-launcher-icon-size: 32px;
-  --d4n-launcher-kernel-plate-bg: var(--d4n-color-surface-sunken);
+  --d4n-launcher-kernel-plate-bg: var(--d4n-color-plate-raster);
   --d4n-launcher-kernel-plate-radius: var(--d4n-radius-sm);
   --d4n-launcher-transition: var(--d4n-motion-duration-fast);
   --d4n-toc-row-height: var(--d4n-density-comfortable-row-height);
