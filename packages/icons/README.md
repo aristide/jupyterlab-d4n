@@ -51,10 +51,14 @@ the added `<title>`. The colour machinery is there for the next export.
 
 `src/manifest.ts` holds three lists.
 
-**`OVERRIDES`** — applied at activation. 53 names, every one read out of
-`@jupyterlab/ui-components`'s generated `lib/icon/iconimports.js` rather than
-recalled. Covers the sidebar rail, the notebook and file-browser toolbars, the
+**`OVERRIDES`** — applied at activation. 57 names, every one confirmed against
+the **live** registry of a running JupyterLab 4.5, not recalled and not inferred
+from source. Covers the sidebar rail, the notebook and file-browser toolbars, the
 directional/control set, and the common file types.
+
+The full evidence — all 129 registered names, what each maps to or needs, and a
+per-surface census — is `docs/icon-manifest.md` (TODO P0-04). Read that before
+adding a row here.
 
 **`LANGUAGE_MARKS`** — registered, real, and deliberately **not** applied:
 `ui-components:python`, `:julia`, `:r-kernel`. PRD §7.8.2 recommends accepting
@@ -63,11 +67,17 @@ marks in house style is a trademark question before it is a design one. The
 assets are imported and normalised; spreading this map into `OVERRIDES` is a
 one-line change once criterion **I6** is signed off at P0.
 
-**`PENDING`** — candidate names that could **not** be verified from source,
-because they live in `@jupyterlab/*-extension` packages (shipped with the
-application, not the libraries) or in third-party labextensions. They are never
-applied. A wrong name is a silent no-op, so an unverified guess is worse than an
-omission.
+**`PENDING`** — candidate names that **cannot** be verified in this image,
+because the third-party labextension that would register them is not installed.
+They are never applied. A wrong name is a silent no-op, so an unverified guess is
+worse than an omission.
+
+The runtime audit shrank this list from seven to two, and not by confirming five
+— by **disproving** them. `filebrowser:filter`, `filebrowser:new-directory`,
+`notebook:restart-kernel`, `notebook:restart-and-run-all` and
+`notebook:interrupt-kernel` are not registry names at all; those buttons render
+`ui-components:` icons. No `@jupyterlab/*-extension` package registers an icon of
+its own, so the only unverifiable class left is genuine third-party extensions.
 
 ### Why a wrong name is silent
 
@@ -83,52 +93,58 @@ are genuinely there. If a future JupyterLab renames that field the plugin
 degrades to `resolve()`, which is safe for the core `ui-components:` names in
 `OVERRIDES` because those are registered eagerly on import.
 
-### The P0 audit (TODO P5-01)
+### The runtime audit (TODO P0-04)
 
-Only a running lab can enumerate the real registry. From the browser console:
+Only a running lab can enumerate the real registry. `auditRegistry()` is exported
+for that, and returns structured data rather than only printing:
 
 ```js
-jupyterapp.commands.execute('d4n-icons:audit-registry');
+const mod = (await window._JUPYTERLAB['@d4n/icons'].get('./index'))();
+mod.auditRegistry();
 ```
 
-It prints the registered names we do not cover, the deferred language marks, any
-`OVERRIDES` key missing from this build, and each `PENDING` candidate annotated
-with whether its name actually exists. That output is the P0 manifest.
+The federated container is the route because **a 4.5 build has no
+`window.jupyterapp`** — there is no application global to hang
+`commands.execute('d4n-icons:audit-registry')` off from a headless harness. That
+command still exists and now returns the same object, for when you do have an
+`app` handle.
+
+The field that settles anything is `applied`: not "this name is in `OVERRIDES`"
+but "this registered icon's live `svgstr` is byte-identical to our asset".
+`uncovered`, `absentFromBuild`, `notApplied` and `pending[].registered` are the
+rest of the manifest.
 
 ---
 
 ## Asset gaps
 
-Names that exist in `ui-components` and are **intentionally left stock** because
-the design set has no equivalent asset. Each is design work, not code work, and
-each is a visible stock glyph counting against criterion **I1**:
+**65 of the 129 registered names have no Data4Now equivalent.** The enumerated
+list, grouped into eleven authoring families and ordered by cost, is the
+"Authoring brief" section of `docs/icon-manifest.md`; it is not duplicated here,
+because two copies of a 65-row list diverge.
 
-- Directional: `caret-up`, `caret-left`, `caret-up-empty-thin`,
-  `caret-down-empty`, `caret-down-empty-thin`, `move-up`, `move-down` — the
-  export ships `chevron-down` and `chevron-right` only.
-- Paired expand/collapse: `expand`, `collapse`, `expand-all`, `collapse-all`.
-  `actions/expand.svg` and `actions/fullscreen.svg` are near-identical corner
-  brackets and neither reads as "collapse"; mapping one half of a pair and
-  leaving the other stock is exactly the ragged result PRD §7.8.3 warns about.
-- Cell insertion: `add-above`, `add-below` — `toolbar/add-cell.svg` carries no
-  direction, so both would collapse to one glyph.
-- Trust: `not-trusted` (`trusted` maps to `identity/shield.svg`).
-- Docking: `dock-top`, `dock-bottom`, `dock-left`, `dock-right` — four related
-  icons, and the export has only the two sidebar ones.
-- Debugger stepping: `step-into`, `step-out`, `step-over`, `breakpoint`,
-  `selected-breakpoint`, `view-breakpoint`, `exceptions`, `jump-back`,
-  `jump-forward`, `fast-forward`, `pause`.
-- Search modifiers: `regex`, `case-sensitive`, `word`.
-- Miscellaneous file types and marks: `pdf`, `image`, `video`, `audio`, `html5`,
-  `react`, `vega`, `mermaid`, `home`, `bell`, `tag`, `keyboard`, `build`.
+The part worth knowing without opening that file: the gaps are not evenly spread.
+The chrome is complete (left rail 5/5, notebook toolbar 12/12, dock tab bar 4/4),
+and the shortfall is concentrated in the **debugger panel** (6 of 12) and the
+**cell toolbar** (2 of 6).
+
+Four gaps are worse than "stock", because we override one half of a pair core
+renders together and the halves then ship at different weights:
+
+- `caret-up` vs `caret-down` — the file-browser sort header, swapping on click.
+- `not-trusted` vs `trusted` — the same status-bar slot, alternating.
+- `filter-dot` vs `filter` — the same file-browser slot, alternating.
+- `bug-dot` vs `bug` — the debugger rail icon and its breakpoint variant.
+
+Each is one mirrored path or one added dot. They are the first thing to author.
 
 Brand marks (`jupyter`, `jupyter-favicon`, `jupyterlab-wordmark`) are out of
-scope here — they belong to PRD §8.9.
+scope here — they belong to PRD §8.9 / P0-07.
 
-Unused assets in the export, kept because they are the obvious targets once the
-runtime audit lands: `sidebar/git.svg`, `sidebar/comments.svg`,
-`sidebar/sidebar-left.svg`, `sidebar/sidebar-right.svg`, `sidebar/wrap.svg`, all
-of `compute/`, and most of `data/`.
+62 of the 120 exported assets are unused, most of them legitimately: `compute/`,
+eleven of the thirteen `data/` VCS glyphs and six of `identity/` are Data4Now
+product icons with no JupyterLab counterpart. `sidebar/git.svg` and
+`data/branch.svg` are what `PENDING` is holding for.
 
 ---
 

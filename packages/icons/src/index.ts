@@ -4,6 +4,7 @@ import {
 } from '@jupyterlab/application';
 import { LabIcon } from '@jupyterlab/ui-components';
 import { LANGUAGE_MARKS, OVERRIDES, PENDING } from './manifest';
+import type { IPendingIcon } from './manifest';
 
 const LOG = '[@d4n/icons]';
 
@@ -120,6 +121,81 @@ function applyOverrides(quiet: boolean): number {
   return written;
 }
 
+/** One row of {@link auditRegistry}'s per-name verdict. */
+export interface IRegistryAudit {
+  /** Every name in the live `LabIcon` registry, sorted. */
+  readonly registered: readonly string[];
+  /** `OVERRIDES` keys that exist in the registry **and** currently hold our SVG. */
+  readonly applied: readonly string[];
+  /** `OVERRIDES` keys registered but whose live `svgstr` is not ours. */
+  readonly notApplied: readonly string[];
+  /** `OVERRIDES` keys that no plugin in this build ever registered. */
+  readonly absentFromBuild: readonly string[];
+  /** Registered names we neither override nor defer. */
+  readonly uncovered: readonly string[];
+  /** `LANGUAGE_MARKS` names present in this build (D-010 / PRD §7.8.2). */
+  readonly deferred: readonly string[];
+  /** Each `PENDING` candidate with the only fact that settles it. */
+  readonly pending: readonly (IPendingIcon & {
+    readonly registered: boolean;
+  })[];
+}
+
+/**
+ * Enumerate the live `LabIcon` registry and score `OVERRIDES` against it.
+ *
+ * This is the evidence source for the P0-04 icon gap analysis, and it is
+ * exported rather than kept private for one reason: the registry is the union of
+ * core, every `*-extension` package and every third-party labextension, so it
+ * only exists in a *running* lab. A test harness reaches this through the
+ * federated container —
+ * `(await window._JUPYTERLAB['@d4n/icons'].get('./index'))().auditRegistry()` —
+ * because JupyterLab exposes no application global to hang a command call off.
+ *
+ * `applied` is the load-bearing field. `OVERRIDES` containing a name proves
+ * nothing (a misspelling is a silent no-op, see `manifest.ts`); a name whose
+ * live `svgstr` is byte-identical to our asset proves the override landed.
+ *
+ * @returns the audit, or `null` if the registry is no longer readable.
+ */
+export function auditRegistry(): IRegistryAudit | null {
+  const registry = iconRegistry();
+  if (!registry) {
+    return null;
+  }
+
+  const deferredNames = new Set(Object.keys(LANGUAGE_MARKS));
+  const applied: string[] = [];
+  const notApplied: string[] = [];
+  const absentFromBuild: string[] = [];
+
+  for (const [name, svgstr] of Object.entries(OVERRIDES)) {
+    const icon = registry.get(name);
+    if (!icon) {
+      absentFromBuild.push(name);
+    } else if (icon.svgstr === svgstr) {
+      applied.push(name);
+    } else {
+      notApplied.push(name);
+    }
+  }
+
+  const overridden = new Set(Object.keys(OVERRIDES));
+  const registered = [...registry.keys()].sort();
+
+  return {
+    registered,
+    applied: applied.sort(),
+    notApplied: notApplied.sort(),
+    absentFromBuild: absentFromBuild.sort(),
+    uncovered: registered.filter(
+      n => !overridden.has(n) && !deferredNames.has(n)
+    ),
+    deferred: [...deferredNames].filter(n => registry.has(n)).sort(),
+    pending: PENDING.map(p => ({ ...p, registered: registry.has(p.name) }))
+  };
+}
+
 /**
  * Data4Now icon overrides (PRD §7.8).
  *
@@ -185,43 +261,35 @@ const plugin: JupyterFrontEndPlugin<void> = {
      * audit produces a manifest rather than an opinion.
      *
      * Not added to the command palette: this is developer tooling, and the
-     * palette is a user surface. Run it from the browser console with
-     * `jupyterapp.commands.execute('d4n-icons:audit-registry')`.
+     * palette is a user surface. It returns the audit as well as printing it, so
+     * a harness that *can* reach `app.commands` gets structured data; one that
+     * cannot calls the exported {@link auditRegistry} through the federated
+     * container instead.
      */
     app.commands.addCommand('d4n-icons:audit-registry', {
       label: 'Data4Now: Audit icon registry',
       execute: () => {
-        const registry = iconRegistry();
-        if (!registry) {
+        const audit = auditRegistry();
+        if (!audit) {
           console.warn(
             `${LOG} cannot enumerate the registry — LabIcon._instances is no longer a Map in this build`
           );
-          return;
+          return null;
         }
-        const registered = [...registry.keys()].sort();
-        const covered = new Set(Object.keys(OVERRIDES));
-        const deferred = new Set(Object.keys(LANGUAGE_MARKS));
 
         console.groupCollapsed(
-          `${LOG} registry audit — ${registered.length} registered, ${covered.size} overridden`
+          `${LOG} registry audit — ${audit.registered.length} registered, ${audit.applied.length} overrides live`
         );
-        console.log(
-          'uncovered:',
-          registered.filter(n => !covered.has(n) && !deferred.has(n))
-        );
-        console.log(
-          'deferred (language marks, PRD §7.8.2):',
-          [...deferred].filter(n => registry.has(n))
-        );
+        console.log('uncovered:', audit.uncovered);
+        console.log('deferred (language marks, PRD §7.8.2):', audit.deferred);
         console.log(
           'in OVERRIDES but absent from this build:',
-          [...covered].filter(n => !registry.has(n))
+          audit.absentFromBuild
         );
-        console.log(
-          'PENDING candidates (name confirmed?):',
-          PENDING.map(p => ({ ...p, registered: registry.has(p.name) }))
-        );
+        console.log('registered but override did not take:', audit.notApplied);
+        console.log('PENDING candidates (name confirmed?):', audit.pending);
         console.groupEnd();
+        return audit;
       }
     });
 

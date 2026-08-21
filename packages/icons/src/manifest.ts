@@ -3,9 +3,13 @@
  *
  * HOW THE NAMES IN `OVERRIDES` WERE ESTABLISHED
  * ---------------------------------------------
- * Every key below was read out of `@jupyterlab/ui-components`'s
- * `lib/icon/iconimports.js`, which is the generated file that registers the
- * built-in icon set. They are not remembered, and they are not guessed.
+ * The original keys were read out of `@jupyterlab/ui-components`'s
+ * `lib/icon/iconimports.js`, the generated file that registers the built-in
+ * icon set. Every key has since been re-confirmed against the **live** registry
+ * of a running JupyterLab 4.5 — see `docs/icon-manifest.md` (TODO P0-04), which
+ * records the full 129-name enumeration, the per-surface census, and the
+ * evidence for each promotion. They are not remembered, and they are not
+ * guessed.
  *
  * That distinction is the whole reason this file is structured the way it is.
  * `LabIcon.resolve({ icon: 'typo:name' })` does not throw — it *creates* a
@@ -17,18 +21,33 @@
  *
  * A second sweep of every other installed `@jupyterlab/*` package found zero
  * `new LabIcon(...)` registrations outside `ui-components` — the debugger, for
- * instance, aliases `runIcon`/`pauseIcon` rather than registering its own. Icons
- * belonging to `*-extension` packages and to third-party labextensions cannot be
- * enumerated from source here; that is what the runtime audit (TODO P5-01) is
- * for, and `PENDING` is its input.
+ * instance, aliases `runIcon`/`pauseIcon` rather than registering its own. The
+ * runtime enumeration confirmed that sweep and sharpened it: of the 129 names
+ * registered in the running build, **127 are `ui-components:`** and the only two
+ * others are `completer:inline` and `completer:widget`. No `*-extension` package
+ * registers an icon of its own.
+ *
+ * That result retired five `PENDING` rows outright. `filebrowser:filter`,
+ * `filebrowser:new-directory`, `notebook:restart-kernel`,
+ * `notebook:restart-and-run-all` and `notebook:interrupt-kernel` are **not
+ * registry names at all** — those toolbar buttons render `ui-components:filter`,
+ * `ui-components:new-folder`, `ui-components:refresh`,
+ * `ui-components:fast-forward` and `ui-components:stop`. Had any of them been
+ * "promoted" on plausibility, all five would have been silent no-ops.
  *
  * COVERAGE IS PARTIAL AND THAT IS RECORDED, NOT HIDDEN
  * ---------------------------------------------------
- * The Data4Now export ships 120 icons; `ui-components` registers ~120 names, and
- * the two sets are not the same shape. Where the design system has no equivalent
- * asset (`caret-up`, `collapse`, `move-up`, the debugger stepping glyphs) the
- * name is deliberately absent rather than mapped to an approximate neighbour —
- * see README.md "Asset gaps", which is the work item for the design side.
+ * The Data4Now export ships 120 icons; the running build registers 129 names,
+ * and the two sets are not the same shape. 57 names are overridden here, 3 are
+ * deliberately deferred (`LANGUAGE_MARKS`), 3 are Jupyter trademarks that belong
+ * to the logo decision rather than to this file, and 66 have no D4N equivalent.
+ * Where the design system has no asset (`caret-up`, `collapse`, `move-up`, the
+ * ten debugger glyphs) the name is deliberately absent rather than mapped to an
+ * approximate neighbour — `docs/icon-manifest.md` is the authoring brief.
+ *
+ * `ui-components:blank` must **never** be overridden: it is a deliberately empty
+ * 1×1 SVG that core renders where a menu row needs an icon-sized gap. Giving it
+ * a glyph puts a mark in every blank slot in the product.
  */
 
 // actions/
@@ -42,6 +61,7 @@ import externalSvg from '../svg/actions/external.svg';
 import filterSvg from '../svg/actions/filter.svg';
 import linkSvg from '../svg/actions/link.svg';
 import moreHSvg from '../svg/actions/more-h.svg';
+import moreVSvg from '../svg/actions/more-v.svg';
 import plusSvg from '../svg/actions/plus.svg';
 import redoSvg from '../svg/actions/redo.svg';
 import refreshSvg from '../svg/actions/refresh.svg';
@@ -94,12 +114,14 @@ import tocSvg from '../svg/sidebar/toc.svg';
 import checkSvg from '../svg/status/check.svg';
 import errorXSvg from '../svg/status/error-x.svg';
 import infoSvg from '../svg/status/info.svg';
+import warningSvg from '../svg/status/warning.svg';
 
 // toolbar/
 import clearSvg from '../svg/toolbar/clear.svg';
 import copySvg from '../svg/toolbar/copy.svg';
 import cutSvg from '../svg/toolbar/cut.svg';
 import pasteSvg from '../svg/toolbar/paste.svg';
+import runAllSvg from '../svg/toolbar/run-all.svg';
 import runSvg from '../svg/toolbar/run.svg';
 import saveSvg from '../svg/toolbar/save.svg';
 import stopSvg from '../svg/toolbar/stop.svg';
@@ -132,8 +154,20 @@ export const OVERRIDES: Readonly<Record<string, string>> = {
   'ui-components:save': saveSvg,
   'ui-components:stop': stopSvg,
 
+  // "Restart the kernel and run every cell" — the notebook toolbar's second
+  // most-hit button. Registered as `fast-forward`, not under any `notebook:`
+  // name; the runtime census (P0-04) caught it rendering in
+  // `.jp-NotebookPanel-toolbar` alongside eight icons we already owned.
+  'ui-components:fast-forward': runAllSvg,
+
   // Directional / control
   'ui-components:caret-down': chevronDownSvg,
+  // The outline caret core puts in every `HTMLSelect` — including the notebook
+  // toolbar's cell-type picker and each debugger section twisty. Core draws it
+  // as a chevron, so this is the same glyph, not an approximation; sharing an
+  // asset with `caret-down` above is deliberate, since core's filled/outline
+  // distinction carries no meaning at 16px.
+  'ui-components:caret-down-empty': chevronDownSvg,
   'ui-components:caret-right': chevronRightSvg,
   'ui-components:check': checkSvg,
   'ui-components:close': closeSvg,
@@ -142,6 +176,13 @@ export const OVERRIDES: Readonly<Record<string, string>> = {
   'ui-components:duplicate': duplicateSvg,
   'ui-components:edit': editSvg,
   'ui-components:ellipses': moreHSvg,
+  // `dots` is core's `ellipses` rotated 90° — literally the same three circles
+  // under `transform="rotate(90,12,12)"` — so it takes the vertical member of
+  // our own h/v pair. Registered but rendered nowhere in core 4.5 (its only
+  // consumers are `--jp-icon-dots` in `deprecated.css` and third-party
+  // extensions), so unlike the other three promotions this one is confirmed
+  // against the registry rather than against a pixel.
+  'ui-components:dots': moreVSvg,
   'ui-components:file-upload': uploadSvg,
   'ui-components:filter': filterSvg,
   'ui-components:history': historySvg,
@@ -170,6 +211,10 @@ export const OVERRIDES: Readonly<Record<string, string>> = {
 
   // Status & identity
   'ui-components:error': errorXSvg,
+  // The debugger's "pause on exceptions" toggle. Core draws a triangle with a
+  // bang, which is exactly what `status/warning` is; the census found it
+  // rendering in `#jp-debugger-sidebar` next to `stop`, which we already owned.
+  'ui-components:exceptions': warningSvg,
   'ui-components:info': infoSvg,
   'ui-components:trusted': shieldSvg,
   'ui-components:user': userSvg,
@@ -203,50 +248,37 @@ export interface IPendingIcon {
 }
 
 /**
- * Input for the P0 icon audit (TODO P5-01), which enumerates the live `LabIcon`
- * registry in a running lab and settles each of these.
+ * Names that a runtime enumeration in *this* deployment cannot settle, because
+ * the extension that would register them is not installed.
  *
- * None of these names could be verified from the packages installed in this
- * repo: they belong to `@jupyterlab/*-extension` packages (which ship with the
- * application, not with the libraries) or to third-party labextensions. Running
- * `d4n-icons:audit-registry` from the command palette prints the real registry
- * next to `OVERRIDES`; promote a row here into `OVERRIDES` only after its name
- * appears in that output.
+ * P0-04 emptied this list of everything else. The five core guesses it used to
+ * hold (`filebrowser:filter`, `filebrowser:new-directory`,
+ * `notebook:restart-kernel`, `notebook:restart-and-run-all`,
+ * `notebook:interrupt-kernel`) were all disproved: the live registry contains
+ * 129 names, none of them under a `filebrowser:` or `notebook:` prefix. Those
+ * buttons render `ui-components:` icons, four of which `OVERRIDES` already
+ * covers.
+ *
+ * What survives is the class the audit is structurally unable to resolve — a
+ * third-party labextension registers its icons only when it is installed, so an
+ * empty result here is evidence of absence *from this image*, not of a wrong
+ * name. Settle these by installing the extension and re-running
+ * `auditRegistry()`; do not promote on the strength of the note.
+ *
+ * Two assets sit unused waiting on that: `sidebar/git.svg` and
+ * `data/branch.svg`, plus the eleven other `data/*` VCS glyphs the design system
+ * ships (`commit`, `pull`, `push`, `clone`, `stash`, …). They exist because the
+ * Data4Now product has a git surface, not because JupyterLab core does.
  */
 export const PENDING: readonly IPendingIcon[] = [
   {
-    name: 'filebrowser:filter',
-    asset: 'actions/filter.svg',
-    note: 'file browser filter box; may simply reuse ui-components:filter'
-  },
-  {
-    name: 'filebrowser:new-directory',
-    asset: 'file-types/folder-open.svg',
-    note: 'file browser toolbar "new folder"; ui-components:new-folder is the likely real owner'
-  },
-  {
-    name: 'notebook:restart-kernel',
-    asset: 'toolbar/restart.svg',
-    note: 'notebook toolbar restart; core may render ui-components:refresh instead'
-  },
-  {
-    name: 'notebook:restart-and-run-all',
-    asset: 'toolbar/run-all.svg',
-    note: 'notebook toolbar fast-forward; core may render ui-components:fast-forward instead'
-  },
-  {
-    name: 'notebook:interrupt-kernel',
-    asset: 'toolbar/interrupt.svg',
-    note: 'notebook toolbar interrupt; core may render ui-components:stop instead'
-  },
-  {
     name: 'jupyterlab-git:git',
     asset: 'sidebar/git.svg',
-    note: 'third-party (@jupyterlab/git); only present when that extension is installed'
+    note: 'third-party (@jupyterlab/git), not installed in this image — absent from the 129-name runtime registry, which neither confirms nor refutes the name'
   },
   {
     name: 'jupyterlab-git:branch',
     asset: 'data/branch.svg',
-    note: 'third-party (@jupyterlab/git)'
+    note: 'third-party (@jupyterlab/git), not installed in this image — same caveat as above'
   }
 ];
