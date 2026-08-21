@@ -9,9 +9,9 @@
  * `@jupyterlab/application-extension:logo`. Every selector is mirrored in
  * ../selectors.json (PRD §7.4(5)).
  *
- * P1 scope: height, background, bottom border, logo slot spacing. The
- * right-side action cluster and the 2px teal pillar between the logo and the
- * menu items are net-new markup and belong to the shell rework (TODO.md P2-01).
+ * Covered here: the panel plate, the menu panel, the logo slot, the teal
+ * pillar that separates the lockup from the menu items, and `#jp-top-bar` —
+ * the shell's right-hand action cluster (TODO.md P2-01).
  *
  * The bar is NAVY IN BOTH MODES (docs/decisions.md D-007), so --d4n-top-panel-*
  * resolves to chrome tokens rather than to the surface ramp, and the logo is
@@ -42,18 +42,186 @@ body[data-jp-theme-name^='Data4Now'] #jp-menu-panel {
 /* `#jp-top-panel` is a CSS flex row with the default `align-items: stretch`,
  * so the logo slot is already full-bar height; it centres its own mark rather
  * than the panel centring its children — changing the panel's alignment would
- * stop the menu bar filling the bar. */
+ * stop the menu bar filling the bar.
+ *
+ * `position: relative` on the slot is the containing block for the teal pillar
+ * below: the pillar is anchored to this slot, not to the panel, so it moves
+ * with the lockup instead of needing a measured offset. */
 /* stylelint-disable selector-id-pattern -- `jp-MainLogo` is the id
  * `@jupyterlab/application-extension:logo` assigns to the shell slot. It is not
  * kebab-case and it is not ours to rename. */
 body[data-jp-theme-name^='Data4Now'] #jp-MainLogo {
+  position: relative;
   display: flex;
   align-items: center;
+  min-width: max-content;
   padding: 0 var(--d4n-top-panel-logo-inset);
 }
 
+/* `flex: none` and `min-width: max-content` are what make the slot survive
+ * contact with a real asset, and they were measured, not guessed. The mark is a
+ * flex item inside a flex item: with the default `flex-shrink: 1` the browser
+ * resolved the slot from an intrinsic contribution smaller than the mark, then
+ * shrank the mark into it — the logo computed to a WIDTH OF ZERO and the brand
+ * simply did not render, with nothing in the cascade to explain why. Pinning
+ * the mark against shrink and letting the slot reserve its max-content keeps
+ * the lockup at its own aspect ratio whatever P0-07 finally drops in here, and
+ * keeps the pillar below sitting AFTER the mark rather than on top of it.
+ *
+ * `margin: 0` beats a generated atomic rule (`.<hash> svg { margin: 2px 2px 2px
+ * 8px }`) that `@jupyter/react-components` emits for icon slots and that lands
+ * on this svg by accident. Left alone it adds 8px to the left inset, so the
+ * lockup sits at 20px and `--d4n-top-panel-logo-inset` stops describing what is
+ * on screen. The class name is a build hash and cannot be referenced. */
 body[data-jp-theme-name^='Data4Now'] #jp-MainLogo svg {
+  flex: none;
   height: var(--d4n-top-panel-logo-height);
   width: auto;
+  margin: 0;
+}
+
+/* The teal pillar (PRD §8.9.1, D-007) — it echoes the `|` between FOR and NOW
+ * in the wordmark and is the seam between the brand lockup and the menu.
+ *
+ * It hangs off the RIGHT EDGE OF THE LOGO SLOT, not off a measured offset into
+ * the panel. The imported draft positions it at a hard `left: 230px`, which is
+ * only correct for the exact lockup that was on the canvas the day it was
+ * written: any change to the mark, to the inset, or to the UI font leaves the
+ * pillar floating inside or outside the logo. Anchored to `#jp-MainLogo`, it
+ * tracks whatever the slot ends up measuring — including while the P0-07 asset
+ * is still the stock mark.
+ *
+ * `top: 50%` + `translateY(-50%)` rather than symmetrical insets, so the pillar
+ * stays vertically centred and exactly as tall as the lockup if the bar height
+ * changes with density. */
+body[data-jp-theme-name^='Data4Now'] #jp-MainLogo::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 0;
+  width: var(--d4n-top-panel-accent-pillar-width);
+  height: var(--d4n-top-panel-logo-height);
+  background: var(--d4n-top-panel-accent-pillar);
+  border-radius: var(--d4n-radius-pill);
+  transform: translateY(-50%);
 }
 /* stylelint-enable selector-id-pattern */
+
+/* --- The top bar --------------------------------------------------------- */
+
+/* `#jp-top-bar` is the shell's right-hand action cluster, and it is a
+ * `jp-Toolbar`. That is the whole bug: the toolbar rules paint it with
+ * `--jp-toolbar-background` (surface.raised — WHITE in light mode) even though
+ * it sits on the navy frame, so the panel rendered navy for the width of the
+ * menu and white for the rest of the bar.
+ *
+ * The fix is to make it a hole rather than a plate: the frame behind it is
+ * already the right colour, so background, border and shadow all come off and
+ * `#jp-top-panel`'s own background shows through. Written against
+ * `#jp-top-panel .jp-Toolbar` rather than `#jp-top-bar` alone so that any
+ * toolbar an extension drops into the top area gets the same treatment — a
+ * second white slab appearing the first time somebody adds one is exactly the
+ * failure this rule exists to prevent. The descendant scope keeps it off dock
+ * and side-panel toolbars, and the id out-specifies core without `!important`.
+ *
+ * `color` is the chrome ramp, NOT the canvas text ramp: everything in here is
+ * on navy in both modes (D-007), so it inherits white-on-navy. */
+body[data-jp-theme-name^='Data4Now'] #jp-top-panel .jp-Toolbar {
+  padding: 0 var(--d4n-space-3);
+  color: var(--d4n-top-panel-fg);
+  background: transparent;
+  border-bottom: none;
+  box-shadow: none;
+}
+
+/* The custom element lays its children out inside a shadow root; the host
+ * background above paints behind that region, so the region has to be cleared
+ * too or the white slab survives one level down. */
+body[data-jp-theme-name^='Data4Now']
+  #jp-top-panel
+  .jp-Toolbar::part(positioning-region) {
+  background: transparent;
+}
+
+/* Everything the cluster can contain — toolbar buttons, a kernel indicator, the
+ * user menu, a third-party status widget — reads its foreground from the canvas
+ * text ramp by default, which is dark-on-navy here. These three rules move the
+ * text, the label and the icon fills onto the chrome ramp. Muted at rest, full
+ * strength on hover, matching the menu bar next to it. */
+body[data-jp-theme-name^='Data4Now']
+  #jp-top-panel
+  .jp-Toolbar
+  .jp-ToolbarButtonComponent,
+body[data-jp-theme-name^='Data4Now']
+  #jp-top-panel
+  .jp-Toolbar
+  .jp-ToolbarButtonComponent-label {
+  color: var(--d4n-top-panel-fg);
+  font-family: var(--d4n-font-family-ui);
+}
+
+body[data-jp-theme-name^='Data4Now']
+  #jp-top-panel
+  .jp-Toolbar
+  :is(.jp-icon0, .jp-icon1, .jp-icon2, .jp-icon3)[fill] {
+  fill: var(--d4n-top-panel-fg-muted);
+}
+
+body[data-jp-theme-name^='Data4Now']
+  #jp-top-panel
+  .jp-Toolbar
+  :is(.jp-icon0, .jp-icon1, .jp-icon2, .jp-icon3)[stroke] {
+  stroke: var(--d4n-top-panel-fg-muted);
+}
+
+body[data-jp-theme-name^='Data4Now']
+  #jp-top-panel
+  .jp-Toolbar
+  .jp-ToolbarButtonComponent:hover
+  :is(.jp-icon0, .jp-icon1, .jp-icon2, .jp-icon3)[fill] {
+  fill: var(--d4n-top-panel-fg);
+}
+
+/* Hit-area states. buttons.css gives every toolbar button the ghost surface,
+ * which is a canvas colour and disappears (or worse, flashes light grey) on
+ * navy. On the frame the state washes are the chrome ones — white at 8% and
+ * 14% — the same pair the menu bar items use, so a button and a menu title
+ * highlight identically as the pointer crosses between them.
+ *
+ * `--d4n-color-chrome-top-panel-hover/-active` are read at Tier 2 because the
+ * top-panel component tier has no state pair of its own; the menu bar reaches
+ * for the same two through `--d4n-menu-bar-item-bg-*`. */
+body[data-jp-theme-name^='Data4Now']
+  #jp-top-panel
+  .jp-Toolbar
+  .jp-ToolbarButtonComponent:hover::part(control) {
+  background: var(--d4n-color-chrome-top-panel-hover);
+}
+
+body[data-jp-theme-name^='Data4Now']
+  #jp-top-panel
+  .jp-Toolbar
+  .jp-ToolbarButtonComponent:active::part(control),
+body[data-jp-theme-name^='Data4Now']
+  #jp-top-panel
+  .jp-Toolbar
+  .jp-ToolbarButtonComponent[aria-pressed='true']::part(control) {
+  background: var(--d4n-color-chrome-top-panel-active);
+}
+
+/* The plain-DOM toolbar button path (deprecated upstream, still emitted by
+ * third-party toolbar items — buttons.css §TOOLBAR VARIANT makes the same
+ * point). Same two washes, no shadow part to reach through. */
+body[data-jp-theme-name^='Data4Now']
+  #jp-top-panel
+  .jp-Toolbar
+  button.jp-ToolbarButtonComponent:hover {
+  background: var(--d4n-color-chrome-top-panel-hover);
+}
+
+body[data-jp-theme-name^='Data4Now']
+  #jp-top-panel
+  .jp-Toolbar
+  button.jp-ToolbarButtonComponent:active {
+  background: var(--d4n-color-chrome-top-panel-active);
+}
