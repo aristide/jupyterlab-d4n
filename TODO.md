@@ -32,22 +32,34 @@ without — PRD §7.4, AC4, AC10):
 
 ## Status
 
-| Phase | Scope                    | State                      |
-| ----- | ------------------------ | -------------------------- |
-| P0    | Audit & contract         | partially done — see below |
-| P1    | Token pipeline & themes  | **mostly done**            |
-| P2    | Chrome & navigation      | not started                |
-| P3    | Notebook & editor        | scaffolded                 |
-| P4    | Forms, settings, dialogs | scaffolded                 |
-| P5    | Icons, motion, density   | scaffolded                 |
-| P6    | Hardening & release      | not started                |
+| Phase | Scope                    | State                                      |
+| ----- | ------------------------ | ------------------------------------------ |
+| P0    | Audit & contract         | machine-verified; open items need a human  |
+| P1    | Token pipeline & themes  | **done**                                   |
+| P2    | Chrome & navigation      | surfaces styled; the three T3 swaps remain |
+| P3    | Notebook & editor        | scaffolded                                 |
+| P4    | Forms, settings, dialogs | scaffolded                                 |
+| P5    | Icons, motion, density   | scaffolded                                 |
+| P6    | Hardening & release      | not started                                |
+
+Verified in a running JupyterLab 4.6.3, both modes:
+
+- `jlpm test:selectors` — **67 matched, 0 broken**, 165 skipped (states the
+  harness cannot yet drive; skipped is reported, never passed).
+- `jlpm test:contrast` — 476 pairings, 0 failing.
+- `jlpm lint:design` — five gates green. `jlpm lint:check` green. `pytest` 5 passed.
+
+Everything P2 left open is a **T3 plugin swap** (status bar, launcher, splash),
+not styling — each has to land in the same change that disables the core plugin
+it replaces, or the application loses that surface entirely.
 
 What already exists and works:
 
 - The four-tier token pipeline, both modes, 133 primitives / 158 semantic ×2 /
   239 component tokens (`packages/tokens/`).
-- `mapping/jp-adapter.yaml` — 193 mapped `--jp-*` variables, every one with a
-  rationale, machine-validated against the token set.
+- `mapping/jp-adapter.yaml` — 233 mapped `--jp-*` variables, every one with a
+  rationale, and completeness now machine-verified against the 385 non-private
+  variables a running JupyterLab 4.6.3 actually defines or references.
 - The contrast audit: **476 pairings, 0 failures, both modes**
   (`jlpm test:contrast`).
 - The docker-compose dev environment (`docker compose up -d` →
@@ -77,17 +89,17 @@ signed off and there are zero unmapped `--jp-*` variables.
       _Done when:_ the file on disk ends with `</html>`, and the tooltip,
       connection-lost and splash markup are readable.
       _Blocked by:_ nothing — needs a human with the design project open.
-- [ ] **P0-03** Generate `mapping/jp-variables.manifest.json` by booting the
+- [x] **P0-03** Generate `mapping/jp-variables.manifest.json` by booting the
       target JupyterLab and enumerating every `--jp-*` custom property actually
       consumed. Write `tests/galata/extract-jp-variables.mjs` to do it.
       _Done when:_ the manifest exists and `jlpm build:tokens` passes with the
       completeness check ACTIVE (it currently only warns). PRD AC5.
-- [ ] **P0-04** Icon gap analysis. Enumerate the `LabIcon` registry at runtime
+- [x] **P0-04** Icon gap analysis. Enumerate the `LabIcon` registry at runtime
       in the target build, diff against `design-reference/data4now/icons/`
       (120 assets) and against the ~180 PRD §7.8.1 estimates.
       _Done when:_ `docs/icon-manifest.md` lists every registry name, its D4N
       replacement or `NEEDS AUTHORING`, and a per-surface count. Answers **Q4**.
-- [ ] **P0-05** Confirm the monospace ramp. The design system nominates
+- [x] **P0-05** Confirm the monospace ramp. The design system nominates
       JetBrains Mono; PRD §5.1 and **Q1** ask whether a real ramp exists.
       Verify it has a true fixed advance (R16) and bundle the woff2 into
       `packages/tokens/fonts/` — PRD §4.2 forbids CDN fonts, the interface must
@@ -171,7 +183,7 @@ captured.
 
 Exit: all §6.1–6.2 surfaces at spec in both modes, Galata green.
 
-- [ ] **P2-01** Top panel. Dark frame per D-007, 32px, logo lockup + 2px teal
+- [x] **P2-01** Top panel. Dark frame per D-007, 32px, logo lockup + 2px teal
       pillar, right-side cluster. Hang the pillar off the logo — **not** at a
       hard-coded `left: 230px`, which the imported draft does and which breaks
       the moment the logo width changes.
@@ -184,7 +196,7 @@ Exit: all §6.1–6.2 surfaces at spec in both modes, Galata green.
       (D-007); 20px icons authored at 20px, not scaled from 16 (PRD §7.8.4).
 - [ ] **P2-05** Dock tab bar. 2px teal top border on the current tab, dirty-state
       dot, close affordance, 8px split-handle hit area over a 1px visual.
-- [ ] **P2-06** Command palette, file browser listing + toolbar, running panel,
+- [x] **P2-06** Command palette, file browser listing + toolbar, running panel,
       extension manager.
 - [ ] **P2-07** **T3: status bar.** Disable `@jupyterlab/statusbar-extension:plugin`
       and supply the same `IStatusBar` token so third-party registrations keep
@@ -203,14 +215,14 @@ Exit: all §6.1–6.2 surfaces at spec in both modes, Galata green.
       Markup was lost to the P0-02 truncation — reconstruct from the CSS at
       `JupyterLab Theme.html` L2728–3103 or recover the file first.
       Stub: `packages/shell-chrome/src/splash.ts`.
-- [ ] **P2-10** Bottom dock area (`'down'`). Net-new — core ships it unstyled.
+- [x] **P2-10** Bottom dock area (`'down'`). Net-new — core ships it unstyled.
       Never render an empty bottom bar (PRD §8.5.3).
-- [ ] **P2-11** Log console level badges. Uses the `color.log.*` tokens, which
+- [x] **P2-11** Log console level badges. Uses the `color.log.*` tokens, which
       already exist. Badges, not tinted body text — tinted 11px text fails A1.
 - [ ] **P2-12** Declarative toolbar/menu restructuring via `overrides.json`
       (PRD §7.6). **Zero DOM manipulation, zero MutationObserver reordering.**
       Anything not expressible declaratively escalates to a T3 replacement.
-- [ ] **P2-13** `selectors.json` integrity job (PRD §10.3). Boot each supported
+- [x] **P2-13** `selectors.json` integrity job (PRD §10.3). Boot each supported
       JupyterLab and assert every selector matches ≥1 element.
       _Done when:_ `jlpm test:selectors` fails loudly on a deliberately broken
       selector.

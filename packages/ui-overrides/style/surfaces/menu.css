@@ -201,13 +201,23 @@ body[data-jp-theme-name^='Data4Now'] .lm-Menu-item.lm-mod-toggled {
   font-weight: var(--d4n-font-weight-medium);
 }
 
+/* PRD §8.4.3 requires a check glyph in the icon column for a toggled item, and
+ * A7 requires the state not to be carried by colour alone. Both are already
+ * satisfied WITHOUT drawing one here: JupyterLab puts a `check` LabIcon into
+ * `.lm-Menu-itemIcon`, and `@d4n/icons` replaces it with our own
+ * checkmark-item.svg.
+ *
+ * This rule used to add `content: '✓'` on top of that, which rendered TWO
+ * checkmarks side by side — a text glyph next to the SVG. Measured on a toggled
+ * item: `.lm-Menu-itemIcon` textContent "Check" (our svg's <title>) AND a
+ * ::before of "✓".
+ *
+ * So the job here is to TINT the glyph that already exists, not to add one. It
+ * inherits `currentColor`, hence colouring the slot rather than the path. */
 body[data-jp-theme-name^='Data4Now']
   .lm-Menu-item.lm-mod-toggled
-  > .lm-Menu-itemIcon::before {
-  content: '✓';
+  > .lm-Menu-itemIcon {
   color: var(--d4n-color-action-default);
-  font-size: var(--d4n-font-size-ui-sm);
-  line-height: 1;
 }
 
 /* Separator. Core renders it as four zero-height cells each drawing their own
