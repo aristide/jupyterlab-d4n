@@ -8,6 +8,7 @@ import { ITerminalTracker } from '@jupyterlab/terminal';
 
 import { activateAdaptiveTheme } from './adaptiveTheme';
 import { activateEditorThemeSync } from './editorThemeSync';
+import { splashPlugin } from './splash';
 import { activateTerminalBridge } from './terminalBridge';
 
 /**
@@ -83,10 +84,15 @@ const terminalBridge: JupyterFrontEndPlugin<void> = {
   }
 };
 
-const plugins: JupyterFrontEndPlugin<void>[] = [
+// `unknown` rather than `void`: the splash PROVIDES a token
+// (`JupyterFrontEndPlugin<ISplashScreen>`), so a `void`-typed array cannot hold
+// it. Every further T3 replacement in this package provides a token too, so the
+// array stays widened.
+const plugins: JupyterFrontEndPlugin<unknown>[] = [
   adaptiveTheme,
   editorThemeSync,
-  terminalBridge
+  terminalBridge,
+  splashPlugin
 ];
 
 export default plugins;
@@ -103,8 +109,9 @@ export type { D4nDensity } from './density';
 export { buildGridStyle, buildTextRenderer } from './gridStyle';
 export { buildTerminalTheme } from './terminalBridge';
 
+export { SPLASH_PLUGIN_ID, buildSplashNode } from './splash';
+
 // Deferred T3 plugin replacements. See each module for the reasoning and the
-// TODO id; none of them registers anything yet.
+// TODO id; neither registers anything yet.
 export { LAUNCHER_PLUGIN_ID } from './launcher';
-export { SPLASH_PLUGIN_ID } from './splash';
 export { STATUS_BAR_PLUGIN_ID } from './statusBar';

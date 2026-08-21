@@ -417,6 +417,48 @@
     }
   },
 
+  "splash": {
+    "$description": "PRD §8.9 / §6.1. The boot overlay, T3-replaced via ISplashScreen.\n\nREAD THESE VALUES FROM THE DARK PALETTE IN BOTH MODES — `tokensFor(false)`.\nThe splash is the application FRAME at its first frame, and D-007 makes the\nframe dark in both modes; the imported mockup paints it on ink regardless of\nmode too. Taking the current mode's palette would give a white flash before a\ndark chrome in light mode, which is the opposite of what the frame decision is\nfor.\n\nThe consumer applies these as INLINE STYLES rather than CSS, and that is not a\nshortcut: the theme manager is what calls `splash.show(isLight)`, so the splash\npaints while the theme is still loading and `data-jp-theme-name` is not\nreliably set. Every rule gated per D-003 is therefore inert at splash time. The\ntyped token export exists for exactly this class of surface (PRD §7.9).",
+    "bg": { "$value": "{color.surface.sunken}", "$type": "color" },
+    "markBgFrom": { "$value": "{color.surface.raised}", "$type": "color" },
+    "markBgTo": { "$value": "{color.chrome.railBg}", "$type": "color" },
+    "markSize": { "$value": "96px", "$type": "dimension" },
+    "markRadius": { "$value": "22px", "$type": "dimension" },
+    "accent": { "$value": "{color.action.default}", "$type": "color" },
+    "dot": {
+      "$value": "{color.danger.subtle}",
+      "$type": "color",
+      "$description": "The magenta dot echoing the pie-chart wedge inside the logo's O. It is the brand accent here, not an error signal — danger.subtle is simply where that magenta lives in the ramp."
+    },
+    "dotSize": { "$value": "14px", "$type": "dimension" },
+    "wordmark": { "$value": "{color.text.strong}", "$type": "color" },
+    "muted": {
+      "$value": "{color.chrome.railFg}",
+      "$type": "color",
+      "$description": "Tagline and status line. Measures 5.45:1 on splash.bg. The mockup's footer used a dimmer slate (#5A6B82) which measures 2.90:1 at 10px — an A1 failure on the first screen a user ever sees, so the footer takes this value too."
+    },
+    "washDot": {
+      "$value": "{color.chrome.topPanelHover}",
+      "$type": "color",
+      "$description": "The dot-pattern wash over the plate. Reuses the frame's own hover wash — same white-at-6% on the same dark ground, so the splash and the top panel share one texture value rather than two that drift."
+    },
+    "markInnerEdge": {
+      "$value": "{color.chrome.topPanelHover}",
+      "$type": "color",
+      "$description": "The 1px inner highlight on the mark, giving it a lit top edge."
+    },
+    "loaderTrack": {
+      "$value": "rgba(255, 255, 255, 0.08)",
+      "$type": "color",
+      "$description": "A literal rather than a token reference, deliberately: this is a white-alpha wash on a known dark ground and there is no semantic colour it belongs to. Tier 2 holds no 8% white, and inventing one for a single consumer would be a token that means nothing."
+    },
+    "loaderWidth": { "$value": "260px", "$type": "dimension" },
+    "loaderTrackHeight": { "$value": "3px", "$type": "dimension" },
+    "gap": { "$value": "{space.10}", "$type": "dimension" },
+    "fadeDuration": { "$value": "280ms", "$type": "duration" },
+    "slideDuration": { "$value": "1600ms", "$type": "duration" }
+  },
+
   "topPanel": {
     "height": {
       "$value": "{density.comfortable.menuBarHeight}",

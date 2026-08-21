@@ -571,6 +571,26 @@ export const d4n = {
       "headerFontSize": "11px",
       "headerLetterSpacing": "0.04em"
     },
+    "splash": {
+      "bg": "#F4F6FA",
+      "markBgFrom": "#FFFFFF",
+      "markBgTo": "#0B1F38",
+      "markSize": "96px",
+      "markRadius": "22px",
+      "accent": "#167C7C",
+      "dot": "#ED6B85",
+      "dotSize": "14px",
+      "wordmark": "#0B1F38",
+      "muted": "#8A99AE",
+      "washDot": "rgba(255, 255, 255, 0.08)",
+      "markInnerEdge": "rgba(255, 255, 255, 0.08)",
+      "loaderTrack": "rgba(255, 255, 255, 0.08)",
+      "loaderWidth": "260px",
+      "loaderTrackHeight": "3px",
+      "gap": "40px",
+      "fadeDuration": "280ms",
+      "slideDuration": "1600ms"
+    },
     "topPanel": {
       "height": "36px",
       "bg": "#0F3D6E",
@@ -1260,6 +1280,26 @@ export const d4n = {
       "headerFg": "#C8D1DD",
       "headerFontSize": "11px",
       "headerLetterSpacing": "0.04em"
+    },
+    "splash": {
+      "bg": "#0B1F38",
+      "markBgFrom": "#122A47",
+      "markBgTo": "#050F1D",
+      "markSize": "96px",
+      "markRadius": "22px",
+      "accent": "#4FD1D1",
+      "dot": "#E63558",
+      "dotSize": "14px",
+      "wordmark": "#FFFFFF",
+      "muted": "#8A99AE",
+      "washDot": "rgba(255, 255, 255, 0.06)",
+      "markInnerEdge": "rgba(255, 255, 255, 0.06)",
+      "loaderTrack": "rgba(255, 255, 255, 0.08)",
+      "loaderWidth": "260px",
+      "loaderTrackHeight": "3px",
+      "gap": "40px",
+      "fadeDuration": "280ms",
+      "slideDuration": "1600ms"
     },
     "topPanel": {
       "height": "36px",

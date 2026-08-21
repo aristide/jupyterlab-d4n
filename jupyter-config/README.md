@@ -31,22 +31,29 @@ Two entries earn a note:
   `light` or `dark` instead would make the outcome depend on signal connection
   order, which is the race PRD R14 describes. See `docs/decisions.md` D-004.
 
-## `labconfig/page_config.json` — currently empty, on purpose
+## `labconfig/page_config.json` — one entry so far
 
-PRD §7.10 lists four core plugins this distribution eventually replaces:
+PRD §7.10 lists four core plugins this distribution replaces:
 
 ```
-@jupyterlab/apputils-extension:splash      -> shell-chrome (ISplashScreen)
-@jupyterlab/statusbar-extension:plugin     -> shell-chrome (IStatusBar)
-@jupyterlab/launcher-extension:plugin      -> shell-chrome (ILauncher)
-@jupyterlab/csvviewer-extension:csv        -> shell-chrome (DataGrid bridge)
+@jupyterlab/apputils-extension:splash      -> shell-chrome (ISplashScreen)   DISABLED
+@jupyterlab/statusbar-extension:plugin     -> shell-chrome (IStatusBar)      pending P2-07
+@jupyterlab/launcher-extension:plugin      -> shell-chrome (ILauncher)       pending P2-08
+@jupyterlab/csvviewer-extension:csv        -> shell-chrome (DataGrid bridge) pending P3-11
 ```
 
-They are **not** disabled yet. Disabling a core plugin before its replacement
-supplies the same token does not degrade gracefully — it removes the launcher,
-or the status bar, from the application entirely. Each line gets added here in
-the same change that lands its replacement, which is how TODO.md sequences them
-(P2-07, P2-08, P3-11).
+Only the splash is disabled, because only the splash has a replacement.
+
+**The rule this file exists to enforce:** a core plugin is disabled in the SAME
+change that lands the plugin supplying its token, never before. Disabling one
+early does not degrade gracefully — it removes the launcher, or the status bar,
+from the application entirely, and the symptom (a missing surface) points
+nowhere near the cause (a config file).
+
+Two tokens are involved for the splash and both matter. `ISplashScreen` is a
+`provides`, so if core's plugin were left enabled alongside ours JupyterLab
+would refuse to start: two plugins cannot provide the same token. Disabling
+core's is what makes ours resolvable, not merely preferable.
 
 `docker/entrypoint.sh` writes a _user-level_ `page_config.json` when
 `JUPYTERLAB_D4N=0`, which merges over this one and turns every `@d4n` extension
