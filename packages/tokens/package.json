@@ -18,6 +18,7 @@
         "lib/**/*.{d.ts,js,js.map}",
         "src/**/*.ts",
         "style/**/*.css",
+        "fonts/**/*.{woff2,txt,md}",
         "dist/**/*.json"
     ],
     "scripts": {

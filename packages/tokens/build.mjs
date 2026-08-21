@@ -6,6 +6,7 @@
  *   style/generated/tokens.css      Tiers 1-3, mode-scoped
  *   style/generated/jp-adapter.css  Tier 4 - the --jp-* surface
  *   style/generated/ansi.css        the 32-selector rendermime ANSI block
+ *   style/generated/fonts.css       @font-face for the bundled typefaces
  *   src/generated/tokens.ts         typed, FULLY RESOLVED values per mode
  *   dist/tokens.json                resolved dump, for the contrast audit + docs
  *
@@ -416,6 +417,178 @@ const ansiCss =
   `${ansiBlock()}\n`;
 
 // ---------------------------------------------------------------------------
+// @font-face - the bundled typefaces (PRD 4.2 / 8.7.3 R16, TODO P0-05)
+// ---------------------------------------------------------------------------
+//
+// PRD 4.2: "must fully render with no network. No CDN fonts. All assets
+// bundled." Before this existed there was not a single @font-face rule for our
+// families anywhere in the product - Montserrat, Roboto and JetBrains Mono
+// rendered only on machines that happened to have them installed, and silently
+// degraded to system-ui everywhere else (CI, the Linux container, any user).
+// A missing typeface is the loudest possible visual regression and the easiest
+// one to not notice, because the developer's own machine has the fonts.
+//
+// The files live in packages/tokens/fonts/ and are referenced by a relative
+// url() from style/generated/fonts.css. @jupyterlab/builder's webpack config
+// has an `asset/resource` rule for .woff2, so each file is emitted into the
+// federated bundle's static/ directory and served from the extension - no
+// network, no CDN, no fonts.gstatic.com.
+//
+// NOTE ON SCOPING. Every *style rule* we ship is gated on
+// [data-jp-theme-name^='Data4Now'] (D-003). @font-face is an at-rule, not a
+// style rule, and has no selector to gate: it only declares that a face is
+// AVAILABLE under a family name. Nothing is applied until some rule asks for
+// the family, and the only rules that do are the gated ones. Declaring the
+// faces unconditionally is therefore inert under a stock theme, and it is the
+// only thing CSS permits.
+
+/**
+ * The Google-Fonts "latin" subset range, verbatim from the css2 API. We ship
+ * the latin subset of the two proportional families and DROP cyrillic,
+ * cyrillic-ext, greek, greek-ext, vietnamese and latin-ext - roughly 5x the
+ * bytes for coverage this product's chrome does not use. Text outside the
+ * range falls through to the system-ui fallback in font.family.*, which is
+ * what an unsubsetted build would effectively do anyway for anything the face
+ * lacks. Revisit if the UI is localised beyond Latin script.
+ *
+ * We also drop ITALIC faces for all three families. Nothing in the token set
+ * or the component CSS asks for one; browsers synthesise an oblique for the
+ * rare `<em>` in rendered markdown.
+ */
+const LATIN_SUBSET =
+  'U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, ' +
+  'U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, ' +
+  'U+2212, U+2215, U+FEFF, U+FFFD';
+
+/**
+ * The declarative face table. One row per file we actually ship.
+ *
+ * `weight` is a RANGE for the two variable faces. Montserrat and Roboto are
+ * each a single variable woff2 with a wght axis (100-900 in both), so one file
+ * serves 400/500/600/700 and every step between. Declaring a range rather than
+ * a single number is what tells the browser to set the axis instead of
+ * synthesising a fake bold - and it matters for Montserrat in particular,
+ * whose variable default instance is Thin (100): a face declared
+ * `font-weight: 400` while defaulting to 100 is a trap we are stepping around.
+ *
+ * JetBrains Mono ships three STATIC faces from the upstream JetBrains release
+ * rather than the Google subset, deliberately - see the note on that row.
+ */
+const FONT_FACES = [
+  {
+    family: 'Montserrat',
+    file: 'montserrat-latin-variable.woff2',
+    style: 'normal',
+    weight: '100 900',
+    unicodeRange: LATIN_SUBSET,
+    note: 'variable wght 100-900, latin subset'
+  },
+  {
+    family: 'Roboto',
+    file: 'roboto-latin-variable.woff2',
+    style: 'normal',
+    weight: '100 900',
+    unicodeRange: LATIN_SUBSET,
+    note: 'variable wght 100-900, latin subset'
+  },
+  // The mono family is NOT subset. PRD 8.7.3 / R16 / T5: xterm.js measures one
+  // glyph and grids the rest, so every character the terminal can draw has to
+  // come from the same fixed-advance face. The Google "latin" subset stops at
+  // U+2215 and contains none of U+2500-257F (box drawing) or U+2580-259F (block
+  // elements) - exactly the glyphs htop, ncdu and `tree` are made of. Those
+  // would fall through to a proportional system fallback and shear the grid.
+  // The upstream JetBrains webfont carries all 128 box-drawing and all 32 block
+  // glyphs at the same 600/1000 advance as ASCII, so it ships whole (~92 KB).
+  {
+    family: 'JetBrains Mono',
+    file: 'jetbrains-mono-regular.woff2',
+    style: 'normal',
+    weight: '400',
+    note: 'full charset - box drawing must share the fixed advance (R16)'
+  },
+  {
+    family: 'JetBrains Mono',
+    file: 'jetbrains-mono-medium.woff2',
+    style: 'normal',
+    weight: '500',
+    note: 'full charset'
+  },
+  {
+    family: 'JetBrains Mono',
+    file: 'jetbrains-mono-semibold.woff2',
+    style: 'normal',
+    weight: '600',
+    note: 'full charset'
+  }
+];
+
+const FONT_DIR = join(HERE, 'fonts');
+const declaredFamilies = new Set(FONT_FACES.map(f => f.family));
+
+// A face table that has drifted from the files on disk is a 404 at runtime and
+// a silent fallback in the UI, so check.
+for (const face of FONT_FACES) {
+  if (!existsSync(join(FONT_DIR, face.file))) {
+    fail(
+      `@font-face row "${face.family}" points at fonts/${face.file}, ` +
+        `which does not exist.`
+    );
+  }
+}
+
+// THE check this whole task turns on: the family name in @font-face must match
+// the first family in the token, character for character, or the browser skips
+// straight to the fallback and nothing about it looks broken. Rather than
+// eyeballing it, derive it: take the leading family of every `font.family.*`
+// primitive and require a face for it.
+for (const [key, token] of tier1) {
+  if (!key.startsWith('font.family.')) {
+    continue;
+  }
+  const first = token.value
+    .split(',')[0]
+    .trim()
+    .replace(/^['"]|['"]$/g, '');
+  if (!declaredFamilies.has(first)) {
+    fail(
+      `"${key}" leads with the family "${first}", but no @font-face declares ` +
+        `it. It would resolve only on machines with that font installed ` +
+        `(PRD 4.2). Either bundle it or demote it behind a bundled family.`
+    );
+  }
+}
+
+const fontsCss =
+  header +
+  `/* Bundled typefaces. See the FONT_FACES table in build.mjs for what is
+ * subset, what is dropped, and why the mono family is not subset at all.
+ * Licences: fonts/OFL-*.txt - all three faces are SIL Open Font License 1.1,
+ * whose section 4 requires the licence to travel with the files.
+ *
+ * font-display: swap everywhere - PRD 4.2 wants text readable immediately; a
+ * block period would show empty chrome, and the faces are same-origin so the
+ * swap is a single frame in practice.
+ *
+ * @font-face carries no selector, so it cannot take the D4N theme gate the way
+ * every style rule does (D-003). It is inert on its own: it makes a family
+ * available, and only the gated rules ask for it.
+ */\n\n` +
+  FONT_FACES.map(face => {
+    const lines = [
+      `  /* ${face.note} */`,
+      `  font-family: '${face.family}';`,
+      `  font-style: ${face.style};`,
+      `  font-weight: ${face.weight};`,
+      `  font-display: swap;`,
+      `  src: url('../../fonts/${face.file}') format('woff2');`
+    ];
+    if (face.unicodeRange) {
+      lines.push(`  unicode-range: ${face.unicodeRange};`);
+    }
+    return `@font-face {\n${lines.join('\n')}\n}\n`;
+  }).join('\n');
+
+// ---------------------------------------------------------------------------
 // Write
 // ---------------------------------------------------------------------------
 
@@ -434,6 +607,7 @@ mkdirSync(GEN_TS, { recursive: true });
 writeFileSync(join(GEN_CSS, 'tokens.css'), tokensCss);
 writeFileSync(join(GEN_CSS, 'jp-adapter.css'), adapterCss);
 writeFileSync(join(GEN_CSS, 'ansi.css'), ansiCss);
+writeFileSync(join(GEN_CSS, 'fonts.css'), fontsCss);
 writeFileSync(join(GEN_TS, 'tokens.ts'), tokensTs);
 writeFileSync(
   join(DIST, 'tokens.json'),
@@ -459,5 +633,6 @@ for (const w of warnings) {
 }
 console.log(
   `tokens: ${tier1.size} primitives, ${light.size} semantic x2 modes, ` +
-    `${tier3.size} component, ${mappingRows.length} adapter rows -> dist/`
+    `${tier3.size} component, ${mappingRows.length} adapter rows, ` +
+    `${FONT_FACES.length} @font-face (${declaredFamilies.size} families) -> dist/`
 );
