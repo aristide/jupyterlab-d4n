@@ -105,9 +105,16 @@ try {
   // A variable core REFERENCES but never DEFINES still matters: it is a hook
   // core expects a theme to fill, and leaving it unmapped means core falls back
   // to its own default mid-interface.
+  const publicOnly = v => !v.startsWith('--jp-private-');
   const all = [...new Set([...result.defined, ...result.referenced])]
-    .filter(v => !v.startsWith('--jp-private-'))
+    .filter(publicOnly)
     .sort();
+  // Filter BEFORE counting. `result.defined` still holds the --jp-private-*
+  // entries, so subtracting it from the filtered union reported more "defined"
+  // than "total" and drove referencedOnly negative — a manifest is a record
+  // somebody reads on the next JupyterLab bump, and a negative count there is
+  // just wrong data with a plausible shape.
+  const definedPublic = result.defined.filter(publicOnly);
 
   const jupyterlabVersion = await page.evaluate(() =>
     document.getElementById('jupyter-config-data')
@@ -128,9 +135,10 @@ try {
         jupyterlabVersion,
         extractedFrom: `${BASE}/lab`,
         counts: {
-          defined: result.defined.length,
-          referencedOnly: all.length - result.defined.length,
-          total: all.length
+          defined: definedPublic.length,
+          referencedOnly: all.length - definedPublic.length,
+          total: all.length,
+          privateExcluded: result.defined.length - definedPublic.length
         },
         variables: all
       },

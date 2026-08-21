@@ -26,10 +26,18 @@
 #     a variable owned by a third-party extension — those live in compat-shim.
 #
 # STATUS: drafted against JupyterLab 4.5 from upstream's
-# packages/theme-light-extension/style/variables.css. Completeness is NOT yet
-# machine-verified — mapping/jp-variables.manifest.json does not exist until the
-# P0-03 audit boots the target build and enumerates the real set. Until then
-# build.mjs warns rather than failing (PRD AC5).
+# packages/theme-light-extension/style/variables.css, then CLOSED against a
+# running JupyterLab 4.6.3 by the P0-03 audit
+# (tests/galata/extract-jp-variables.mjs → mapping/jp-variables.manifest.json,
+# 385 non-private variables). Completeness is now machine-verified: build.mjs
+# FAILS on any manifest entry that is neither mapped below nor listed under
+# `excluded:` (PRD AC5). Re-run the extractor on every JupyterLab bump —
+# Appendix C step 3.
+#
+# NOTE ON THE MANIFEST: it is extracted from the target build with this
+# extension INSTALLED, so it also contains variables our own compat-shim
+# declares (the nbdime and ipywidgets sets). Those are excluded below with the
+# owner named, not mapped — the adapter stays a contract with ONE upstream.
 
 excluded:
   # PRD Appendix A — "Excluded from the mapping — do not touch".
@@ -55,10 +63,183 @@ excluded:
   - --jp-widgets-input-border-color
   - --jp-widgets-input-focus-border-color
   - --jp-widgets-input-color
+  # The geometry half of the same ipywidgets set. Same owner, same reason, and
+  # they are all set explicitly in packages/compat-shim/style/vendor/ipywidgets.css
+  # — the P0-03 manifest only lists them because that file is loaded in the
+  # running build, not because JupyterLab core reads them.
+  - --jp-widgets-border-width
+  - --jp-widgets-disabled-opacity
+  - --jp-widgets-font-size
+  - --jp-widgets-horizontal-tab-height
+  - --jp-widgets-horizontal-tab-top-border
+  - --jp-widgets-inline-height
+  - --jp-widgets-inline-margin
+  - --jp-widgets-input-border-width
+  - --jp-widgets-margin
+  - --jp-widgets-slider-border-width
+  # Owned by nbdime (loaded by jupyterlab-git for notebook diffs), not by
+  # JupyterLab core — the `--jp-` prefix is nbdime borrowing a namespace it does
+  # not own. Appendix A routes third-party `--jp-*` to compat-shim; these are set
+  # in packages/compat-shim/style/vendor/jupyterlab-git.css, which is also where
+  # the accompanying `.jp-git-diff-*` container rules live. Splitting the diff
+  # across two files would mean an nbdime bump could silently half-apply.
+  - --jp-diff-added-color
+  - --jp-diff-added-text-color
+  - --jp-diff-deleted-color
+  - --jp-diff-deleted-text-color
   # Deliberately left at core's value: a pure timing knob with no visual
   # consequence, and overriding it would be us guessing at a performance
   # trade-off that is not a design decision.
   - --jp-notebook-render-timeout
+  # ---------------------------------------------------------------------------
+  # ICON ASSET URLs — NOT design tokens, and not a gap in the adapter.
+  # ---------------------------------------------------------------------------
+  # Every name below resolves to `url(data:image/svg+xml;base64,…)` on `:root`
+  # — the raw SVG payload webpack inlined at build time. They are consumed by
+  # exactly one kind of rule, `.jp-<Name>Icon { background-image: var(…) }`,
+  # which is core's legacy CSS-background icon path; the LabIcon registry (the
+  # path everything modern renders through) never reads them.
+  #
+  # There is no Tier 1–3 token that could go here. Tiers 1–3 hold colours,
+  # sizes and durations; an inlined SVG document is an ASSET, and PRD §7.8
+  # delivers assets by writing `LabIcon.resolve(name).svgstr`, not by setting a
+  # variable. Mapping them would also defeat the icons' own theming: the shipped
+  # SVGs fill with `jp-icon0`–`4` / `currentColor` (§7.8.4, I2), and those
+  # classes only work when the SVG is INLINED in the DOM. A `background-image`
+  # cannot be recoloured by CSS at all, which is why P0-04's manifest and the
+  # `@d4n/icons` override plugin — not this file — own icon replacement.
+  #
+  # The colour variables that DO belong to icons (`--jp-icon-contrast-color0`–`4`,
+  # `--jp-jupyter-icon-color`, `--jp-console-icon-*`, …) are mapped below.
+  #
+  # This list is deliberately explicit rather than a `--jp-icon-*` prefix rule:
+  # an icon added upstream must fail the build so P0-04's manifest gets a new
+  # row, and a prefix rule would swallow a newly-added icon COLOUR variable too.
+  - --jp-icon-add
+  - --jp-icon-add-above
+  - --jp-icon-add-below
+  - --jp-icon-audio
+  - --jp-icon-bell
+  - --jp-icon-breakpoint
+  - --jp-icon-bug
+  - --jp-icon-bug-dot
+  - --jp-icon-build
+  - --jp-icon-caret-down
+  - --jp-icon-caret-down-empty
+  - --jp-icon-caret-down-empty-thin
+  - --jp-icon-caret-left
+  - --jp-icon-caret-right
+  - --jp-icon-caret-up
+  - --jp-icon-caret-up-empty-thin
+  - --jp-icon-case-sensitive
+  - --jp-icon-check
+  - --jp-icon-circle
+  - --jp-icon-circle-empty
+  - --jp-icon-cleaning
+  - --jp-icon-clear
+  - --jp-icon-close
+  - --jp-icon-close-all
+  - --jp-icon-code
+  - --jp-icon-code-check
+  - --jp-icon-collapse
+  - --jp-icon-collapse-all
+  - --jp-icon-console
+  - --jp-icon-copy
+  - --jp-icon-copyright
+  - --jp-icon-cut
+  - --jp-icon-delete
+  - --jp-icon-dock-bottom
+  - --jp-icon-dock-left
+  - --jp-icon-dock-right
+  - --jp-icon-dock-top
+  - --jp-icon-dots
+  - --jp-icon-download
+  - --jp-icon-duplicate
+  - --jp-icon-edit
+  - --jp-icon-ellipses
+  - --jp-icon-error
+  - --jp-icon-exceptions
+  - --jp-icon-expand
+  - --jp-icon-expand-all
+  - --jp-icon-extension
+  - --jp-icon-fast-forward
+  - --jp-icon-file
+  - --jp-icon-file-upload
+  - --jp-icon-filter
+  - --jp-icon-filter-dot
+  - --jp-icon-filter-list
+  - --jp-icon-folder
+  - --jp-icon-folder-favorite
+  - --jp-icon-history
+  - --jp-icon-home
+  - --jp-icon-html5
+  - --jp-icon-image
+  - --jp-icon-info
+  - --jp-icon-inspector
+  - --jp-icon-json
+  - --jp-icon-julia
+  - --jp-icon-jump-back
+  - --jp-icon-jump-forward
+  - --jp-icon-jupyter
+  - --jp-icon-jupyter-favicon
+  - --jp-icon-jupyterlab-wordmark
+  - --jp-icon-kernel
+  - --jp-icon-keyboard
+  - --jp-icon-launch
+  - --jp-icon-launcher
+  - --jp-icon-line-form
+  - --jp-icon-link
+  - --jp-icon-list
+  - --jp-icon-lock
+  - --jp-icon-markdown
+  - --jp-icon-mermaid
+  - --jp-icon-move-down
+  - --jp-icon-move-up
+  - --jp-icon-new-folder
+  - --jp-icon-not-trusted
+  - --jp-icon-notebook
+  - --jp-icon-numbering
+  - --jp-icon-offline-bolt
+  - --jp-icon-open-kernel-source
+  - --jp-icon-palette
+  - --jp-icon-paste
+  - --jp-icon-pause
+  - --jp-icon-pdf
+  - --jp-icon-python
+  - --jp-icon-r-kernel
+  - --jp-icon-react
+  - --jp-icon-redo
+  - --jp-icon-refresh
+  - --jp-icon-regex
+  - --jp-icon-run
+  - --jp-icon-running
+  - --jp-icon-save
+  - --jp-icon-search
+  - --jp-icon-selected-breakpoint
+  - --jp-icon-settings
+  - --jp-icon-share
+  - --jp-icon-spreadsheet
+  - --jp-icon-step-into
+  - --jp-icon-step-out
+  - --jp-icon-step-over
+  - --jp-icon-stop
+  - --jp-icon-tab
+  - --jp-icon-table-rows
+  - --jp-icon-tag
+  - --jp-icon-terminal
+  - --jp-icon-text-editor
+  - --jp-icon-toc
+  - --jp-icon-tree-view
+  - --jp-icon-trusted
+  - --jp-icon-undo
+  - --jp-icon-user
+  - --jp-icon-users
+  - --jp-icon-variable
+  - --jp-icon-vega
+  - --jp-icon-video
+  - --jp-icon-view-breakpoint
+  - --jp-icon-word
+  - --jp-icon-yaml
 
 mappings:
   # ===========================================================================
@@ -128,6 +309,24 @@ mappings:
   - jp: --jp-border-radius
     token: radius.md
     rationale: "6px. The design system's default; radius.sm (4px) is used only for toolbar buttons and chips, radius.lg (10px) only for dialogs."
+
+  # ===========================================================================
+  # FOCUS RING
+  # ===========================================================================
+  # Core never DEFINES these two — every theme is expected to. They are the
+  # highest-consequence unmapped pair the P0-03 audit found: 30+ core rules read
+  # them (menu bar, menu items, dock tabs, side-bar tabs, dialog buttons,
+  # toolbar buttons, HTMLSelect, status-bar items, the search overlay, the RJSF
+  # checkboxes), and a custom property that resolves to nothing takes the whole
+  # `outline-*` declaration invalid — which computes to `outline: none`. Leaving
+  # them out is a silent WCAG 2.4.7 failure across the entire chrome, and it
+  # looks exactly like a design that simply has no focus ring.
+  - jp: --jp-focus-outline-color
+    token: focusRing.color
+    rationale: "Teal. Pointed at the Tier 3 focusRing group rather than straight at color.action.default so the ONE focus spec (PRD §5.1) has a single definition that our own component CSS and core's 30-odd outline rules both read — move the focus colour once, and both follow."
+  - jp: --jp-focus-outline-width
+    token: focusRing.width
+    rationale: "2px (border.width.thick). NOT border.width.thin: core applies several of these outlines with a negative offset (`outline-offset: calc(-1 * var(--jp-focus-outline-width))`) so the ring is drawn INSIDE the control, where a 1px ring is indistinguishable from the control's own border."
 
   # ===========================================================================
   # UI TYPOGRAPHY
@@ -233,6 +432,15 @@ mappings:
   - jp: --jp-content-link-color
     token: color.text.link
     rationale: "Teal. Distinct from the navy brand so a link never reads as a heading."
+  - jp: --jp-content-link-hover-color
+    token: color.action.hover
+    rationale: "The hover step of the SAME teal ramp text.link is drawn from, not a second hue — a link that changes colour family on hover reads as a different kind of link. action.hover rather than action.strong because strong is our pressed step, and a hover that is already at the bottom of the ramp leaves :active with nowhere to go."
+  - jp: --jp-content-link-visited-color
+    token: color.text.link
+    rationale: "Deliberately IDENTICAL to the unvisited link — visited is not distinguished. Distinguishing it needs a purple, and the palette has no sixth hue to spend (the plum ramp is a data-viz primitive, not a text colour). The usual argument for :visited — reference-document navigation — does not hold here: notebook links go to kernels, datasets and issue trackers, where staleness is misleading rather than helpful. Recorded explicitly so nobody re-litigates it as an oversight."
+  - jp: --jp-content-presentation-font-size1
+    token: font.size.content.3
+    rationale: "18px. Core swaps this in for --jp-content-font-size1 wholesale in presentation mode. It must stay ABOVE --jp-code-presentation-font-size (content.2, 16px) — markdown body sits 1px above code at rest (14 vs 13), and if both land on 16 a projected notebook flattens into one undifferentiated size at exactly the moment legibility matters most."
   - jp: --jp-content-font-family
     token: font.family.content
     rationale: "Roboto. The design system's body face — separate from the chrome face so long-form markdown reads as document, not as UI."
@@ -429,6 +637,9 @@ mappings:
   - jp: --jp-cell-editor-background
     token: color.surface.code
     rationale: "The code-editing surface. Its own token rather than surface.canvas, so the editor can be separated from the notebook background in dark mode without moving every panel with it."
+  - jp: --jp-cell-editor-background-color
+    token: color.surface.code
+    rationale: "A legacy alias of the row above, with exactly one consumer left in 4.6: `.jp-dragImage .jp-dragImage-content`, the code preview inside a dragged cell. Same token on purpose — a cell that changes surface colour the instant it is picked up reads as a rendering fault, not as feedback. Kept as its own row rather than folded in because the two names can diverge upstream and the audit would not notice."
   - jp: --jp-cell-editor-border-color
     token: color.border.subtle
     rationale: "Resting editor outline."
@@ -484,6 +695,18 @@ mappings:
     token: "calc(100% - var(--jp-code-font-size) * var(--jp-code-line-height) - var(--jp-code-padding) * 2 - var(--jp-cell-padding) - 1px)"
     literal: true
     rationale: "A computed expression over other --jp-* values, not a design decision — it keeps one line of the last cell visible when scrolled to the bottom. Copied from core verbatim so it tracks our type tokens automatically."
+  - jp: --jp-notebook-toolbar-padding
+    token: "0 var(--d4n-space-1)"
+    literal: true
+    rationale: "A four-value shorthand no single space token can express, so it is a literal — but a TOKENISED one. Core ships `0 5px 0 2px`: two different off-grid values, asymmetric so the first toolbar button lines up with the prompt gutter at core's 64px prompt width. We set our own prompt width (notebook.promptWidth), so that alignment argument no longer holds, and 4px on both sides puts the toolbar back on the 4px grid."
+  - jp: --jp-side-by-side-output-size
+    token: "1fr"
+    literal: true
+    rationale: "A grid fraction, not a design decision: it is the output column's share of the side-by-side cell, and the user overwrites it by dragging the splitter (the handler writes an inline style, which wins over this). 1fr — core's value — is the only neutral starting point; anything else would be us pre-deciding that code or output matters more."
+  - jp: --jp-side-by-side-resized-cell
+    token: "var(--jp-side-by-side-output-size)"
+    literal: true
+    rationale: "Per-cell override of the row above, set inline by the drag handler on the one cell being resized. The default has to CHAIN to the global value or an un-dragged cell would render at a different ratio from its neighbours; core does exactly this, and there is no design content to add."
 
   # ===========================================================================
   # RENDERMIME
@@ -754,6 +977,180 @@ mappings:
   - jp: --jp-scrollbar-thumb-radius
     token: scrollbar.radius
     rationale: "9px — fully rounded at the 10px thumb thickness."
+
+  # ===========================================================================
+  # DIALOG / TOAST BUTTON INTENTS
+  # ===========================================================================
+  # `accept` / `reject` / `warn` × `normal` / `hover` / `active`. Core does not
+  # define any of the nine — every rule that reads them supplies a Material
+  # fallback (`--md-blue-500`, `--md-grey-500`, `--md-red-700`) — so an unmapped
+  # row here does not fall back to something neutral, it falls back to stock
+  # Material, which is the one palette this project exists to remove.
+  #
+  # These are BUTTON INTENTS, so they are pointed at the Tier 3 `button.*` group
+  # rather than at Tier 2 colour ramps. That is deliberate: core paints
+  # `button.jp-mod-styled.jp-mod-accept` with these, and PRD §8.1 paints our own
+  # buttons with `button.*`. Routing both through one Tier 3 group is what keeps
+  # a core dialog's OK button identical to a button we render ourselves — map
+  # these to `color.action.*` instead and the two drift apart the moment §8.1
+  # changes a hover step.
+  #
+  # THE NAME/MEANING SPLIT — `warn`: core reads this variable in two components
+  # with two different meanings. `button.jp-mod-styled.jp-mod-warn` falls back to
+  # `--jp-error-color1` (it is the DESTRUCTIVE confirm — "Delete", "Shut Down
+  # Kernel", "Restart and Clear Outputs"), while `.jp-toast-button.jp-mod-warn`
+  # falls back to `--jp-warn-color1` (an actual amber warning in a notification).
+  # We take the DIALOG meaning as dominant: destructive dialog confirms are far
+  # more frequent and far more consequential than warn-level toast actions, and
+  # a destructive button that is amber instead of magenta understates the
+  # consequence — the failure that matters. The toast's warn button is corrected
+  # back to warning amber in ui-overrides, where it can be selected on its own.
+  - jp: --jp-accept-color-normal
+    token: button.primary.bg
+    rationale: "The affirmative dialog/toast button. Teal (button.primary.bg → color.action.default), NOT the navy brand: PRD §5.1 splits identity from interaction, and a dialog's confirm is an interaction. Navy would also collide with the top panel behind a non-modal toast."
+  - jp: --jp-accept-color-hover
+    token: button.primary.bgHover
+    rationale: "Hover step of the same primary button, so a core dialog button and a §8.1 button move together on hover."
+  - jp: --jp-accept-color-active
+    token: button.primary.bgActive
+    rationale: "Pressed step. CAVEAT worth carrying: core also reuses this variable as `outline-color` on `.lm-MenuBar:focus-visible` and on `button.jp-mod-accept:focus-visible` — a pressed-button fill doing duty as a focus ring. On the always-dark top panel (D-007) a pressed teal ring is weak, so ui-overrides re-points the menu-bar focus ring at focusRing.color; distorting this row to suit the menu bar would break the button it is actually named for."
+  - jp: --jp-reject-color-normal
+    token: button.secondary.bg
+    rationale: "Cancel / dismiss. The SECONDARY variant, not a grey literal: 'reject' in core means 'the other button', not 'a negative action' — Cancel is neutral, and the destructive path is `warn`. Core's `--md-grey-500` fallback is a mid grey that fails 4.5:1 against white label text in light mode; our secondary button is a bordered surface with primary-text-coloured label, which passes in both modes."
+  - jp: --jp-reject-color-hover
+    token: button.secondary.bgHover
+    rationale: "Hover step of the secondary button."
+  - jp: --jp-reject-color-active
+    token: button.secondary.bgActive
+    rationale: "Pressed step of the secondary button."
+  - jp: --jp-warn-color-normal
+    token: button.danger.bg
+    rationale: "The destructive confirm — see the name/meaning note above. Magenta (color.danger.default), the logo's pie-wedge colour, and the same token the error output block and the dead-kernel indicator use, so 'this destroys something' is one colour across the product."
+  - jp: --jp-warn-color-hover
+    token: button.danger.bgHover
+    rationale: "Hover step of the danger button."
+  - jp: --jp-warn-color-active
+    token: button.danger.bgActive
+    rationale: "Pressed step of the danger button."
+
+  # ===========================================================================
+  # SWITCH (settings editor, notification centre)
+  # ===========================================================================
+  # Core defines neither; both rules carry a fallback. The thumb is drawn with
+  # --jp-ui-inverse-font-color1 (a light chip in both modes), so both track
+  # colours below are chosen to keep a light thumb legible on them.
+  - jp: --jp-switch-color
+    token: color.border.default
+    rationale: "The OFF track. A border token, not a surface token, even though it is a background: the track is a 16px pill that has to read as a filled outline against surface.raised, and every surface.* step is by construction close to the panel it sits on. color.border.default is the same choice core makes (its fallback is --jp-border-color1) and it is the only neutral in the system guaranteed to separate from both raised and canvas in both modes."
+  - jp: --jp-switch-true-position-color
+    token: color.action.default
+    rationale: "The ON track. Core falls back to --jp-warn-color0 — amber — which says 'careful' about a setting the user just switched on. An engaged toggle is a SELECTED interactive state, so it takes the interaction teal, the same token as the active tab indicator and the focused-cell border. State is still legible without colour (the thumb slides), so this satisfies A7 on position alone."
+
+  # ===========================================================================
+  # COMPLETER TYPE BADGES
+  # ===========================================================================
+  # PRD §6.4 lists `.jp-Completer` type badges as T2 — token-reachable, so they
+  # get mapped rather than excluded. Eleven indices, and the index is NOT
+  # arbitrary: @jupyterlab/completer orders its type list with
+  # KNOWN_TYPES = ['function', 'instance', 'class', 'module', 'keyword'] first,
+  # so indices 1–5 are those five in that order, 6–10 are whatever extra types
+  # the kernel returns (order not stable across kernels), and 0 is "no type".
+  #
+  # WHY THE SYNTAX RAMP AND NOT AN ACCENT SET: the badge is a solid swatch with
+  # no text on it, sitting next to `.jp-Completer-typeExtended`, which prints the
+  # type NAME in text — so colour is never the sole carrier here (A7 is already
+  # satisfied) and the swatch's only job is recognition. Colouring it with the
+  # colour the CM6 HighlightStyle will paint the accepted token in makes that
+  # recognition transfer to the editor: the swatch beside `def` is the same hue
+  # the function name turns once inserted. color.icon.contrast0–4 was the
+  # alternative and was rejected — it is five slots for eleven indices, and it
+  # carries no relationship to what the completion IS.
+  #
+  # The ten hues below were checked for mutual distinctness in BOTH modes on a
+  # running build. That constraint is what excludes color.syntax.operator and
+  # color.syntax.invalid: both resolve to the same magenta as color.syntax.meta,
+  # so either would have made two badges identical. `invalid` is doubly wrong
+  # here anyway — it means "this is broken", not "this is a category".
+  - jp: --jp-completer-type-background0
+    token: transparent
+    literal: true
+    rationale: "Index 0 is 'no type reported', not a category. A literal `transparent` — matching core — because painting a swatch here would assert a classification the kernel did not make, and every remaining hue is spoken for by a real type."
+  - jp: --jp-completer-type-background1
+    token: color.syntax.function
+    rationale: "Index 1 is always `function` (first entry of KNOWN_TYPES). Same token the editor paints a function name with."
+  - jp: --jp-completer-type-background2
+    token: color.syntax.name
+    rationale: "Index 2 is always `instance` — a bound identifier, which is exactly what color.syntax.name covers. Not color.syntax.property: an instance in a completion list is usually a module-level or local binding, not an attribute access."
+  - jp: --jp-completer-type-background3
+    token: color.syntax.type
+    rationale: "Index 3 is always `class`. color.syntax.type is the ramp's class/type-annotation colour, so the badge and the annotation `x: MyClass` agree."
+  - jp: --jp-completer-type-background4
+    token: color.syntax.meta
+    rationale: "Index 4 is always `module`. meta carries decorators, pragmas and import-level constructs — the closest thing the ramp has to 'namespace'. type was the neighbouring candidate and is already spent on `class`, which is the distinction that matters most in a Python completion list."
+  - jp: --jp-completer-type-background5
+    token: color.syntax.keyword
+    rationale: "Index 5 is always `keyword`. Direct match."
+  - jp: --jp-completer-type-background6
+    token: color.syntax.string
+    rationale: "Indices 6–10 are kernel-defined extra types in an order that is not stable across kernels, so no fixed meaning can be assigned. The requirement collapses to 'mutually distinct, and distinct from 1–5' — this is the remaining syntax hue set, assigned in ramp order."
+  - jp: --jp-completer-type-background7
+    token: color.syntax.number
+    rationale: "Kernel-defined extra type — see index 6."
+  - jp: --jp-completer-type-background8
+    token: color.syntax.property
+    rationale: "Kernel-defined extra type — see index 6."
+  - jp: --jp-completer-type-background9
+    token: color.syntax.regexp
+    rationale: "Kernel-defined extra type — see index 6."
+  - jp: --jp-completer-type-background10
+    token: color.syntax.comment
+    rationale: "Kernel-defined extra type, and the last distinct hue the ramp has left — the neutral one. Using the comment colour as a BACKGROUND chip does not inherit its 'recede' intent: that intent is about text weight, and this swatch carries no text. An eleventh type falls back to index 0 in core, which is why the ramp stops here."
+
+  # ===========================================================================
+  # KEYBOARD SHORTCUTS EDITOR
+  # ===========================================================================
+  - jp: --jp-shortcuts-button-background
+    token: color.surface.sunken
+    rationale: "The key-cap chips in the shortcut editor (`.jp-Shortcuts-Plus`, `.jp-mod-selected-InputText`). Sunken, not raised: a key cap is an inset well the user types into, and the settings panel it sits on is already surface.raised — raised-on-raised is invisible."
+  - jp: --jp-shortcuts-button-hover-background
+    token: color.surface.hover
+    rationale: "Hover on the same chips. The standard hover step, so a key cap behaves like every other hoverable row in the chrome rather than inventing a local convention."
+
+  # ===========================================================================
+  # LUMINO DATAGRID (CSV viewer, debugger variables grid)
+  # ===========================================================================
+  # PRD Appendix B: the grid body is canvas-rendered and reached by the T4
+  # bridge, not by CSS. These two variables still matter — `buildGridStyle()`
+  # reads them off `getComputedStyle(document.body)` to build the TextRenderer
+  # font, and the debugger's colour-palette legend reads them directly in CSS.
+  # Mapping them is what stops the bridge from measuring a stock value.
+  - jp: --jp-datagrid-font-family
+    token: font.family.mono
+    rationale: "Mono, not font.family.content (core's fallback). Grid cells hold data — numbers, ids, timestamps — and PRD §8.6.2 already specifies mono for variable values in the tree view; using a proportional face here would break decimal alignment down a numeric column and make the same value look different in the two debugger views."
+  - jp: --jp-datagrid-font-size
+    token: font.size.codeCompact
+    rationale: "12px. The compact step of the CODE ramp rather than font.size.ui.xs (11px, also 12-ish): this text is set in font.family.mono, and a size taken from the UI ramp would drift away from the mono ramp the moment the two are re-tuned. 12px also matches core's own hardcoded fallback, so row heights do not shift under third-party grid extensions that never read the variable."
+
+  # ===========================================================================
+  # FILE BROWSER, FILE EDITOR, FLAT BUTTONS
+  # ===========================================================================
+  - jp: --jp-dirlisting-padding-width
+    token: space.3
+    rationale: "12px — the file browser row's horizontal inset, and it must equal the notebook and console padding (both space.3) or the file browser's left edge steps away from the document beside it."
+  - jp: --jp-editor-scroll-padding
+    token: "calc(100% - var(--jp-code-font-size) * var(--jp-code-line-height) - var(--jp-code-padding) * 2)"
+    literal: true
+    rationale: "The file editor's scroll-past-end padding. Core never defines it, so unmapped it resolves to nothing and the whole `padding-bottom` declaration is dropped — scroll-past-end silently does nothing. Same computed form as --jp-notebook-scroll-padding (one line stays visible at the bottom) minus the --jp-cell-padding term, because a file editor has no cell box around it."
+  - jp: --jp-flat-button-height
+    token: button.heightCompact
+    rationale: "24px min-height for core's flat text buttons (`.jp-TrimmedOutputs-button`, 'Show more outputs'). The COMPACT control height, not button.height: these sit inside an output area between cells, where a 32px control pushes the output stream around."
+  - jp: --jp-flat-button-padding
+    token: "var(--d4n-space-2) var(--d4n-space-3)"
+    literal: true
+    rationale: "A two-value shorthand no single space token expresses, so a literal — but built from tokens, not from 8px/12px numerals. Same 8/12 values core ships, which are already on our 4px grid; the change is that they now track the grid if it moves."
+  - jp: --jp-add-tag-extra-width
+    token: space.2
+    rationale: "8px. The notebook tag editor measures the typed text in a throwaway node and sets the input width to `calc(<measured>px + this)`, so it is the slack that stops the caret sitting flush against the border. space.2 rather than space.1: at 4px the caret visually touches the 1px border on the tag chip's radius.sm corner."
 
   # ===========================================================================
   # MISC
