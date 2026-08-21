@@ -83,12 +83,31 @@ signed off and there are zero unmapped `--jp-*` variables.
       (which holds the actual connection-lost and splash markup). The CSS for
       those surfaces _is_ present. See P0-02.
 - [ ] **P0-02** Recover the truncated tail of `JupyterLab Theme.html`.
-      Export it from claude.ai/design directly, or split it in the design
-      project so each file is under 256 KiB. Two screenshots
-      (`screenshots/01-launcher.png`, `01-menu.png`) also failed to import.
-      _Done when:_ the file on disk ends with `</html>`, and the tooltip,
-      connection-lost and splash markup are readable.
-      _Blocked by:_ nothing — needs a human with the design project open.
+      **Downgraded from blocking to nice-to-have — see the audit below.**
+      Both read routes are closed: `DesignSync get_file` caps at 256 KiB with no
+      range parameter (our copy is exactly 262 144 bytes / 6962 lines), and
+      WebFetch on the design URL returns 403 because it carries no first-party
+      session. So this needs a human to export it, or to split the file in the
+      design project.
+      Two screenshots (`screenshots/01-launcher.png`, `01-menu.png`) also failed
+      to import.
+      _Done when:_ the file on disk ends with `</html>`.
+
+      **What is actually lost, audited rather than assumed.** Only the React
+          demo scaffolding: the three `*Host` render functions (`NotifHost`'s tail,
+          `OverlayHost`, `TooltipHost`) all sit past the cut — verified, zero
+          matches for their `// ===== … =====` banners.
+
+          **Every CSS spec survived**, which is the part we actually port:
+          `.jp-Tooltip` (17 rules from L2728), `.jp-ConnLost` (14 from L2850, with
+          `body.is-dark` overrides), `.jp-Splash` (16 from L2952 — including
+          `-lockup`, `-mark`, `-wordmark`), `.jp-Notification` (40 from L3520).
+
+          So what the tail would add is their exact DOM structure and copy strings
+          for those three surfaces. We write our own markup regardless: these are
+          JupyterLab plugins, not a port of their React mock. Worth recovering for
+          the copy; not worth waiting on.
+
 - [x] **P0-03** Generate `mapping/jp-variables.manifest.json` by booting the
       target JupyterLab and enumerating every `--jp-*` custom property actually
       consumed. Write `tests/galata/extract-jp-variables.mjs` to do it.
@@ -212,8 +231,15 @@ Exit: all §6.1–6.2 surfaces at spec in both modes, Galata green.
       _Done when:_ L1–L9 hold, and the core plugin is disabled in the same change.
       Stub: `packages/shell-chrome/src/launcher.ts`.
 - [ ] **P2-09** **T3: splash screen.** Replace via `ISplashScreen`.
-      Markup was lost to the P0-02 truncation — reconstruct from the CSS at
-      `JupyterLab Theme.html` L2728–3103 or recover the file first.
+      **Not blocked by P0-02** — an earlier note here said the markup was lost
+      and to recover the file first. That overstated it: the splash SPEC is
+      CSS, and all of it survived the truncation. `.jp-Splash` at
+      `JupyterLab Theme.html` L2952-3103 gives the plate, the `::before` wash,
+      and `-lockup` / `-mark` / `-wordmark` geometry, with `body.is-dark`
+      overrides alongside. Write our own markup against it, which is what a
+      `ISplashScreen` replacement does anyway.
+      Note the splash is the one surface where the light/dark logo question
+      does not arise (D-007 makes the frame dark in both modes).
       Stub: `packages/shell-chrome/src/splash.ts`.
 - [x] **P2-10** Bottom dock area (`'down'`). Net-new — core ships it unstyled.
       Never render an empty bottom bar (PRD §8.5.3).
