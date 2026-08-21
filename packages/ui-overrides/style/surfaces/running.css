@@ -49,7 +49,24 @@ body[data-jp-theme-name^='Data4Now'] .jp-RunningSessions {
 
 /* Core indents the tree by a bare 14px. Rounding to the spacing scale keeps the
  * indent on the same 4px grid as the row padding, so the icon column of an
- * indented child lines up with the label column of its parent. */
+ * indented child lines up with the label column of its parent.
+ *
+ * `.jp-RunningSessions-sectionList` is NOT the element to target on 4.6.3, and
+ * this is worth knowing because the class still exists in upstream's own
+ * stylesheet: it appears there and NOWHERE in the shipped JS, and one of its two
+ * upstream rules already carries `@deprecated For backward compatibility when
+ * sessions manager does not specify supportsMultipleViews`. Measured with the
+ * panel open and 19 rows rendered, it matched 0 elements — so the rule below,
+ * written against it, indented nothing at all.
+ *
+ * The list is now a `<jp-tree-view class="jp-TreeView">` inside
+ * `.jp-RunningSessions-sectionContainer`. Both are declared, the live one
+ * asserted and the legacy one kept for the older shape upstream still supports;
+ * selectors.json records the deprecation so the next JupyterLab bump can drop
+ * it deliberately rather than by discovery. */
+body[data-jp-theme-name^='Data4Now']
+  .jp-RunningSessions-sectionContainer
+  > .jp-TreeView,
 body[data-jp-theme-name^='Data4Now'] .jp-RunningSessions-sectionList {
   padding-left: var(--d4n-space-3);
 }

@@ -72,7 +72,10 @@ body[data-jp-theme-name^='Data4Now']
 
 body[data-jp-theme-name^='Data4Now']
   .jp-SideBar
-  .lm-TabBar-tabIcon.jp-SideBar-tabIcon {
+  /* `.jp-SideBar-tabIcon` does not exist on 4.6.3 — the rail glyph is a plain
+   * `.lm-TabBar-tabIcon` plus a generated atomic class. Requiring both matched
+   * zero elements, so the icon sizing below silently never applied. */
+  .lm-TabBar-tabIcon {
   min-width: var(--d4n-sidebar-rail-icon-size);
   min-height: var(--d4n-sidebar-rail-icon-size);
   background-size: var(--d4n-sidebar-rail-icon-size);

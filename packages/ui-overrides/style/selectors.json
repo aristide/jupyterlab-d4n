@@ -27,18 +27,28 @@
   "package": "@d4n/ui-overrides",
   "scope": "body[data-jp-theme-name^='Data4Now']",
   "verifiedAgainst": {
+    "@jupyter/web-components": "0.16.6",
     "@jupyterlab/application": "4.6.3",
     "@jupyterlab/apputils": "4.7.3",
     "@jupyterlab/cells": "4.6.3",
     "@jupyterlab/documentsearch": "4.6.3",
+    "@jupyterlab/extensionmanager": "4.6.3",
+    "@jupyterlab/filebrowser": "4.6.3",
+    "@jupyterlab/filebrowser-extension": "4.6.3",
+    "@jupyterlab/logconsole": "4.6.3",
+    "@jupyterlab/logconsole-extension": "4.6.3",
     "@jupyterlab/notebook": "4.6.3",
     "@jupyterlab/outputarea": "4.6.3",
     "@jupyterlab/rendermime": "4.6.3",
+    "@jupyterlab/running": "4.6.3",
+    "@jupyterlab/running-extension": "4.6.3",
+    "@jupyterlab/statusbar": "4.6.3",
     "@jupyterlab/ui-components": "4.6.3",
     "@lumino/widgets": "2.9.0",
     "declaredRanges": {
       "@jupyterlab/*": "^4.5.0",
-      "@lumino/*": "^2.0.0"
+      "@lumino/*": "^2.0.0",
+      "@jupyter/web-components": "transitive, via @jupyterlab/ui-components"
     }
   },
   "states": {
@@ -61,17 +71,33 @@
     "extension-manager-open": "The extension manager panel open in the sidebar.",
     "right-panel-open": "The right sidebar open on the property inspector.",
     "debugger-open": "The debugger panel open, which is where the accordion titles are.",
-    "document-loading": "A document mid-load, while its spinner is on screen."
+    "document-loading": "A document mid-load, while its spinner is on screen.",
+    "running-panel-open": "The Running Terminals and Kernels panel open in the left sidebar with at least one live kernel.",
+    "log-console-open": "The Log Console open in the down area with at least one logged message.",
+    "bottom-dock-open": "Any widget open in the '#jp-down-stack' down area, so its TabPanel tab bar and the vsplit handle exist.",
+    "toast-visible": "A notification toast on screen. JupyterLab raises the Jupyter-news prompt on a first boot with a fresh profile, so this is reachable but not deterministic; the entries are optional until the harness can raise one on demand."
   },
   "surfaces": [
     {
       "file": "style/surfaces/top-panel.css",
       "upstream": ["@jupyterlab/application 4.6.3 style/core.css"],
       "selectors": [
-        { "selector": "#jp-top-panel", "state": "boot" },
-        { "selector": "#jp-menu-panel", "state": "boot" },
-        { "selector": "#jp-MainLogo", "state": "boot" },
-        { "selector": "#jp-MainLogo svg", "state": "boot" }
+        {
+          "selector": "#jp-top-panel",
+          "state": "boot"
+        },
+        {
+          "selector": "#jp-menu-panel",
+          "state": "boot"
+        },
+        {
+          "selector": "#jp-MainLogo",
+          "state": "boot"
+        },
+        {
+          "selector": "#jp-MainLogo svg",
+          "state": "boot"
+        }
       ]
     },
     {
@@ -81,8 +107,14 @@
         "@jupyterlab/application 4.6.3 style/menus.css"
       ],
       "selectors": [
-        { "selector": ".lm-MenuBar", "state": "boot" },
-        { "selector": ".lm-MenuBar-item", "state": "boot" },
+        {
+          "selector": ".lm-MenuBar",
+          "state": "boot"
+        },
+        {
+          "selector": ".lm-MenuBar-item",
+          "state": "boot"
+        },
         {
           "selector": ".lm-MenuBar-item.lm-mod-active",
           "state": "menu-open",
@@ -114,7 +146,10 @@
         "@jupyterlab/application 4.6.3 style/menus.css"
       ],
       "selectors": [
-        { "selector": ".lm-Menu", "state": "menu-open" },
+        {
+          "selector": ".lm-Menu",
+          "state": "menu-open"
+        },
         {
           "selector": ".lm-MenuBar-menu.jp-ThemedContainer",
           "state": "menu-open"
@@ -123,12 +158,30 @@
           "selector": ".lm-Menu:not(.lm-MenuBar-menu)",
           "state": "context-menu-open"
         },
-        { "selector": ".lm-Menu-content", "state": "menu-open" },
-        { "selector": ".lm-Menu-item", "state": "menu-open" },
-        { "selector": ".lm-Menu-itemIcon", "state": "menu-open" },
-        { "selector": ".lm-Menu-itemLabel", "state": "menu-open" },
-        { "selector": ".lm-Menu-itemShortcut", "state": "menu-open" },
-        { "selector": ".lm-Menu-itemSubmenuIcon", "state": "menu-open" },
+        {
+          "selector": ".lm-Menu-content",
+          "state": "menu-open"
+        },
+        {
+          "selector": ".lm-Menu-item",
+          "state": "menu-open"
+        },
+        {
+          "selector": ".lm-Menu-itemIcon",
+          "state": "menu-open"
+        },
+        {
+          "selector": ".lm-Menu-itemLabel",
+          "state": "menu-open"
+        },
+        {
+          "selector": ".lm-Menu-itemShortcut",
+          "state": "menu-open"
+        },
+        {
+          "selector": ".lm-Menu-itemSubmenuIcon",
+          "state": "menu-open"
+        },
         {
           "selector": ".lm-Menu-item[data-type='submenu']",
           "state": "menu-open",
@@ -194,7 +247,10 @@
         "@jupyterlab/ui-components 4.6.3 style/icons.css"
       ],
       "selectors": [
-        { "selector": ".lm-DockPanel-tabBar", "state": "boot" },
+        {
+          "selector": ".lm-DockPanel-tabBar",
+          "state": "boot"
+        },
         {
           "selector": ".lm-DockPanel-tabBar .lm-TabBar-tab",
           "state": "document-open"
@@ -275,7 +331,10 @@
         "@jupyterlab/ui-components 4.6.3 style/sidepanel.css"
       ],
       "selectors": [
-        { "selector": ".jp-SideBar.lm-TabBar", "state": "boot" },
+        {
+          "selector": ".jp-SideBar.lm-TabBar",
+          "state": "boot"
+        },
         {
           "selector": ".jp-SideBar.lm-TabBar[data-orientation='vertical']",
           "state": "boot"
@@ -285,8 +344,9 @@
           "state": "boot"
         },
         {
-          "selector": ".jp-SideBar .lm-TabBar-tabIcon.jp-SideBar-tabIcon",
-          "state": "boot"
+          "selector": ".jp-SideBar .lm-TabBar-tabIcon",
+          "state": "boot",
+          "note": "jp-SideBar-tabIcon does not exist on 4.6.3; the rail glyph is a plain lm-TabBar-tabIcon."
         },
         {
           "selector": ".jp-SideBar .lm-TabBar-tab.lm-mod-current",
@@ -300,8 +360,14 @@
           "selector": ".jp-SideBar.lm-TabBar.jp-mod-right .lm-TabBar-tab.lm-mod-current",
           "state": "right-panel-open"
         },
-        { "selector": ".jp-SidePanel", "state": "right-panel-open" },
-        { "selector": ".jp-SidePanel-header", "state": "right-panel-open" },
+        {
+          "selector": ".jp-SidePanel",
+          "state": "right-panel-open"
+        },
+        {
+          "selector": ".jp-SidePanel-header",
+          "state": "right-panel-open"
+        },
         {
           "selector": ".lm-AccordionPanel .jp-AccordionPanel-title",
           "state": "debugger-open",
@@ -337,11 +403,26 @@
       "file": "style/surfaces/dialog.css",
       "upstream": ["@jupyterlab/apputils 4.7.3 style/dialog.css"],
       "selectors": [
-        { "selector": ".jp-Dialog.jp-ThemedContainer", "state": "dialog-open" },
-        { "selector": ".jp-Dialog-content", "state": "dialog-open" },
-        { "selector": ".jp-Dialog-header", "state": "dialog-open" },
-        { "selector": ".jp-Dialog-body", "state": "dialog-open" },
-        { "selector": ".jp-Dialog-footerButtons", "state": "dialog-open" },
+        {
+          "selector": ".jp-Dialog.jp-ThemedContainer",
+          "state": "dialog-open"
+        },
+        {
+          "selector": ".jp-Dialog-content",
+          "state": "dialog-open"
+        },
+        {
+          "selector": ".jp-Dialog-header",
+          "state": "dialog-open"
+        },
+        {
+          "selector": ".jp-Dialog-body",
+          "state": "dialog-open"
+        },
+        {
+          "selector": ".jp-Dialog-footerButtons",
+          "state": "dialog-open"
+        },
         {
           "selector": ".jp-Dialog-button.jp-mod-styled",
           "state": "dialog-open",
@@ -360,7 +441,10 @@
         "@jupyterlab/rendermime 4.6.3 style/base.css"
       ],
       "selectors": [
-        { "selector": ".jp-Notebook", "state": "notebook-open" },
+        {
+          "selector": ".jp-Notebook",
+          "state": "notebook-open"
+        },
         {
           "selector": ".jp-Notebook .jp-Cell.jp-mod-active",
           "state": "notebook-open"
@@ -374,9 +458,18 @@
           "state": "notebook-open",
           "note": "Core paints this as the active-cell bar. It is neutralised here so the inset indicator is the only bar; if the selector stops matching, two bars come back."
         },
-        { "selector": ".jp-InputPrompt", "state": "notebook-open" },
-        { "selector": ".jp-OutputPrompt", "state": "notebook-executed" },
-        { "selector": ".jp-OutputArea-output", "state": "notebook-executed" },
+        {
+          "selector": ".jp-InputPrompt",
+          "state": "notebook-open"
+        },
+        {
+          "selector": ".jp-OutputPrompt",
+          "state": "notebook-executed"
+        },
+        {
+          "selector": ".jp-OutputArea-output",
+          "state": "notebook-executed"
+        },
         {
           "selector": ".jp-RenderedText[data-mime-type='application/vnd.jupyter.stderr']",
           "state": "notebook-error-output",
@@ -411,7 +504,10 @@
           "selector": ".lm-CommandPalette-input",
           "state": "command-palette-open"
         },
-        { "selector": "input.jp-mod-styled", "state": "dialog-open" },
+        {
+          "selector": "input.jp-mod-styled",
+          "state": "dialog-open"
+        },
         {
           "selector": ".jp-DocumentSearch-regex-error",
           "state": "document-search-regex-error",
@@ -431,7 +527,8 @@
         {
           "selector": "input[type='checkbox']",
           "state": "boot",
-          "note": "The file browser listing renders one per row."
+          "note": "Custom-drawn checkbox styling. No checkbox is rendered at cold boot on 4.6.3 (DirListing ships none by default); they appear in the settings editor and in dialogs.",
+          "optional": true
         },
         {
           "selector": "input[type='radio']",
@@ -457,7 +554,10 @@
         "@jupyterlab/ui-components 4.6.3 style/toolbar.css"
       ],
       "selectors": [
-        { "selector": "button.jp-mod-styled", "state": "dialog-open" },
+        {
+          "selector": "button.jp-mod-styled",
+          "state": "dialog-open"
+        },
         {
           "selector": "button.jp-mod-styled.jp-mod-accept",
           "state": "dialog-open"
@@ -487,7 +587,10 @@
           "state": "extension-manager-open",
           "optional": true
         },
-        { "selector": ".jp-Toolbar", "state": "document-open" },
+        {
+          "selector": ".jp-Toolbar",
+          "state": "document-open"
+        },
         {
           "selector": ".jp-ToolbarButtonComponent",
           "state": "document-open",
@@ -516,15 +619,27 @@
         "@jupyterlab/ui-components 4.6.3 style/styling.css"
       ],
       "selectors": [
-        { "selector": ".lm-MenuBar-item", "state": "boot" },
-        { "selector": ".lm-TabBar-tab", "state": "boot" },
+        {
+          "selector": ".lm-MenuBar-item",
+          "state": "boot"
+        },
+        {
+          "selector": ".lm-TabBar-tab",
+          "state": "boot"
+        },
         {
           "selector": ".lm-TabBar-addButton",
           "state": "document-open",
           "optional": true
         },
-        { "selector": ".jp-ToolbarButtonComponent", "state": "document-open" },
-        { "selector": "button.jp-Dialog-button", "state": "dialog-open" }
+        {
+          "selector": ".jp-ToolbarButtonComponent",
+          "state": "document-open"
+        },
+        {
+          "selector": "button.jp-Dialog-button",
+          "state": "dialog-open"
+        }
       ],
       "nonQueryable": [
         ":focus-visible",
@@ -546,6 +661,855 @@
         "*:not(.jp-SpinnerContent)",
         "*:not(.jp-SpinnerContent)::before",
         "*:not(.jp-SpinnerContent)::after"
+      ]
+    },
+    {
+      "file": "style/surfaces/toolbar.css",
+      "upstream": [
+        "@jupyterlab/ui-components 4.6.3 style/toolbar.css",
+        "@jupyterlab/ui-components 4.6.3 style/sidepanel.css",
+        "@jupyterlab/apputils 4.7.3 style/toolbar.css",
+        "@jupyterlab/notebook 4.6.3 style/toolbar.css"
+      ],
+      "selectors": [
+        {
+          "selector": ".jp-Toolbar",
+          "state": "boot",
+          "note": "The `--toolbar-item-gap` rule. `<jp-toolbar>` lays its children out in a shadow root and exposes that variable as the only handle on item spacing, so it is set on the host."
+        },
+        {
+          "selector": ".jp-Toolbar:not(:where(.jp-cell-toolbar))",
+          "state": "boot",
+          "note": "The plate rule. Written with `:where()` on both sides so it weighs exactly what core's own `.jp-Toolbar` weighs and replaces it on source order alone — six upstream rules opt a toolbar OUT of the plate with a single extra class, and an ordinary `body[…]` gate would silently win all six. Measured 18 of 18 toolbars at boot."
+        },
+        {
+          "selector": ".jp-cell-toolbar",
+          "state": "notebook-open",
+          "note": "Not styled here — excluded from the plate rule. Asserted for the same reason `.jp-scrollbar-tiny` is in scrollbars.css: the exclusion is only correct while core still puts this class on the floating cell toolbar. If it disappears, the exclusion is dead code and a hairline reappears under every cell toolbar."
+        },
+        {
+          "selector": ".jp-ToolbarButtonComponent",
+          "state": "boot",
+          "note": "The queryable host of the `::part(control)` rule below — a `<jp-button>` whose real control lives in a shadow root. Measured 41 at cold boot; the file browser's two toolbars alone render several. buttons.css records the same host under the stricter `document-open`."
+        },
+        {
+          "selector": "button.jp-ToolbarButtonComponent",
+          "state": "boot",
+          "optional": true,
+          "note": "The plain-DOM path core marks deprecated; no shadow root, so the geometry lands on the element itself. Measured 0 in a stock 4.6.3 boot — third-party toolbar items are what still render it."
+        },
+        {
+          "selector": ".jp-Toolbar .jp-Toolbar-separator",
+          "state": "boot",
+          "optional": true,
+          "note": "Inert until TODO P2-12. JupyterLab 4.6.3 has no separator item — the string `jp-Toolbar-separator` does not appear anywhere in the 4.6.3 bundle, JS or CSS — so this rule is the receiving end of the declarative toolbar restructuring that adds the item, not a dependency on markup that exists today."
+        },
+        {
+          "selector": ".jp-Toolbar.jp-Toolbar-micro",
+          "state": "boot",
+          "optional": true,
+          "note": "`Toolbar` adds this the moment its last visible item is removed, and core keeps the plate on it — an empty toolbar still draws a background and a bottom border. Reachable but not reliably: measured 1 on a cold boot (launcher only) and 0 once a notebook is restored, because which toolbars end up empty depends on the layout."
+        }
+      ],
+      "nonQueryable": [".jp-ToolbarButtonComponent::part(control)"]
+    },
+    {
+      "file": "style/surfaces/bottom-dock.css",
+      "upstream": [
+        "@jupyterlab/application 4.6.3 style/core.css",
+        "@jupyterlab/application 4.6.3 style/tabs.css",
+        "@jupyterlab/application 4.6.3 lib/shell.js (#jp-down-stack is a TabPanel)",
+        "@lumino/widgets 2.9.0 style/tabpanel.css",
+        "@lumino/widgets 2.9.0 style/splitpanel.css"
+      ],
+      "selectors": [
+        {
+          "selector": "#jp-down-stack",
+          "state": "boot",
+          "note": "State is `boot`, not `bottom-dock-open`: LabShell constructs the panel at startup and hides it until a widget is added, so the node is in the DOM from a cold start (measured 1). Only the styling waits for `bottom-dock-open`."
+        },
+        {
+          "selector": "#jp-down-stack > .lm-TabPanel-tabBar[data-orientation='horizontal']",
+          "state": "boot",
+          "note": "The collapse floor. Core caps this bar at 26px and Lumino reads that number back as the area's minimum height, so the floor has to be raised on the BAR — a rule on the area itself is overridden by the inline min-height Lumino writes. Also present from cold start (measured 1)."
+        },
+        {
+          "selector": "#jp-down-stack .lm-TabBar-tab",
+          "state": "bottom-dock-open",
+          "note": "Measured 0 at boot, 1 with the log console open."
+        },
+        {
+          "selector": "#jp-down-stack .lm-TabBar-tab.lm-mod-current",
+          "state": "bottom-dock-open",
+          "note": "The accent hangs off Lumino's per-tab-bar current tab, not `jp-mod-current` — LabShell only tracks the application-level current tab for the main area, so `jp-mod-current` is never applied down here and core's own accent rule (tabs.css L110, written against `.lm-DockPanel-tabBar`) never matches either."
+        },
+        {
+          "selector": "#jp-main-vsplit-panel",
+          "state": "boot"
+        },
+        {
+          "selector": "#jp-main-vsplit-panel > .lm-SplitPanel-handle",
+          "state": "boot",
+          "note": "The bottom dock's resize handle. Lumino renders one handle per child and hides the last, so both exist before the area is ever opened (measured 2 at boot). This file only re-declares the cursor and the hit target; the visible line is drawn once, in tab-bar.css."
+        }
+      ],
+      "nonQueryable": [
+        "#jp-down-stack:has(> .lm-TabBar > .lm-TabBar-content:empty)",
+        "#jp-down-stack .lm-TabBar-tab.lm-mod-current::before",
+        "#jp-main-vsplit-panel > .lm-SplitPanel-handle::after"
+      ],
+      "note": "The `:has()` rule is an assertion, not a mechanism: `LabShell._onTabPanelChanged` already hides this panel when its last widget is removed, so in a healthy build it never fires. It is listed as nonQueryable rather than optional because it is only ever true in the failure case it exists to catch."
+    },
+    {
+      "file": "style/surfaces/file-browser.css",
+      "upstream": [
+        "@jupyterlab/filebrowser 4.6.3 style/base.css",
+        "@jupyterlab/filebrowser 4.6.3 style/pathnavigator.css",
+        "@jupyterlab/filebrowser-extension 4.6.3 style/base.css"
+      ],
+      "selectors": [
+        {
+          "selector": ".jp-FileBrowser",
+          "state": "boot"
+        },
+        {
+          "selector": ".jp-FileBrowser-toolbar.jp-Toolbar",
+          "state": "boot"
+        },
+        {
+          "selector": ".jp-FileBrowser-filterToolbar.jp-Toolbar",
+          "state": "boot"
+        },
+        {
+          "selector": ".jp-FileBrowser-filterBox",
+          "state": "boot",
+          "note": "The MOUNT only. The control inside is a `<jp-search>` whose input lives in a shadow root; restyling it from here would be a fifth bespoke search input (§8.8/S1). The shared `::part()` mapping is P3-12."
+        },
+        {
+          "selector": ".jp-BreadCrumbs",
+          "state": "boot"
+        },
+        {
+          "selector": ".jp-BreadCrumbs-content",
+          "state": "boot",
+          "note": "The queryable half of the breadcrumb hover rule — the strip washes on hover only when the pointer is NOT over the content itself."
+        },
+        {
+          "selector": ".jp-BreadCrumbs-item",
+          "state": "boot",
+          "optional": true,
+          "note": "Only emitted for path segments below the root. At the root the strip is a `.jp-BreadCrumbs-home` glyph plus one separator, so this measures 0 on a default boot."
+        },
+        {
+          "selector": ".jp-BreadCrumbs-separator",
+          "state": "boot"
+        },
+        {
+          "selector": ".jp-BreadCrumbs-item.jp-mod-dropTarget",
+          "state": "boot",
+          "optional": true,
+          "note": "Only while a file is being dragged over a crumb."
+        },
+        {
+          "selector": ".jp-PathNavigator > input",
+          "state": "boot",
+          "note": "A plain text input with no `.jp-mod-styled` class, so inputs.css never sees it — it consumes the `--d4n-input-*` component tokens directly rather than inventing a second text-field spec. In the DOM from boot (measured 1); the widget hides it rather than unmounting it."
+        },
+        {
+          "selector": ".jp-PathNavigator-suggestions",
+          "state": "boot",
+          "note": "Also in the DOM from boot, carrying an inline `display: none` (measured 1)."
+        },
+        {
+          "selector": ".jp-PathNavigator-suggestions > li",
+          "state": "boot",
+          "optional": true,
+          "note": "Populated only while a path is being typed."
+        },
+        {
+          "selector": ".jp-PathNavigator-suggestions > li.jp-mod-active",
+          "state": "boot",
+          "optional": true,
+          "note": "Lumino's keyboard highlight on a suggestion. Styled in the same declaration block as `:hover` so arrow-key navigation cannot go invisible (R12)."
+        },
+        {
+          "selector": ".jp-DirListing",
+          "state": "boot"
+        },
+        {
+          "selector": ".jp-DirListing-header",
+          "state": "boot"
+        },
+        {
+          "selector": ".jp-DirListing-headerItem",
+          "state": "boot"
+        },
+        {
+          "selector": ".jp-DirListing-headerItem.jp-mod-selected",
+          "state": "boot",
+          "note": "The sorted column. Core's only signal is `font-weight: 600` on text that is already semibold — invisible — so the foreground moves too (A7). Measured 1 at boot (Name)."
+        },
+        {
+          "selector": ".jp-DirListing-resizeHandle",
+          "state": "boot"
+        },
+        {
+          "selector": ".jp-DirListing-resizeHandle.jp-mod-active",
+          "state": "boot",
+          "optional": true,
+          "note": "Only while a column is being dragged."
+        },
+        {
+          "selector": ".jp-DirListing-content",
+          "state": "boot"
+        },
+        {
+          "selector": ".jp-DirListing-item",
+          "state": "boot",
+          "note": "One per row. A failure here means the fixture directory is empty, not that the selector moved — check `.jp-DirListing-content:empty` before treating it as an upstream break."
+        },
+        {
+          "selector": ".jp-DirListing-itemIcon",
+          "state": "boot"
+        },
+        {
+          "selector": ".jp-DirListing-itemIcon > svg",
+          "state": "boot"
+        },
+        {
+          "selector": ".jp-DirListing-itemModified",
+          "state": "boot"
+        },
+        {
+          "selector": ".jp-DirListing-itemCreated",
+          "state": "boot",
+          "optional": true,
+          "note": "An optional column, off by default in 4.6.3 — the stock header ships Name and Last Modified only, so this measures 0 until the user turns the column on."
+        },
+        {
+          "selector": ".jp-DirListing-itemFileSize",
+          "state": "boot",
+          "optional": true,
+          "note": "Same as `-itemCreated`: an optional column, off by default in 4.6.3."
+        },
+        {
+          "selector": ".jp-DirListing-item.jp-mod-selected",
+          "state": "boot",
+          "optional": true,
+          "note": "Needs a click, or a restored selection from a previous session. Carries the tinted plate plus the inset leading accent bar — selection is not colour-only (A7)."
+        },
+        {
+          "selector": ".jp-DirListing-content mark",
+          "state": "boot",
+          "optional": true,
+          "note": "Undo #1 of core's selection inversion. Only present once a filter term has been typed."
+        },
+        {
+          "selector": ".jp-DirListing-content .jp-DirListing-item.jp-mod-selected mark",
+          "state": "boot",
+          "optional": true,
+          "note": "Core's inverse-colour rule for the same mark on a brand-filled row. Repeated verbatim so our treatment clears it rather than tying with it."
+        },
+        {
+          "selector": ".jp-DirListing-item.jp-mod-running",
+          "state": "boot",
+          "optional": true,
+          "note": "Needs a kernel running on a file in the listed directory. Base of the running-dot rules below."
+        },
+        {
+          "selector": ".jp-DirListing-editor",
+          "state": "boot",
+          "optional": true,
+          "note": "The inline rename editor — only exists mid-rename."
+        },
+        {
+          "selector": ".jp-DirListing-item.jp-mod-dropTarget",
+          "state": "boot",
+          "optional": true,
+          "note": "Drop INTO that directory. Deliberately a different signal from `.jp-mod-native-drop` below, which is a drop into the current directory."
+        },
+        {
+          "selector": ".jp-DirListing.jp-mod-native-drop .jp-DirListing-content",
+          "state": "boot",
+          "optional": true,
+          "note": "An OS file drag over the listing, i.e. an upload."
+        },
+        {
+          "selector": ".jp-DirListing-item.lm-mod-drag-image",
+          "state": "boot",
+          "optional": true,
+          "note": "The chip that follows the cursor while rows are dragged."
+        },
+        {
+          "selector": ".jp-DirListing-item.jp-mod-selected.lm-mod-drag-image",
+          "state": "boot",
+          "optional": true
+        }
+      ],
+      "nonQueryable": [
+        ".jp-BreadCrumbs:hover:not(:has(.jp-BreadCrumbs-content:hover))",
+        ".jp-BreadCrumbs-item:hover",
+        ".jp-PathNavigator > input:focus",
+        ".jp-PathNavigator-suggestions > li:hover",
+        ".jp-DirListing-headerItem:hover",
+        ".jp-DirListing-resizeHandle:hover",
+        ".jp-DirListing-resizeHandle.jp-mod-active:hover",
+        ".jp-DirListing-item:hover:not(.jp-mod-selected)",
+        ".jp-DirListing:not(:focus-within) .jp-DirListing-item.jp-mod-selected",
+        ".jp-DirListing-item.jp-mod-selected:focus-within",
+        ".jp-DirListing-item.jp-mod-running .jp-DirListing-itemIcon::before",
+        ".jp-DirListing-item.jp-mod-running.jp-mod-selected .jp-DirListing-itemIcon::before",
+        ".jp-DirListing-content:empty::after"
+      ]
+    },
+    {
+      "file": "style/surfaces/running.css",
+      "upstream": [
+        "@jupyterlab/running 4.6.3 style/base.css",
+        "@jupyterlab/running-extension 4.6.3 (SearchableSessions modal)",
+        "@jupyter/web-components 0.16.6 jp-tree-item (shadow parts)"
+      ],
+      "selectors": [
+        {
+          "selector": ".jp-RunningSessions",
+          "state": "running-panel-open"
+        },
+        {
+          "selector": ".jp-RunningSessions-sectionList",
+          "state": "running-panel-open",
+          "note": "BROKEN AGAINST 4.6.3 — recorded as an assertion, not as a state the harness cannot reach. Measured 0 with the panel open and 19 rows rendered. The class survives only in upstream's own stylesheet (one of its two rules is already marked `@deprecated For backward compatibility when sessions manager does not specify supportsMultipleViews`) and is emitted by nothing in the 4.6.3 bundle: the section list is now a `<jp-tree-view class=\"jp-TreeView\">` inside `.jp-RunningSessions-sectionContainer`. The indent this rule intends therefore lands on `.jp-RunningSessions-sectionContainer > .jp-TreeView` today. Left failing on purpose so the fix happens in running.css rather than being hidden here."
+        },
+        {
+          "selector": ".jp-RunningSessions-sectionContainer",
+          "state": "running-panel-open",
+          "note": "The plain `<div>` the empty-state pseudo-element hangs off. Deliberately not the `<jp-tree-view>` itself: a shadow host's `::after` is subject to slotting and whether it renders at all depends on the component's shadow template."
+        },
+        {
+          "selector": ".jp-RunningSessions-sectionContainer > .jp-TreeView",
+          "state": "running-panel-open",
+          "note": "The queryable half of the `:has(> .jp-TreeView:empty)` empty-state rule, and the element that actually carries the tree indentation in 4.6.3. `.jp-mod-empty` is NOT the hook — measured in 4.6.3, that class is only ever applied inside the searchable-sessions modal, so a rule keyed on it matches nothing and fails silently."
+        },
+        {
+          "selector": ".jp-RunningSessions-item",
+          "state": "running-panel-open",
+          "note": "A `<jp-tree-item>`, not an `<li>`. The box a user perceives as the row is `part=\"positioning-region\"` inside its shadow root, so every geometry and surface rule is written against `::part()` — asserting the host is as deep as querySelectorAll can go."
+        },
+        {
+          "selector": ".jp-RunningSessions-item.jp-mod-active",
+          "state": "running-panel-open",
+          "optional": true,
+          "note": "The row whose document is the one in front. Needs a session AND that session's widget focused; measured 0 with the panel open. Core paints the host and then blanks the part, so this rule and its `::part()` twin have to stay a pair."
+        },
+        {
+          "selector": ".jp-RunningSessions-itemLabel",
+          "state": "running-panel-open"
+        },
+        {
+          "selector": ".jp-RunningSessions-itemDetail",
+          "state": "running-panel-open",
+          "optional": true,
+          "note": "Rendered only when a section's running item supplies a `detail()` (`h && <span className={itemDetail}>{h}</span>` in the 4.6.3 bundle). None of the stock sections did in the measured build — 0 of 19 rows — so this is conditional upstream markup rather than a break."
+        },
+        {
+          "selector": ".jp-RunningSessions-item-label-kernel-id",
+          "state": "running-panel-open",
+          "note": "A UUID, read character by character against a log line, which is what the mono ramp is for. Measured 6."
+        },
+        {
+          "selector": "img.jp-RunningSessions-icon",
+          "state": "running-panel-open",
+          "note": "Scoped to `img` on purpose: these are the same server-served kernel rasters the launcher gets and they carry the same dark-mode halo (D-010). The `span` variant is an inline LabIcon that already follows the theme and must NOT gain a plate."
+        },
+        {
+          "selector": "span.jp-RunningSessions-icon > svg",
+          "state": "running-panel-open"
+        },
+        {
+          "selector": ".jp-RunningSessions-itemShutdown",
+          "state": "running-panel-open"
+        },
+        {
+          "selector": ".jp-RunningSessions-shutdownAll.jp-ToolbarButtonComponent",
+          "state": "running-panel-open"
+        },
+        {
+          "selector": ".jp-RunningSessions-shutdownAll.jp-ToolbarButtonComponent[disabled]",
+          "state": "running-panel-open",
+          "optional": true,
+          "note": "Measured 2 with the panel open, but only sections with nothing to shut down carry it — a fixture where every section is populated has none."
+        },
+        {
+          "selector": ".jp-SearchableSessions-title",
+          "state": "running-panel-open",
+          "optional": true,
+          "note": "The modal session switcher, a separate mount. Its titles are `<h3>`s rather than accordion titles, which is why the eyebrow treatment is restated for them here — the sidebar's own section headers belong to sidebar.css and are deliberately not touched by this file."
+        },
+        {
+          "selector": ".jp-SearchableSessions-emptyIndicator",
+          "state": "running-panel-open",
+          "optional": true,
+          "note": "Core's own empty state, already translated — retokened, not replaced."
+        }
+      ],
+      "nonQueryable": [
+        ".jp-RunningSessions-item::part(positioning-region)",
+        ".jp-RunningSessions-item:hover::part(positioning-region)",
+        ".jp-RunningSessions-item.jp-mod-active::part(positioning-region)",
+        ".jp-RunningSessions-item:focus-within > .jp-RunningSessions-itemShutdown",
+        ".jp-RunningSessions-itemShutdown:hover",
+        ".jp-RunningSessions-sectionContainer:has(> .jp-TreeView:empty)::after"
+      ],
+      "note": "The `:focus-within` rule is an accessibility fix, not decoration: the per-row kill button is `visibility: hidden` until the row is hovered, and core's other reveal path keys off `.jp-RunningSessions-item:focus-visible` — the wrong element, because tabbing moves focus to the BUTTON and the item then stops matching. Upstream ends up with a focused, operable, invisible control that shuts down a running kernel (WCAG 2.4.11). It cannot be asserted here, so it is recorded here."
+    },
+    {
+      "file": "style/surfaces/extension-manager.css",
+      "upstream": [
+        "@jupyterlab/extensionmanager 4.6.3 style/base.css",
+        "@jupyter/web-components 0.16.6 jp-search (shadow parts)"
+      ],
+      "selectors": [
+        {
+          "selector": ".jp-extensionmanager-view",
+          "state": "extension-manager-open"
+        },
+        {
+          "selector": ".jp-extensionmanager-title",
+          "state": "extension-manager-open"
+        },
+        {
+          "selector": ".jp-extensionmanager-path",
+          "state": "extension-manager-open"
+        },
+        {
+          "selector": ".jp-extensionmanager-path > svg",
+          "state": "extension-manager-open"
+        },
+        {
+          "selector": ".jp-extensionmanager-header",
+          "state": "extension-manager-open"
+        },
+        {
+          "selector": ".jp-extensionmanager-header .jp-FilterBox",
+          "state": "extension-manager-open",
+          "note": "The MOUNT only — margin and width. Same `<jp-search>` the file browser filter uses, left alone for the same reason (S1, P3-12)."
+        },
+        {
+          "selector": ".jp-extensionmanager-disclaimer",
+          "state": "extension-manager-open",
+          "optional": true,
+          "note": "The third-party consent notice. Present until the disclaimer is accepted, after which it is gone for that deployment — reachable at a fresh boot but not on a machine where someone has already clicked through."
+        },
+        {
+          "selector": ".jp-extensionmanager-disclaimer a",
+          "state": "extension-manager-open",
+          "optional": true
+        },
+        {
+          "selector": ".jp-extensionmanager-disclaimer .jp-Button",
+          "state": "extension-manager-open",
+          "optional": true
+        },
+        {
+          "selector": ".jp-extensionmanager-disclaimer-enable",
+          "state": "extension-manager-open",
+          "optional": true,
+          "note": "One of the two sanctioned `!important` sites in this package (§7.4(4)): upstream's own declarations on this class are `!important`, so no amount of specificity reaches them. Core paints BOTH consent buttons red, so the affirmative and the refusal look identical; this restores an ordinary primary/secondary pair."
+        },
+        {
+          "selector": ".jp-extensionmanager-disclaimer-disable",
+          "state": "extension-manager-open",
+          "optional": true
+        },
+        {
+          "selector": ".jp-extensionmanager-listview",
+          "state": "extension-manager-open"
+        },
+        {
+          "selector": ".jp-extensionmanager-entry",
+          "state": "extension-manager-open",
+          "note": "Core renders these as `<li>`s divided by a hairline. The `border` SHORTHAND is what turns the row into a card AND overwrites that divider in one declaration — four `border-*` longhands would leave core's bottom line 1px inside our own."
+        },
+        {
+          "selector": ".jp-extensionmanager-entry-title",
+          "state": "extension-manager-open"
+        },
+        {
+          "selector": ".jp-extensionmanager-entry-name",
+          "state": "extension-manager-open"
+        },
+        {
+          "selector": ".jp-extensionmanager-entry-name a:link",
+          "state": "extension-manager-open",
+          "optional": true,
+          "note": "Only entries whose package declares a homepage — measured 1 of 9."
+        },
+        {
+          "selector": ".jp-extensionmanager-entry-version",
+          "state": "extension-manager-open"
+        },
+        {
+          "selector": ".jp-extensionmanager-entry-description",
+          "state": "extension-manager-open"
+        },
+        {
+          "selector": ".jp-extensionmanager-entry-buttons",
+          "state": "extension-manager-open",
+          "optional": true,
+          "note": "`ListEntry` guards this on `performAction` (`e.performAction&&h.createElement(\"div\",{className:\"jp-extensionmanager-entry-buttons\"}…` in the 4.6.3 bundle), which the panel withholds until the third-party disclaimer is accepted. Measured 0 of 9 entries pre-acceptance."
+        },
+        {
+          "selector": ".jp-extensionmanager-is-approved",
+          "state": "extension-manager-open",
+          "optional": true,
+          "note": "Guarded on `i.approved` — only when the deployment's package index marks the extension approved."
+        },
+        {
+          "selector": ".jp-extensionmanager-entry-warning",
+          "state": "extension-manager-open",
+          "optional": true,
+          "note": "One of the four entry states core does express as a class. \"Installed vs enabled vs disabled\" is NOT one of them in 4.6 — it is carried entirely by which buttons the entry renders — so there is no selector to hang a treatment on."
+        },
+        {
+          "selector": ".jp-extensionmanager-entry-error",
+          "state": "extension-manager-open",
+          "optional": true
+        },
+        {
+          "selector": ".jp-extensionmanager-entry-should-be-uninstalled",
+          "state": "extension-manager-open",
+          "optional": true
+        },
+        {
+          "selector": ".jp-extensionmanager-entry-error pre",
+          "state": "extension-manager-open",
+          "optional": true
+        },
+        {
+          "selector": ".jp-extensionmanager-pagination",
+          "state": "extension-manager-open",
+          "optional": true,
+          "note": "Only when a search returns more than one page — measured 0 in an air-gapped container."
+        },
+        {
+          "selector": ".jp-extensionmanager-pagination li > a",
+          "state": "extension-manager-open",
+          "optional": true
+        },
+        {
+          "selector": ".jp-extensionmanager-pagination li.active > a",
+          "state": "extension-manager-open",
+          "optional": true
+        },
+        {
+          "selector": ".jp-extensionmanager-pending",
+          "state": "extension-manager-open",
+          "note": "The host is always rendered (measured 1); only the `.jp-mod-hasPending` state below is conditional."
+        },
+        {
+          "selector": ".jp-extensionmanager-pending.jp-mod-hasPending",
+          "state": "extension-manager-open",
+          "optional": true,
+          "note": "Only while an install or uninstall is in flight. The indeterminate bar itself is core's animation — reduced-motion is already handled in motion.css and reaches it."
+        },
+        {
+          "selector": ".jp-extensionmanager-loader",
+          "state": "extension-manager-open",
+          "optional": true
+        },
+        {
+          "selector": ".jp-extensionmanager-error",
+          "state": "extension-manager-open",
+          "optional": true,
+          "note": "The state users hit most: this panel needs network access to a package index and an air-gapped deployment never gets it. Not reachable from a scripted boot only because whether it fires depends on the container's egress."
+        },
+        {
+          "selector": ".jp-extensionmanager-listview-message",
+          "state": "extension-manager-open",
+          "optional": true,
+          "note": "Core's own translated \"No entries\" — retokened and centred rather than replaced from CSS, which would drop the translation. Present only for a section with no results; measured 1 in an air-gapped container where the Discover section cannot fetch, and 0 in a networked one."
+        },
+        {
+          "selector": ".jp-extensionmanager-dialog .jp-extensionmanager-dialog-subheader",
+          "state": "dialog-open",
+          "optional": true,
+          "note": "The uninstall confirmation dialog."
+        }
+      ],
+      "nonQueryable": [
+        ".jp-extensionmanager-pagination li > a:hover",
+        ".jp-extensionmanager-pending.jp-mod-hasPending::before",
+        ".jp-extensionmanager-entry-name a:visited"
+      ],
+      "note": "`a:visited` is listed as nonQueryable rather than optional because querySelectorAll never reports a match for it — browsers evaluate `:visited` as unvisited outside of painting, for history-privacy reasons — so an assertion on it could only ever fail."
+    },
+    {
+      "file": "style/surfaces/command-palette.css",
+      "upstream": [
+        "@lumino/widgets 2.9.0 style/commandpalette.css",
+        "@jupyterlab/apputils 4.7.3 style/commandpalette.css"
+      ],
+      "importOrder": {
+        "after": "style/surfaces/inputs.css",
+        "why": "`.lm-CommandPalette-input` is styled by both files at identical (0,2,1) specificity and both declare padding — inputs.css sets the `padding` shorthand for the §8.8 base input, this file restates `padding-right` to clear the search glyph. A tie on specificity is resolved by source order, so if style/index.css ever imports this file BEFORE inputs.css the glyph clearance is silently lost. The alternative was an `!important`, which §7.4(4) reserves for beating upstream `!important` only."
+      },
+      "selectors": [
+        {
+          "selector": ".jp-ModalCommandPalette.jp-ThemedContainer",
+          "state": "command-palette-open",
+          "note": "`top` is pinned to `--d4n-top-panel-height` rather than core's bare 38px so the palette hangs off the bottom edge of the chrome; the two are the same number today only by coincidence."
+        },
+        {
+          "selector": ".lm-CommandPalette",
+          "state": "command-palette-open"
+        },
+        {
+          "selector": ".lm-CommandPalette-content",
+          "state": "command-palette-open"
+        },
+        {
+          "selector": ".lm-CommandPalette-search",
+          "state": "command-palette-open"
+        },
+        {
+          "selector": ".lm-CommandPalette-wrapper",
+          "state": "command-palette-open",
+          "note": "Stripped back to a positioning context. Every declaration on it removes something core draws — a 30px height that fights the base input's 28px, a second background, an inset box-shadow that reads as a second outline, a 9px side inset, and an `overflow: overlay` that clips the input's focus ring."
+        },
+        {
+          "selector": ".lm-CommandPalette.lm-mod-focused .lm-CommandPalette-wrapper",
+          "state": "command-palette-open",
+          "note": "Core's focus treatment, neutralised: the input's own `:focus` styling plus the ring from focus.css already cover it, and leaving both produces a ring inside a ring. Measured 1 — the modal palette focuses its input on open."
+        },
+        {
+          "selector": ".lm-CommandPalette-input",
+          "state": "command-palette-open",
+          "note": "See importOrder above. `float: none` is load-bearing: core's `float: left` takes the input out of flow, so the wrapper collapses and the glyph lands in the wrong place once the wrapper is no longer a fixed 30px box."
+        },
+        {
+          "selector": ".jp-SearchIconGroup",
+          "state": "command-palette-open"
+        },
+        {
+          "selector": ".jp-SearchIconGroup svg",
+          "state": "command-palette-open"
+        },
+        {
+          "selector": ".lm-CommandPalette-header",
+          "state": "command-palette-open"
+        },
+        {
+          "selector": ".lm-CommandPalette-header.lm-mod-active",
+          "state": "command-palette-open",
+          "optional": true,
+          "note": "Lumino's KEYBOARD highlight on a category header — not `:hover` and not `:focus`. Written in the same declaration block as the hover so the two cannot drift apart (M1, R12). Measured 0 on open; it needs arrow-key navigation the harness does not drive."
+        },
+        {
+          "selector": ".lm-CommandPalette-header > mark",
+          "state": "command-palette-open",
+          "optional": true,
+          "note": "Needs a typed query — measured 0 on open, 18 after two keystrokes."
+        },
+        {
+          "selector": ".lm-CommandPalette-item",
+          "state": "command-palette-open"
+        },
+        {
+          "selector": ".lm-CommandPalette-item.lm-mod-active",
+          "state": "command-palette-open",
+          "optional": true,
+          "note": "The row Enter will run — the palette's selection, moved by arrow keys and not by the pointer, which is why it is deliberately STRONGER than hover. Lumino leaves activeIndex at -1 until a query is typed or an arrow key is pressed: measured 0 on open, 1 after typing."
+        },
+        {
+          "selector": ".lm-CommandPalette-item.lm-mod-disabled",
+          "state": "command-palette-open",
+          "note": "Measured 134 of 238 rows on a stock boot — most commands need a document."
+        },
+        {
+          "selector": ".lm-CommandPalette-itemLabel",
+          "state": "command-palette-open"
+        },
+        {
+          "selector": ".lm-CommandPalette-itemLabel > mark",
+          "state": "command-palette-open",
+          "optional": true,
+          "note": "Needs a typed query. Weight-led rather than tinted: after two keystrokes every visible row carries a mark, and a tint repeated down the whole list is stripe noise that also collides with the selected row's plate (A7)."
+        },
+        {
+          "selector": ".lm-CommandPalette-item.lm-mod-active .lm-CommandPalette-itemLabel > mark",
+          "state": "command-palette-open",
+          "optional": true,
+          "note": "Core's inverse-colour rule for a mark on a brand-filled active row, repeated so our treatment clears it."
+        },
+        {
+          "selector": ".lm-CommandPalette-item.lm-mod-disabled mark",
+          "state": "command-palette-open",
+          "optional": true
+        },
+        {
+          "selector": ".lm-CommandPalette-item .lm-CommandPalette-itemIcon",
+          "state": "command-palette-open"
+        },
+        {
+          "selector": ".lm-CommandPalette-item .lm-CommandPalette-itemShortcut",
+          "state": "command-palette-open"
+        },
+        {
+          "selector": ".lm-CommandPalette-item .lm-CommandPalette-itemShortcut:empty",
+          "state": "command-palette-open",
+          "note": "`:empty` is structural, so it IS queryable — this one is asserted rather than filed under nonQueryable. Not defensive tidying either: Lumino renders the element on EVERY row whether or not the command has a binding, and measured 160 of 238 were empty. Without the rule most rows carry a 2px bordered box floating at their right edge."
+        },
+        {
+          "selector": ".lm-CommandPalette-emptyMessage",
+          "state": "command-palette-open",
+          "optional": true,
+          "note": "Needs a query that matches nothing — measured 1 with a nonsense query. This is the LIVE no-results hook; apputils' own `.lm-CommandPalette-content:empty::after { content: 'No results' }` is dead, because Lumino 2.9's `renderEmptyMessage` always appends this `<li>` so the content element is never `:empty` (measured 0 for `.lm-CommandPalette-content:empty` in that same state). Styling the dead one would have looked correct in review and shipped a state nobody would ever see — which is the failure mode this manifest exists to catch — so it is deliberately not styled and deliberately not recorded as a dependency."
+        }
+      ],
+      "nonQueryable": [
+        ".lm-CommandPalette-header:hover",
+        ".lm-CommandPalette-item.lm-mod-active:hover:not(.lm-mod-disabled)",
+        ".lm-CommandPalette-item:hover:not(.lm-mod-active, .lm-mod-disabled)"
+      ]
+    },
+    {
+      "file": "style/surfaces/log-console.css",
+      "upstream": [
+        "@jupyterlab/logconsole 4.6.3 style/base.css",
+        "@jupyterlab/logconsole 4.6.3 lib/widget.js (LogConsoleOutputPrompt)",
+        "@jupyterlab/logconsole-extension 4.6.3 style/base.css",
+        "@jupyterlab/logconsole-extension 4.6.3 lib/index.js (LogConsoleStatus)",
+        "@jupyterlab/outputarea 4.6.3 style/base.css",
+        "@jupyterlab/ui-components 4.6.3 style/base.css (HTMLSelect)",
+        "@jupyterlab/statusbar 4.6.3 style/statusbar.css"
+      ],
+      "selectors": [
+        {
+          "selector": ".jp-LogConsolePanel",
+          "state": "log-console-open"
+        },
+        {
+          "selector": ".jp-LogConsolePanel .jp-OutputArea-child",
+          "state": "log-console-open",
+          "note": "The entry separator. Measured 3 in a freshly-opened console."
+        },
+        {
+          "selector": ".jp-LogConsolePanel .jp-OutputArea-prompt[data-log-level]",
+          "state": "log-console-open",
+          "note": "The prompt gutter. The level never appears as text in the DOM — `LogConsoleOutputPrompt` writes it to `node.dataset.logLevel` and nothing else — so the attribute IS the hook. The theme gate plus the attribute puts this at (0,4,1), which beats core's own (0,3,0) per-level rules without `!important`. `flex: 0 0 auto` has to be restated alongside `width`: the log console substitutes a bare `Widget` for the usual `OutputPrompt`, so the node never picks up `.jp-OutputPrompt`'s `flex` and its default `flex-shrink: 1` would let a long line squeeze the chip."
+        },
+        {
+          "selector": ".jp-LogConsolePanel .jp-OutputArea-prompt[data-log-level='metadata']",
+          "state": "log-console-open",
+          "note": "A SIXTH value the public `LogLevel` union does not mention — it is `Private.LogLevel` index 5 — but it does reach the DOM: `Logger` writes it on the entries the console generates about itself (\"Log level set to …\", and the `<hr/>` from Add Checkpoint). Measured as the ONLY level present in a freshly-opened console (3 of 3 prompts). Asserted here precisely because an upstream tidy-up could remove it, which would silently strip the `content: none` that keeps a sixth colour out of a ramp of five."
+        },
+        {
+          "selector": ".jp-LogConsolePanel .jp-OutputArea-prompt[data-log-level] > div",
+          "state": "log-console-open",
+          "note": "The timestamp. `LogConsoleOutputPrompt` appends it as a bare, class-less `<div>`, so the child combinator is the only handle there is — and it is exact, because the prompt has no other child. If a class ever appears here, this entry is what notices."
+        },
+        {
+          "selector": ".jp-LogConsoleListPlaceholder",
+          "state": "log-console-open",
+          "note": "Two distinct states share this node — \"No source selected.\" and \"No log messages.\" — and core supplies both strings, translated. In the DOM whenever the panel is open, messages or not (measured 1 alongside 3 entries)."
+        },
+        {
+          "selector": ".jp-LogConsole-toolbarLogLevel",
+          "state": "log-console-open"
+        },
+        {
+          "selector": ".jp-LogConsole-toolbarLogLevelDropdown select",
+          "state": "log-console-open",
+          "note": "An `HTMLSelect` in `jp-DefaultStyle` — a different control from the `select.jp-mod-styled` inputs.css owns, so the two do not overlap. Not a source picker: it sets the minimum level the current source records."
+        },
+        {
+          "selector": ".jp-LogConsole-toolbarLogLevel-disabled",
+          "state": "log-console-open",
+          "optional": true,
+          "note": "Only while no source is selected — measured 1 with an empty dock and 0 with a notebook in front."
+        },
+        {
+          "selector": ".jp-LogConsoleStatusItem",
+          "state": "log-console-open",
+          "note": "The \"N messages\" indicator in the status bar."
+        },
+        {
+          "selector": ".jp-LogConsoleStatusItem.jp-mod-selected",
+          "state": "log-console-open",
+          "optional": true,
+          "note": "Transient. `LogConsoleStatus` adds `jp-mod-highlighted` and `jp-LogConsoleStatusItem` at construction; `jp-mod-selected` is added only by `_showHighlighted()` on a flash — a new message at or above the flash level arriving while the console is hidden — and removed by `_clearHighlight()`. Measured 0 with the console open, which is the resting case."
+        },
+        {
+          "selector": ".jp-LogConsoleStatusItem.jp-mod-selected .jp-StatusBar-TextItem",
+          "state": "log-console-open",
+          "optional": true,
+          "note": "Inherits the transient parent above. The descendant is from @jupyterlab/statusbar, not logconsole — core hardcodes `color: white` on it (its own comment admits it is a contrast patch); both ends become tokens here."
+        }
+      ],
+      "nonQueryable": [
+        ".jp-LogConsolePanel .jp-OutputArea-prompt[data-log-level]::before",
+        ".jp-LogConsolePanel .jp-OutputArea-prompt[data-log-level='critical']::before",
+        ".jp-LogConsolePanel .jp-OutputArea-prompt[data-log-level='error']::before",
+        ".jp-LogConsolePanel .jp-OutputArea-prompt[data-log-level='warning']::before",
+        ".jp-LogConsolePanel .jp-OutputArea-prompt[data-log-level='info']::before",
+        ".jp-LogConsolePanel .jp-OutputArea-prompt[data-log-level='debug']::before",
+        ".jp-LogConsolePanel .jp-OutputArea-prompt[data-log-level='metadata']::before",
+        ".jp-LogConsole-toolbarLogLevelDropdown select:hover"
+      ],
+      "note": "The five chip rules re-express the level as a filled badge with the name in it, which is what turns the level colour from an 11px text target (1.4.3, 4.5:1 — unmeetable) into a non-text contrast target (1.4.11, 3:1), and stops severity being carried by colour alone (1.4.1). They cannot be asserted — generated content is not in the DOM — so the queryable prompts above are what guards them: if `[data-log-level]` stops matching, every chip goes with it."
+    },
+    {
+      "file": "style/surfaces/notifications.css",
+      "upstream": [
+        "@jupyterlab/apputils 4.7.3 (notification manager)",
+        "react-toastify 9.x (the actual popup renderer)"
+      ],
+      "note": "PRD 6.5 inventories toasts as .jp-Notification-*. Those names reach only the STATUS BAR item; the popup itself is rendered by react-toastify and carries Toastify__* classes. Styling the documented names alone leaves the popup unthemed.",
+      "selectors": [
+        {
+          "selector": ".jp-Notification-Status",
+          "state": "boot"
+        },
+        {
+          "selector": ".Toastify",
+          "state": "boot"
+        },
+        {
+          "selector": ".Toastify__toast",
+          "state": "toast-visible",
+          "optional": true
+        },
+        {
+          "selector": ".Toastify__toast.Toastify__toast-theme--light",
+          "state": "toast-visible",
+          "optional": true
+        },
+        {
+          "selector": ".Toastify__toast-body",
+          "state": "toast-visible",
+          "optional": true
+        },
+        {
+          "selector": ".Toastify__close-button",
+          "state": "toast-visible",
+          "optional": true
+        },
+        {
+          "selector": ".Toastify__progress-bar",
+          "state": "toast-visible",
+          "optional": true
+        }
+      ],
+      "nonQueryable": [
+        ".Toastify__toast button:hover",
+        ".Toastify__close-button:hover",
+        ".Toastify__toast-body a",
+        ".Toastify__progress-bar--error",
+        ".Toastify__progress-bar--warning",
+        ".Toastify__progress-bar--success",
+        ".Toastify__toast--error",
+        ".Toastify__toast--warning",
+        ".Toastify__toast--success",
+        ".Toastify__toast--info"
       ]
     }
   ]

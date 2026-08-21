@@ -173,25 +173,47 @@ try {
   await page.goto(`${BASE}/lab`, { waitUntil: 'networkidle', timeout: 60_000 });
   await page.waitForSelector('#main', { timeout: 60_000 });
 
+  // `#main` exists before the shell has finished populating. The dock panel
+  // creates its tab bar only when the first widget lands in it, so querying at
+  // this point reported `.lm-DockPanel-tabBar` as BROKEN while the very same
+  // selector matched fine in a browser a moment later. Waiting for the default
+  // boot widget makes "boot" mean the state a user actually sees, rather than
+  // the first frame after the shell element appears.
+  //
+  // This matters more than a flaky assertion: a false "upstream markup moved"
+  // is the report most likely to be waved away, and the next real one with it.
+  await page
+    .waitForSelector('.jp-Launcher, .lm-DockPanel-tabBar', { timeout: 30_000 })
+    .catch(() => {
+      console.warn(
+        '  ! No launcher or dock tab bar after 30s — boot-state selectors may ' +
+          'report broken for want of a mounted shell rather than for real.'
+      );
+    });
+
   // Group by precondition so each is set up once rather than per selector.
   const byPrecondition = new Map();
+  // The manifest names the precondition `state`; an earlier version of this
+  // loop read `requires`, which no entry uses. Every selector therefore landed
+  // in the ''-keyed group and was asserted at cold boot — so a rule that only
+  // exists with a menu open, or the extension manager showing, reported as
+  // BROKEN. That is the same class of bug as the vacuous pass above, inverted:
+  // noise instead of silence, and noise gets muted.
   for (const e of entries) {
-    const key = e.requires ?? '';
+    const key = e.state ?? e.requires ?? 'boot';
     if (!byPrecondition.has(key)) {
       byPrecondition.set(key, []);
     }
     byPrecondition.get(key).push(e);
   }
 
-  for (const [requires, group] of byPrecondition) {
-    if (requires) {
-      const setup = PRECONDITIONS[requires];
+  for (const [state, group] of byPrecondition) {
+    // `boot` is the cold-start state: nothing to set up.
+    if (state && state !== 'boot') {
+      const setup = PRECONDITIONS[state];
       if (!setup) {
         for (const e of group) {
-          skipped.push({
-            ...e,
-            why: `no automation for precondition "${requires}"`
-          });
+          skipped.push({ ...e, why: `no automation for state "${state}"` });
         }
         continue;
       }
@@ -201,7 +223,7 @@ try {
         for (const e of group) {
           skipped.push({
             ...e,
-            why: `precondition "${requires}" failed: ${err.message}`
+            why: `state "${state}" failed: ${err.message}`
           });
         }
         continue;
@@ -216,17 +238,23 @@ try {
           e.selector
         );
       } catch (err) {
+        // An unparsable selector is OUR error and is never optional.
         failed.push({ ...e, why: `invalid selector: ${err.message}` });
         continue;
       }
       if (count > 0) {
         passed.push(e);
+      } else if (e.optional) {
+        // Declared as only existing in a state this harness cannot reach — a
+        // rename in flight, a drag, a typed filter term. Reported, never
+        // asserted, so it cannot be used to quietly mute a real break.
+        skipped.push({ ...e, why: 'optional: not present in this state' });
       } else {
         failed.push({ ...e, why: 'matched 0 elements' });
       }
     }
 
-    if (requires === 'menu-open') {
+    if (state === 'menu-open') {
       await page.keyboard.press('Escape');
     }
   }
