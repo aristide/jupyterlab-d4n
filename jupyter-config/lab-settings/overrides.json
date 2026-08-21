@@ -1,0 +1,22 @@
+{
+  "@jupyterlab/apputils-extension:themes": {
+    "theme": "Data4Now Light",
+    "adaptive-theme": true,
+    "preferred-light-theme": "Data4Now Light",
+    "preferred-dark-theme": "Data4Now Dark",
+    "theme-scrollbars": true
+  },
+  "@jupyterlab/codemirror-extension:plugin": {
+    "defaultConfig": {
+      "theme": "d4n-light",
+      "lineNumbers": true,
+      "lineWrap": false,
+      "highlightActiveLine": true,
+      "highlightTrailingWhitespace": false,
+      "rulers": []
+    }
+  },
+  "@jupyterlab/terminal-extension:plugin": {
+    "theme": "inherit"
+  }
+}

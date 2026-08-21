@@ -1,0 +1,320 @@
+/* =============================================================================
+ | Data4Now JupyterLab Theme — variables-dark.css
+ | -----------------------------------------------------------------------------
+ | Dark companion to variables.css. Same brand DNA, inverted neutrals.
+ | Navy stays primary; teal stays accent; magenta stays error — but the
+ | layout chrome flips to deep navy/ink surfaces with mist-cool text.
+ |===========================================================================*/
+
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Roboto:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root {
+
+  /* ---------------------------------------------------------------------------
+   | BRAND PALETTE (same source-of-truth as light)
+   |--------------------------------------------------------------------------*/
+  --d4n-navy:         #0F3D6E;
+  --d4n-navy-deep:    #082B52;
+  --d4n-navy-soft:    #3B5C87;
+  --d4n-teal:         #1FA0A0;
+  --d4n-teal-bright:  #4FD1D1;     /* boosted for dark contrast */
+  --d4n-teal-deep:    #167C7C;
+  --d4n-magenta:      #E63558;
+  --d4n-magenta-bright:#FF6B86;    /* boosted for dark contrast */
+  --d4n-magenta-deep: #C4274A;
+
+  --d4n-ink:          #0B1F38;
+  --d4n-ink-deep:     #050F1D;     /* darker still — sidebar/status */
+  --d4n-graphite:     #2C3E55;
+  --d4n-slate:        #5A6B82;
+  --d4n-steel:        #8A99AE;
+  --d4n-mist:         #C8D1DD;
+  --d4n-fog:          #E4E9F0;
+  --d4n-paper:        #F4F6FA;
+  --d4n-white:        #FFFFFF;
+
+
+  /* ---------------------------------------------------------------------------
+   | TYPOGRAPHY (same families as light)
+   |--------------------------------------------------------------------------*/
+  --jp-ui-font-family:
+    'Montserrat', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --jp-content-font-family:
+    'Roboto', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --jp-code-font-family:
+    'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace;
+  --jp-code-font-family-default: var(--jp-code-font-family);
+
+  --jp-ui-font-size0: 0.75rem;
+  --jp-ui-font-size1: 0.8125rem;
+  --jp-ui-font-size2: 0.875rem;
+  --jp-ui-font-size3: 1rem;
+
+  --jp-content-font-size0: 0.8125rem;
+  --jp-content-font-size1: 14px;
+  --jp-content-font-size2: 1rem;
+  --jp-content-font-size3: 1.125rem;
+  --jp-content-font-size4: 1.25rem;
+  --jp-content-font-size5: 1.5rem;
+
+  --jp-content-line-height: 1.6;
+  --jp-content-heading-line-height: 1.25;
+  --jp-content-heading-margin-top: 1.2em;
+  --jp-content-heading-margin-bottom: 0.5em;
+  --jp-content-heading-font-weight: 600;
+
+  --jp-code-font-size: 13px;
+  --jp-code-line-height: 1.5;
+  --jp-code-padding: 5px;
+
+
+  /* ---------------------------------------------------------------------------
+   | BRAND COLORS — slightly lifted for dark surfaces
+   |--------------------------------------------------------------------------*/
+  --jp-brand-color0: #6E89AD;
+  --jp-brand-color1: #4F77A8;
+  --jp-brand-color2: var(--d4n-navy-soft);
+  --jp-brand-color3: var(--d4n-navy);
+  --jp-brand-color4: var(--d4n-navy-deep);
+
+
+  /* ---------------------------------------------------------------------------
+   | ACCENT COLORS — boosted teal for dark contrast
+   |--------------------------------------------------------------------------*/
+  --jp-accent-color0: #9CD4D4;
+  --jp-accent-color1: var(--d4n-teal-bright);
+  --jp-accent-color2: var(--d4n-teal);
+  --jp-accent-color3: var(--d4n-teal-deep);
+
+
+  /* ---------------------------------------------------------------------------
+   | SEMANTIC STATUS COLORS — boosted for dark contrast
+   |--------------------------------------------------------------------------*/
+  --jp-error-color0: #FFB1C0;
+  --jp-error-color1: var(--d4n-magenta-bright);
+  --jp-error-color2: var(--d4n-magenta);
+  --jp-error-color3: rgba(230, 53, 88, 0.18);
+
+  --jp-warn-color0: #F4C97A;
+  --jp-warn-color1: #E0A04A;
+  --jp-warn-color2: #C97C0A;
+  --jp-warn-color3: rgba(224, 160, 74, 0.18);
+
+  --jp-success-color0: #A8D9C0;
+  --jp-success-color1: #6FCF97;
+  --jp-success-color2: #4DAA85;
+  --jp-success-color3: rgba(111, 207, 151, 0.16);
+
+  --jp-info-color0: #9CD4D4;
+  --jp-info-color1: var(--d4n-teal-bright);
+  --jp-info-color2: var(--d4n-teal);
+  --jp-info-color3: rgba(31, 160, 160, 0.18);
+
+
+  /* ---------------------------------------------------------------------------
+   | LAYOUT — inverted neutral stack
+   | layout-color0 = darkest editor surface
+   | layout-color4 = lightest chrome
+   |--------------------------------------------------------------------------*/
+  --jp-layout-color0: #0E2542;     /* notebook scroll bg */
+  --jp-layout-color1: #122A47;     /* code cell / card bg */
+  --jp-layout-color2: #0B1F38;     /* page bg */
+  --jp-layout-color3: #1B385C;     /* sunken / tab bar */
+  --jp-layout-color4: #2C4A75;     /* inactive chrome */
+
+  --jp-inverse-layout-color0: var(--d4n-paper);
+  --jp-inverse-layout-color1: var(--d4n-white);
+  --jp-inverse-layout-color2: var(--d4n-fog);
+  --jp-inverse-layout-color3: var(--d4n-mist);
+  --jp-inverse-layout-color4: var(--d4n-steel);
+
+
+  /* ---------------------------------------------------------------------------
+   | TEXT / ICON COLOR ON LAYOUT SURFACES
+   |--------------------------------------------------------------------------*/
+  --jp-ui-font-color0: var(--d4n-paper);
+  --jp-ui-font-color1: var(--d4n-mist);
+  --jp-ui-font-color2: var(--d4n-steel);
+  --jp-ui-font-color3: #6B7B91;
+
+  --jp-ui-inverse-font-color0: var(--d4n-ink);
+  --jp-ui-inverse-font-color1: rgba(11, 31, 56, 0.9);
+  --jp-ui-inverse-font-color2: rgba(11, 31, 56, 0.7);
+  --jp-ui-inverse-font-color3: rgba(11, 31, 56, 0.5);
+
+  --jp-content-font-color0: var(--d4n-paper);
+  --jp-content-font-color1: #E4E9F0;
+  --jp-content-font-color2: var(--d4n-mist);
+  --jp-content-font-color3: var(--d4n-steel);
+
+  --jp-content-link-color: var(--d4n-teal-bright);
+
+
+  /* ---------------------------------------------------------------------------
+   | BORDERS — cool low-contrast separators
+   |--------------------------------------------------------------------------*/
+  --jp-border-width: 1px;
+  --jp-border-color0: #2C4A75;
+  --jp-border-color1: #1B385C;
+  --jp-border-color2: #142E50;
+  --jp-border-color3: #0F2746;
+
+  --jp-border-radius: 6px;
+
+
+  /* ---------------------------------------------------------------------------
+   | NOTEBOOK CELL THEMING
+   |--------------------------------------------------------------------------*/
+  --jp-cell-padding: 8px;
+  --jp-cell-collapser-width: 8px;
+  --jp-cell-collapser-min-height: 20px;
+  --jp-cell-collapser-not-active-hover-opacity: 0.6;
+
+  --jp-cell-editor-background: #122A47;
+  --jp-cell-editor-border-color: #1B385C;
+  --jp-cell-editor-box-shadow:
+    inset 0 0 0 var(--jp-border-width) var(--jp-cell-editor-border-color);
+  --jp-cell-editor-active-background: #15324F;
+  --jp-cell-editor-active-border-color: var(--d4n-teal-bright);
+
+  --jp-cell-prompt-width: 64px;
+  --jp-cell-prompt-font-family: var(--jp-code-font-family);
+  --jp-cell-prompt-letter-spacing: 0;
+  --jp-cell-prompt-opacity: 1;
+  --jp-cell-prompt-not-active-opacity: 0.5;
+  --jp-cell-prompt-not-active-font-color: var(--d4n-steel);
+
+  --jp-cell-inprompt-font-color: #6BB1FF;
+  --jp-cell-outprompt-font-color: var(--d4n-magenta-bright);
+
+
+  /* ---------------------------------------------------------------------------
+   | NOTEBOOK BACKGROUNDS
+   |--------------------------------------------------------------------------*/
+  --jp-notebook-padding: 10px;
+  --jp-notebook-background: #0B1F38;
+  --jp-notebook-select-background: #15324F;
+  --jp-notebook-multiselected-color: rgba(79, 209, 209, 0.10);
+  --jp-notebook-scroll-padding:
+    calc(100% - var(--jp-code-font-size) * var(--jp-code-line-height) - var(--jp-code-padding) * 2 - var(--jp-cell-padding) - 1px);
+
+
+  /* ---------------------------------------------------------------------------
+   | RENDERMIME
+   |--------------------------------------------------------------------------*/
+  --jp-rendermime-error-background: rgba(230, 53, 88, 0.12);
+  --jp-rendermime-table-row-background: #122A47;
+  --jp-rendermime-table-row-hover-background: rgba(79, 209, 209, 0.08);
+
+
+  /* ---------------------------------------------------------------------------
+   | DIALOGS
+   |--------------------------------------------------------------------------*/
+  --jp-dialog-background: rgba(5, 15, 29, 0.65);
+
+
+  /* ---------------------------------------------------------------------------
+   | TOOLBAR
+   |--------------------------------------------------------------------------*/
+  --jp-toolbar-border-color: #1B385C;
+  --jp-toolbar-micro-height: 8px;
+  --jp-toolbar-background: #0E2542;
+  --jp-toolbar-box-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
+  --jp-toolbar-header-margin: 4px 4px 0 4px;
+  --jp-toolbar-active-background: #1B385C;
+
+
+  /* ---------------------------------------------------------------------------
+   | INPUT
+   |--------------------------------------------------------------------------*/
+  --jp-input-box-shadow: inset 0 0 2px rgba(0, 0, 0, 0.40);
+  --jp-input-active-background: #15324F;
+  --jp-input-hover-background: #15324F;
+  --jp-input-background: #0E2542;
+  --jp-input-border-color: #2C4A75;
+  --jp-input-active-border-color: var(--d4n-teal-bright);
+  --jp-input-active-box-shadow-color: rgba(79, 209, 209, 0.30);
+
+
+  /* ---------------------------------------------------------------------------
+   | GENERAL CHROME
+   |--------------------------------------------------------------------------*/
+  --jp-icon-contrast-color:        var(--d4n-teal-bright);
+  --jp-jupyter-icon-color:         var(--d4n-mist);
+  --jp-notebook-icon-color:        var(--d4n-mist);
+  --jp-json-icon-color:            var(--d4n-teal-bright);
+  --jp-console-icon-background-color: var(--d4n-navy-soft);
+  --jp-console-icon-color:         var(--d4n-paper);
+  --jp-terminal-icon-background-color: var(--d4n-ink-deep);
+  --jp-terminal-icon-color:        var(--d4n-mist);
+  --jp-text-editor-icon-color:     var(--d4n-mist);
+  --jp-inspector-icon-color:       var(--d4n-mist);
+
+
+  /* ---------------------------------------------------------------------------
+   | SHADOWS — deeper for dark surfaces
+   |--------------------------------------------------------------------------*/
+  --jp-elevation-z0: none;
+  --jp-elevation-z1: 0 1px 2px rgba(0, 0, 0, 0.30);
+  --jp-elevation-z2: 0 1px 3px rgba(0, 0, 0, 0.40), 0 1px 2px rgba(0, 0, 0, 0.20);
+  --jp-elevation-z4: 0 4px 12px rgba(0, 0, 0, 0.45), 0 2px 4px rgba(0, 0, 0, 0.25);
+  --jp-elevation-z6: 0 12px 28px rgba(0, 0, 0, 0.55), 0 4px 8px rgba(0, 0, 0, 0.30);
+  --jp-elevation-z8: 0 24px 48px rgba(0, 0, 0, 0.65), 0 8px 16px rgba(0, 0, 0, 0.35);
+
+
+  /* ---------------------------------------------------------------------------
+   | SCROLLBARS — lighter thumb on dark
+   |--------------------------------------------------------------------------*/
+  --jp-scrollbar-background-color: transparent;
+  --jp-scrollbar-thumb-color: 200, 209, 221;
+  --jp-scrollbar-endpad: 3px;
+  --jp-scrollbar-thumb-margin: 3.5px;
+  --jp-scrollbar-thumb-radius: 9px;
+
+
+  /* ---------------------------------------------------------------------------
+   | SYNTAX HIGHLIGHTING — boosted for dark contrast
+   |--------------------------------------------------------------------------*/
+  --jp-mirror-editor-keyword-color:    #6BB1FF;
+  --jp-mirror-editor-atom-color:       var(--d4n-magenta-bright);
+  --jp-mirror-editor-number-color:     #E0A04A;
+  --jp-mirror-editor-def-color:        #9CD4D4;
+  --jp-mirror-editor-variable-color:   var(--d4n-paper);
+  --jp-mirror-editor-variable-2-color: var(--d4n-teal-bright);
+  --jp-mirror-editor-variable-3-color: #6E89AD;
+  --jp-mirror-editor-punctuation-color:var(--d4n-mist);
+  --jp-mirror-editor-property-color:   var(--d4n-teal-bright);
+  --jp-mirror-editor-operator-color:   var(--d4n-magenta-bright);
+  --jp-mirror-editor-comment-color:    var(--d4n-steel);
+  --jp-mirror-editor-string-color:     #6FCF97;
+  --jp-mirror-editor-string-2-color:   #6FCF97;
+  --jp-mirror-editor-meta-color:       var(--d4n-magenta-bright);
+  --jp-mirror-editor-qualifier-color:  var(--d4n-mist);
+  --jp-mirror-editor-builtin-color:    #6BB1FF;
+  --jp-mirror-editor-bracket-color:    var(--d4n-mist);
+  --jp-mirror-editor-tag-color:        #6BB1FF;
+  --jp-mirror-editor-attribute-color:  var(--d4n-teal-bright);
+  --jp-mirror-editor-header-color:     #9CD4D4;
+  --jp-mirror-editor-quote-color:      var(--d4n-steel);
+  --jp-mirror-editor-link-color:       var(--d4n-teal-bright);
+  --jp-mirror-editor-error-color:      var(--d4n-magenta-bright);
+  --jp-mirror-editor-hr-color:         #2C4A75;
+
+
+  /* ---------------------------------------------------------------------------
+   | VEGA / PLOTS
+   |--------------------------------------------------------------------------*/
+  --jp-vega-background: #122A47;
+
+
+  /* ---------------------------------------------------------------------------
+   | SEARCH / FIND
+   |--------------------------------------------------------------------------*/
+  --jp-search-toggle-off-opacity: 0.5;
+  --jp-search-toggle-hover-opacity: 0.8;
+  --jp-search-toggle-on-opacity: 1;
+  --jp-search-selected-match-background-color: rgba(255, 107, 134, 0.30);
+  --jp-search-selected-match-color: var(--d4n-paper);
+  --jp-search-unselected-match-background-color: rgba(79, 209, 209, 0.22);
+  --jp-search-unselected-match-color: var(--d4n-paper);
+}

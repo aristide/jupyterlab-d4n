@@ -1,0 +1,62 @@
+/* SURFACE: focus indication (PRD §9, A5 and A6)
+ *
+ * Upstream selectors verified against:
+ *   @jupyterlab/application    4.6.3  style/buttons.css, style/menus.css,
+ *                                     style/tabs.css, style/sidepanel.css
+ *   @jupyterlab/apputils       4.7.3  style/dialog.css
+ *   @jupyterlab/ui-components  4.6.3  style/styling.css
+ *   (declared range: ^4.5.0)
+ *
+ * Every selector is mirrored in ../selectors.json (PRD §7.4(5)).
+ *
+ * ONE SPEC, ONE RULE. Core declares a focus outline in at least six places with
+ * six different offsets, and separately sets a bare `outline: none` on
+ * `button.jp-mod-styled`, `input.jp-mod-styled`, `select.jp-mod-styled`,
+ * `.lm-Menu` and `.lm-MenuBar`. The single `:focus-visible` rule below both
+ * unifies the former and repairs the latter — every focusable element in the
+ * application gets the same ring from the same tokens.
+ *
+ * Nothing in this package may write a bare `outline: none` (A6). The one place
+ * an indicator is suppressed is the `:focus:not(:focus-visible)` rule at the
+ * bottom, which removes a ring the browser would not have drawn in the first
+ * place, and does it by fading the colour rather than by deleting the outline.
+ *
+ * The leading `html` is not decoration: `.jp-ThemedContainer button:focus-visible`
+ * (@jupyterlab/application 4.6.3, style/buttons.css) has the same specificity as
+ * `body[data-jp-theme-name^='Data4Now'] :focus-visible`, and a tie is settled by
+ * stylesheet insertion order, which is not something a federated extension can
+ * rely on. One extra type selector settles it without `!important`.
+ */
+
+html body[data-jp-theme-name^='Data4Now'] :focus-visible {
+  outline: var(--d4n-focus-ring-width) var(--d4n-focus-ring-style)
+    var(--d4n-focus-ring-color);
+  outline-offset: var(--d4n-focus-ring-offset);
+}
+
+/* Inset exceptions. An outset ring is clipped to nothing on elements that sit
+ * flush against a panel edge or inside an `overflow: hidden` ancestor — menu
+ * bar triggers against the top panel edge, tabs against the tab bar edge,
+ * toolbar buttons inside a clipped toolbar. Same width, same colour, same
+ * token; only the offset flips sign, so this stays one spec. */
+html body[data-jp-theme-name^='Data4Now'] .lm-MenuBar-item:focus-visible,
+html body[data-jp-theme-name^='Data4Now'] .lm-TabBar-tab:focus-visible,
+html body[data-jp-theme-name^='Data4Now'] .lm-TabBar-addButton:focus-visible,
+html
+  body[data-jp-theme-name^='Data4Now']
+  .jp-ToolbarButtonComponent:focus-visible {
+  outline-offset: calc(-1 * var(--d4n-focus-ring-width));
+}
+
+/* Core's dialog buttons key their ring off plain `:focus`, so clicking one
+ * leaves a ring behind after the pointer interaction. `:focus-visible` above
+ * already covers the keyboard case; this narrows the pointer case back out.
+ *
+ * `outline-color: transparent` rather than `outline: none` on purpose — the
+ * outline box stays in the layout, so nothing shifts when focus becomes
+ * visible, and the A6 lint has nothing to catch. */
+html
+  body[data-jp-theme-name^='Data4Now']
+  button.jp-Dialog-button:focus:not(:focus-visible) {
+  outline-color: transparent;
+}

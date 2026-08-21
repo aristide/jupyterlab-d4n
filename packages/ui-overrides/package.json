@@ -1,0 +1,60 @@
+{
+    "name": "@d4n/ui-overrides",
+    "version": "0.1.0",
+    "private": true,
+    "description": "Data4Now design system — token stylesheet and structural CSS layer",
+    "license": "BSD-3-Clause",
+    "author": {
+        "name": "Data4Now",
+        "email": "platform@data4now.org"
+    },
+    "main": "lib/index.js",
+    "types": "lib/index.d.ts",
+    "style": "style/index.css",
+    "styleModule": "style/index.js",
+    "sideEffects": [
+        "style/*.css",
+        "style/surfaces/*.css",
+        "style/index.js"
+    ],
+    "files": [
+        "lib/**/*.{d.ts,js,js.map}",
+        "src/**/*.ts",
+        "style/**/*.{css,js,json}"
+    ],
+    "scripts": {
+        "build:lib": "tsc --sourceMap",
+        "build:lib:prod": "tsc",
+        "build:labextension": "jupyter labextension build .",
+        "build:labextension:dev": "jupyter labextension build --development True .",
+        "clean:lib": "rimraf lib tsconfig.tsbuildinfo",
+        "watch:labextension": "jupyter labextension watch ."
+    },
+    "//": "@d4n/tokens is a dependency even though style/index.css reaches it by relative path. The path is what css-loader resolves, but the dependency edge is what scripts/run-workspaces.mjs topologically sorts on — without it this package can be built before the token CSS has been generated, and the @import silently resolves to a stale or missing file.",
+    "dependencies": {
+        "@d4n/tokens": "^0.1.0",
+        "@jupyterlab/application": "^4.5.0"
+    },
+    "devDependencies": {
+        "@jupyterlab/builder": "^4.5.0",
+        "rimraf": "^5.0.1",
+        "typescript": "~5.5.4"
+    },
+    "jupyterlab": {
+        "extension": true,
+        "outputDir": "../../jupyterlab_d4n/labextensions/@d4n/ui-overrides",
+        "discovery": {
+            "server": {
+                "managers": [
+                    "pip"
+                ],
+                "base": {
+                    "name": "jupyterlab_d4n"
+                }
+            }
+        }
+    },
+    "publishConfig": {
+        "access": "public"
+    }
+}

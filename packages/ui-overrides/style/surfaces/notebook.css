@@ -1,0 +1,102 @@
+/* SURFACE: notebook cells and output (PRD §6.2, §8.2)
+ *
+ * Upstream selectors verified against:
+ *   @jupyterlab/notebook    4.6.3  style/base.css
+ *   @jupyterlab/cells       4.6.3  style/base.css, style/inputarea.css,
+ *                                  style/collapser.css
+ *   @jupyterlab/outputarea  4.6.3  style/base.css
+ *   @jupyterlab/rendermime  4.6.3  style/base.css
+ *   (declared range: ^4.5.0)
+ *
+ * Every selector is mirrored in ../selectors.json (PRD §7.4(5)).
+ *
+ * WHAT IS DELIBERATELY ABSENT
+ *
+ * Prompt width, prompt font, prompt colour, cell padding and the error-output
+ * background all reach the notebook through the Tier-4 adapter
+ * (`--jp-cell-prompt-width`, `--jp-cell-prompt-font-family`,
+ * `--jp-cell-inprompt-font-color`, `--jp-cell-padding`,
+ * `--jp-rendermime-error-background`). Restating them here would give the same
+ * value two owners and guarantee they drift. Only what the adapter cannot
+ * express is written below.
+ *
+ * No margins are added between cells either. JupyterLab 4 renders notebooks
+ * through a windowed list that positions cells from measured heights; a margin
+ * this file adds is not in that measurement and accumulates as scroll drift.
+ * The cell gap is `--jp-cell-padding` and stays there.
+ */
+
+body[data-jp-theme-name^='Data4Now'] .jp-Notebook {
+  background: var(--d4n-color-surface-canvas);
+}
+
+/* Active cell. The indicator is an inset box-shadow rather than a positioned
+ * pseudo-element for one specific reason: it needs to run the full height of
+ * the cell INCLUDING its output, and an absolutely positioned bar would need
+ * `.jp-Cell` to become a containing block — which would also recapture
+ * `.jp-OutputArea-promptOverlay`, an absolutely positioned child that is
+ * currently laid out against the output wrapper. An inset shadow changes no
+ * one's containing block. */
+body[data-jp-theme-name^='Data4Now'] .jp-Notebook .jp-Cell.jp-mod-active {
+  background: var(--d4n-notebook-active-cell-bg);
+  box-shadow: inset var(--d4n-notebook-active-cell-indicator-width) 0 0 0
+    var(--d4n-notebook-active-cell-indicator);
+}
+
+/* Core uses the collapser itself as the active-cell bar, painting it with the
+ * brand colour. With the indicator above, that would be two bars in two
+ * colours a few pixels apart, so the collapser goes back to being purely an
+ * affordance: invisible at rest, revealed on hover (PRD §8.2). Its 24px hit
+ * area needs the collapser to become wider than its visual line, which is a
+ * markup change and belongs to the notebook phase
+ * (TODO.md P3-01); until then the hit area is the 4px
+ * `--jp-cell-collapser-width` the adapter already supplies. */
+body[data-jp-theme-name^='Data4Now']
+  .jp-Notebook
+  .jp-Cell.jp-mod-active
+  .jp-Collapser {
+  background: transparent;
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-Notebook .jp-Cell .jp-Collapser:hover {
+  background: var(--d4n-color-border-strong);
+  opacity: 1;
+  box-shadow: none;
+}
+
+body[data-jp-theme-name^='Data4Now']
+  .jp-Notebook
+  .jp-Cell.jp-mod-active
+  .jp-Collapser:hover {
+  background: var(--d4n-notebook-active-cell-indicator);
+}
+
+/* Tabular figures so a cell going from [9] to [10] does not shift the prompt
+ * column. The rest of the prompt's typography is adapter-driven. */
+body[data-jp-theme-name^='Data4Now'] .jp-InputPrompt,
+body[data-jp-theme-name^='Data4Now'] .jp-OutputPrompt {
+  font-variant-numeric: tabular-nums;
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-OutputArea-output {
+  background: var(--d4n-color-surface-canvas);
+}
+
+/* Error output. The background arrives through the adapter; the left border is
+ * the structural half of the signal and the reason a stderr block is
+ * identifiable without relying on the red wash alone (A7). `stderr` is the mime
+ * type JupyterLab tags error and warning streams with — the same rule covers
+ * tracebacks and library warnings, which is intended. */
+body[data-jp-theme-name^='Data4Now']
+  .jp-RenderedText[data-mime-type='application/vnd.jupyter.stderr'] {
+  padding-left: var(--d4n-space-2);
+  background: var(--d4n-notebook-error-output-bg);
+  border-left: var(--d4n-border-width-thick) solid
+    var(--d4n-notebook-error-output-border);
+}
+
+/* The running-cell prompt pulse (`--d4n-notebook-prompt-running-fg`) has no hook:
+ * JupyterLab 4 marks a cell `.jp-mod-dirty` when its output is stale, but emits
+ * no class while the kernel is actually executing it. Adding one is a notebook
+ * change (TODO.md P3-01). Until then the dirty prompt keeps
+ * core's treatment, which is already tokenised through `--jp-warn-color1`. */

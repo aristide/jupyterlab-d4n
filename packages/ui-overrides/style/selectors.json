@@ -1,0 +1,552 @@
+{
+  "$comment": [
+    "Selector ownership manifest for @d4n/ui-overrides (PRD §7.4(5), §10.3).",
+    "",
+    "Every upstream selector this package's CSS depends on is recorded here,",
+    "grouped by the surface file it came from. tests/galata/selector-integrity.mjs",
+    "boots each supported JupyterLab build, drives each named state, and asserts",
+    "that every entry in `selectors` matches at least one element. A selector that",
+    "stops matching is an upstream markup change, and it must fail the build here",
+    "rather than surface later as a visual regression nobody can explain.",
+    "",
+    "Entries are written WITHOUT the `body[data-jp-theme-name^='Data4Now']` scope",
+    "that every rule in the CSS carries — see `scope` below. The harness is",
+    "asserting that upstream still emits the element, not that our own rule is",
+    "present, so prefixing would only test the theme attribute over and over.",
+    "",
+    "`optional: true` means the state exists in JupyterLab but is not reliably",
+    "reachable from a scripted boot (a disabled menu item, a dirty tab, a bad",
+    "regex). The harness should report those as skipped, never as passes, and",
+    "never fail the build on them.",
+    "",
+    "`nonQueryable` records rules whose selector is a pseudo-element or a",
+    "pseudo-class that `querySelectorAll` cannot evaluate. They are listed for",
+    "completeness of the ownership record — §7.4(5) asks for every selector we",
+    "depend on, not only the assertable ones — and are not asserted."
+  ],
+  "package": "@d4n/ui-overrides",
+  "scope": "body[data-jp-theme-name^='Data4Now']",
+  "verifiedAgainst": {
+    "@jupyterlab/application": "4.6.3",
+    "@jupyterlab/apputils": "4.7.3",
+    "@jupyterlab/cells": "4.6.3",
+    "@jupyterlab/documentsearch": "4.6.3",
+    "@jupyterlab/notebook": "4.6.3",
+    "@jupyterlab/outputarea": "4.6.3",
+    "@jupyterlab/rendermime": "4.6.3",
+    "@jupyterlab/ui-components": "4.6.3",
+    "@lumino/widgets": "2.9.0",
+    "declaredRanges": {
+      "@jupyterlab/*": "^4.5.0",
+      "@lumino/*": "^2.0.0"
+    }
+  },
+  "states": {
+    "boot": "Cold start, default layout: left sidebar open on the file browser, launcher in the dock.",
+    "document-open": "A notebook or text file open in the main dock area.",
+    "document-dirty": "An open document with unsaved changes, so its tab shows the dirty dot.",
+    "dock-split": "The dock area split at least once, so a dock handle exists.",
+    "menu-open": "A top-level menu bar dropdown open (File).",
+    "menu-open-keyboard": "A menu opened and then moved with ArrowDown, so an item carries .lm-mod-active.",
+    "menu-open-view": "The View menu open, which is where the toggled items live.",
+    "context-menu-open": "A context menu opened on a file browser row.",
+    "notebook-open": "A notebook open with at least one code cell.",
+    "notebook-executed": "A notebook with at least one executed cell that produced output.",
+    "notebook-error-output": "A notebook cell executed to a traceback or a stderr stream.",
+    "dialog-open": "Any modal dialog open (File ▸ Rename works).",
+    "dialog-warn-open": "A dialog with a destructive confirmation button (kernel shutdown).",
+    "document-search-open": "The Ctrl/Cmd-F overlay open over a document.",
+    "document-search-regex-error": "The search overlay in regex mode with an unparseable pattern.",
+    "command-palette-open": "The command palette open.",
+    "extension-manager-open": "The extension manager panel open in the sidebar.",
+    "right-panel-open": "The right sidebar open on the property inspector.",
+    "debugger-open": "The debugger panel open, which is where the accordion titles are.",
+    "document-loading": "A document mid-load, while its spinner is on screen."
+  },
+  "surfaces": [
+    {
+      "file": "style/surfaces/top-panel.css",
+      "upstream": ["@jupyterlab/application 4.6.3 style/core.css"],
+      "selectors": [
+        { "selector": "#jp-top-panel", "state": "boot" },
+        { "selector": "#jp-menu-panel", "state": "boot" },
+        { "selector": "#jp-MainLogo", "state": "boot" },
+        { "selector": "#jp-MainLogo svg", "state": "boot" }
+      ]
+    },
+    {
+      "file": "style/surfaces/menu-bar.css",
+      "upstream": [
+        "@lumino/widgets 2.9.0 style/menubar.css",
+        "@jupyterlab/application 4.6.3 style/menus.css"
+      ],
+      "selectors": [
+        { "selector": ".lm-MenuBar", "state": "boot" },
+        { "selector": ".lm-MenuBar-item", "state": "boot" },
+        {
+          "selector": ".lm-MenuBar-item.lm-mod-active",
+          "state": "menu-open",
+          "note": "MenuBar moves this on pointer AND keyboard, which is why the hover treatment is written as one selector list with it (M1)."
+        },
+        {
+          "selector": ".lm-MenuBar.lm-mod-active .lm-MenuBar-item.lm-mod-active",
+          "state": "menu-open"
+        },
+        {
+          "selector": ".lm-MenuBar-item.lm-mod-disabled",
+          "state": "boot",
+          "optional": true,
+          "note": "Lumino only emits this when a menu bar item's command is disabled; JupyterLab's main menus rarely are."
+        },
+        {
+          "selector": ".lm-MenuBar-itemMnemonic",
+          "state": "boot",
+          "optional": true,
+          "note": "Emitted only for items whose IMenuItem declares a mnemonic index. Present in the stock main menu, but a deployment that recomposes the menus through overrides.json can drop it — which is exactly the M3 regression this entry is here to catch."
+        }
+      ],
+      "nonQueryable": [".lm-MenuBar-item:hover"]
+    },
+    {
+      "file": "style/surfaces/menu.css",
+      "upstream": [
+        "@lumino/widgets 2.9.0 style/menu.css",
+        "@jupyterlab/application 4.6.3 style/menus.css"
+      ],
+      "selectors": [
+        { "selector": ".lm-Menu", "state": "menu-open" },
+        {
+          "selector": ".lm-MenuBar-menu.jp-ThemedContainer",
+          "state": "menu-open"
+        },
+        {
+          "selector": ".lm-Menu:not(.lm-MenuBar-menu)",
+          "state": "context-menu-open"
+        },
+        { "selector": ".lm-Menu-content", "state": "menu-open" },
+        { "selector": ".lm-Menu-item", "state": "menu-open" },
+        { "selector": ".lm-Menu-itemIcon", "state": "menu-open" },
+        { "selector": ".lm-Menu-itemLabel", "state": "menu-open" },
+        { "selector": ".lm-Menu-itemShortcut", "state": "menu-open" },
+        { "selector": ".lm-Menu-itemSubmenuIcon", "state": "menu-open" },
+        {
+          "selector": ".lm-Menu-item[data-type='submenu']",
+          "state": "menu-open",
+          "note": "File ▸ New. Also the compound core uses for the disabled-chevron rule this file has to outrank."
+        },
+        {
+          "selector": ".lm-Menu-item[data-type='separator']",
+          "state": "menu-open"
+        },
+        {
+          "selector": ".lm-Menu-item[data-type='separator'] > div",
+          "state": "menu-open",
+          "note": "The four cells Lumino renders inside a separator row. They are hidden here; if the markup changes shape, core's own ::after border comes back and doubles the line."
+        },
+        {
+          "selector": ".lm-Menu-item.lm-mod-active",
+          "state": "menu-open-keyboard",
+          "note": "The keyboard highlight. If this stops matching, keyboard navigation has gone invisible (R12) — treat a failure here as a release blocker, not a styling nit."
+        },
+        {
+          "selector": ".lm-Menu-item.lm-mod-toggled",
+          "state": "menu-open-view",
+          "note": "Carries the check glyph and the weight shift that make the toggled state readable without colour (A7, M5)."
+        },
+        {
+          "selector": ".lm-Menu-item.lm-mod-disabled",
+          "state": "menu-open",
+          "optional": true
+        },
+        {
+          "selector": ".lm-Menu-item.lm-mod-disabled > .lm-Menu-itemIcon",
+          "state": "menu-open",
+          "optional": true
+        },
+        {
+          "selector": ".lm-Menu-item[data-type='submenu'].lm-mod-disabled > .lm-Menu-itemSubmenuIcon",
+          "state": "menu-open",
+          "optional": true,
+          "note": "Core's own compound, repeated verbatim so our reset clears its specificity rather than tying with it."
+        },
+        {
+          "selector": ".lm-Menu-itemMnemonic",
+          "state": "menu-open",
+          "optional": true
+        }
+      ],
+      "nonQueryable": [
+        ".lm-Menu-item:hover",
+        ".lm-Menu-item:hover:not(.lm-mod-disabled)",
+        ".lm-Menu-item.lm-mod-active:not(.lm-mod-disabled)",
+        ".lm-Menu-item:hover:not(.lm-mod-disabled) > .lm-Menu-itemSubmenuIcon",
+        ".lm-Menu-item.lm-mod-active:not(.lm-mod-disabled) > .lm-Menu-itemSubmenuIcon",
+        ".lm-Menu-item.lm-mod-toggled > .lm-Menu-itemIcon::before"
+      ]
+    },
+    {
+      "file": "style/surfaces/tab-bar.css",
+      "upstream": [
+        "@lumino/widgets 2.9.0 style/tabbar.css",
+        "@lumino/widgets 2.9.0 style/dockpanel.css",
+        "@lumino/widgets 2.9.0 style/splitpanel.css",
+        "@jupyterlab/application 4.6.3 style/tabs.css",
+        "@jupyterlab/ui-components 4.6.3 style/icons.css"
+      ],
+      "selectors": [
+        { "selector": ".lm-DockPanel-tabBar", "state": "boot" },
+        {
+          "selector": ".lm-DockPanel-tabBar .lm-TabBar-tab",
+          "state": "document-open"
+        },
+        {
+          "selector": ".lm-DockPanel-tabBar .lm-TabBar-tab.lm-mod-current",
+          "state": "document-open"
+        },
+        {
+          "selector": ".lm-DockPanel-tabBar .lm-TabBar-tab.jp-mod-current",
+          "state": "document-open",
+          "note": "The application-level current tab — exactly one across every split. This is the hook the accent indicator hangs off."
+        },
+        {
+          "selector": ".lm-DockPanel-tabBar .lm-TabBar-tabCloseIcon",
+          "state": "document-open"
+        },
+        {
+          "selector": ".lm-DockPanel-tabBar .lm-TabBar-tabLabel",
+          "state": "document-open"
+        },
+        {
+          "selector": ".lm-DockPanel-tabBar .lm-TabBar-tab.lm-mod-closable.jp-mod-dirty > .lm-TabBar-tabCloseIcon > * > .jp-icon-busy[fill]",
+          "state": "document-dirty",
+          "note": "Core's dirty-tab hack: the close glyph is hidden and this busy circle revealed while the close affordance is not hovered. Deep and fragile by nature — that is why it is asserted."
+        },
+        {
+          "selector": ".lm-SplitPanel[data-orientation='horizontal'] > .lm-SplitPanel-handle",
+          "state": "boot"
+        },
+        {
+          "selector": ".lm-SplitPanel[data-orientation='vertical'] > .lm-SplitPanel-handle",
+          "state": "debugger-open",
+          "optional": true
+        },
+        {
+          "selector": ".lm-DockPanel-handle[data-orientation='horizontal']",
+          "state": "dock-split"
+        },
+        {
+          "selector": ".lm-DockPanel-handle[data-orientation='vertical']",
+          "state": "dock-split",
+          "optional": true
+        },
+        {
+          "selector": ".lm-TabPanel-tabBar",
+          "state": "debugger-open",
+          "optional": true,
+          "note": "TabPanel tab bars only appear inside widgets that use one; they share the dock tab treatment so they are styled alongside it."
+        },
+        {
+          "selector": ".lm-TabPanel-tabBar .lm-TabBar-tab",
+          "state": "debugger-open",
+          "optional": true
+        },
+        {
+          "selector": ".lm-TabPanel-tabBar .lm-TabBar-tab.lm-mod-current",
+          "state": "debugger-open",
+          "optional": true
+        }
+      ],
+      "nonQueryable": [
+        ".lm-DockPanel-tabBar .lm-TabBar-tab:hover:not(.lm-mod-current)",
+        ".lm-TabPanel-tabBar .lm-TabBar-tab:hover:not(.lm-mod-current)",
+        ".lm-DockPanel-tabBar .lm-TabBar-tabCloseIcon:hover",
+        ".lm-DockPanel-tabBar .lm-TabBar-tab.jp-mod-current::before",
+        ".lm-SplitPanel-handle::before",
+        ".lm-SplitPanel-handle::after",
+        ".lm-DockPanel-handle::before",
+        ".lm-DockPanel-handle::after"
+      ]
+    },
+    {
+      "file": "style/surfaces/sidebar.css",
+      "upstream": [
+        "@lumino/widgets 2.9.0 style/tabbar.css",
+        "@jupyterlab/application 4.6.3 style/sidepanel.css",
+        "@jupyterlab/ui-components 4.6.3 style/sidepanel.css"
+      ],
+      "selectors": [
+        { "selector": ".jp-SideBar.lm-TabBar", "state": "boot" },
+        {
+          "selector": ".jp-SideBar.lm-TabBar[data-orientation='vertical']",
+          "state": "boot"
+        },
+        {
+          "selector": ".jp-SideBar[data-orientation='vertical'] .lm-TabBar-tab",
+          "state": "boot"
+        },
+        {
+          "selector": ".jp-SideBar .lm-TabBar-tabIcon.jp-SideBar-tabIcon",
+          "state": "boot"
+        },
+        {
+          "selector": ".jp-SideBar .lm-TabBar-tab.lm-mod-current",
+          "state": "boot"
+        },
+        {
+          "selector": ".jp-SideBar.lm-TabBar.jp-mod-left .lm-TabBar-tab.lm-mod-current",
+          "state": "boot"
+        },
+        {
+          "selector": ".jp-SideBar.lm-TabBar.jp-mod-right .lm-TabBar-tab.lm-mod-current",
+          "state": "right-panel-open"
+        },
+        { "selector": ".jp-SidePanel", "state": "right-panel-open" },
+        { "selector": ".jp-SidePanel-header", "state": "right-panel-open" },
+        {
+          "selector": ".lm-AccordionPanel .jp-AccordionPanel-title",
+          "state": "debugger-open",
+          "optional": true
+        }
+      ],
+      "nonQueryable": [
+        ".jp-SideBar .lm-TabBar-tab:hover:not(.lm-mod-current)",
+        ".jp-SideBar.lm-TabBar.jp-mod-left .lm-TabBar-tab.lm-mod-current::before",
+        ".jp-SideBar.lm-TabBar.jp-mod-right .lm-TabBar-tab.lm-mod-current::before"
+      ]
+    },
+    {
+      "file": "style/surfaces/scrollbars.css",
+      "upstream": ["@jupyterlab/application 4.6.3 style/scrollbar.css"],
+      "selectors": [
+        {
+          "selector": ".jp-scrollbar-tiny",
+          "state": "boot",
+          "note": "Not styled here — excluded from the webkit rules. Asserted because the exclusion is only correct while core still uses this class for its 4px variant; if the class disappears, the exclusion is dead code and the tiny scrollbars silently grow."
+        }
+      ],
+      "nonQueryable": [
+        ":not(.jp-scrollbar-tiny)::-webkit-scrollbar",
+        ":not(.jp-scrollbar-tiny)::-webkit-scrollbar-track",
+        ":not(.jp-scrollbar-tiny)::-webkit-scrollbar-corner",
+        ":not(.jp-scrollbar-tiny)::-webkit-scrollbar-thumb",
+        ":not(.jp-scrollbar-tiny)::-webkit-scrollbar-track-piece:start",
+        ":not(.jp-scrollbar-tiny)::-webkit-scrollbar-track-piece:end"
+      ]
+    },
+    {
+      "file": "style/surfaces/dialog.css",
+      "upstream": ["@jupyterlab/apputils 4.7.3 style/dialog.css"],
+      "selectors": [
+        { "selector": ".jp-Dialog.jp-ThemedContainer", "state": "dialog-open" },
+        { "selector": ".jp-Dialog-content", "state": "dialog-open" },
+        { "selector": ".jp-Dialog-header", "state": "dialog-open" },
+        { "selector": ".jp-Dialog-body", "state": "dialog-open" },
+        { "selector": ".jp-Dialog-footerButtons", "state": "dialog-open" },
+        {
+          "selector": ".jp-Dialog-button.jp-mod-styled",
+          "state": "dialog-open",
+          "note": "Order matters as much as style here: Dialog renders reject before accept, which is what puts the primary rightmost in LTR without any CSS reordering."
+        }
+      ]
+    },
+    {
+      "file": "style/surfaces/notebook.css",
+      "upstream": [
+        "@jupyterlab/notebook 4.6.3 style/base.css",
+        "@jupyterlab/cells 4.6.3 style/base.css",
+        "@jupyterlab/cells 4.6.3 style/inputarea.css",
+        "@jupyterlab/cells 4.6.3 style/collapser.css",
+        "@jupyterlab/outputarea 4.6.3 style/base.css",
+        "@jupyterlab/rendermime 4.6.3 style/base.css"
+      ],
+      "selectors": [
+        { "selector": ".jp-Notebook", "state": "notebook-open" },
+        {
+          "selector": ".jp-Notebook .jp-Cell.jp-mod-active",
+          "state": "notebook-open"
+        },
+        {
+          "selector": ".jp-Notebook .jp-Cell .jp-Collapser",
+          "state": "notebook-open"
+        },
+        {
+          "selector": ".jp-Notebook .jp-Cell.jp-mod-active .jp-Collapser",
+          "state": "notebook-open",
+          "note": "Core paints this as the active-cell bar. It is neutralised here so the inset indicator is the only bar; if the selector stops matching, two bars come back."
+        },
+        { "selector": ".jp-InputPrompt", "state": "notebook-open" },
+        { "selector": ".jp-OutputPrompt", "state": "notebook-executed" },
+        { "selector": ".jp-OutputArea-output", "state": "notebook-executed" },
+        {
+          "selector": ".jp-RenderedText[data-mime-type='application/vnd.jupyter.stderr']",
+          "state": "notebook-error-output",
+          "note": "The mime type is the hook for the error-output left border. It covers tracebacks and library warnings alike, which is intended."
+        }
+      ],
+      "nonQueryable": [".jp-Notebook .jp-Cell .jp-Collapser:hover"]
+    },
+    {
+      "file": "style/surfaces/inputs.css",
+      "upstream": [
+        "@jupyterlab/ui-components 4.6.3 style/base.css",
+        "@jupyterlab/ui-components 4.6.3 style/styling.css",
+        "@jupyterlab/documentsearch 4.6.3 style/base.css",
+        "@jupyterlab/apputils 4.7.3 style/commandpalette.css"
+      ],
+      "selectors": [
+        {
+          "selector": ".jp-InputGroup input",
+          "state": "extension-manager-open"
+        },
+        {
+          "selector": ".jp-InputGroupAction",
+          "state": "extension-manager-open",
+          "optional": true
+        },
+        {
+          "selector": ".jp-DocumentSearch-input",
+          "state": "document-search-open"
+        },
+        {
+          "selector": ".lm-CommandPalette-input",
+          "state": "command-palette-open"
+        },
+        { "selector": "input.jp-mod-styled", "state": "dialog-open" },
+        {
+          "selector": ".jp-DocumentSearch-regex-error",
+          "state": "document-search-regex-error",
+          "optional": true
+        },
+        {
+          "selector": "select.jp-mod-styled",
+          "state": "dialog-open",
+          "optional": true,
+          "note": "Kernel selection dialog."
+        },
+        {
+          "selector": ".jp-select-wrapper",
+          "state": "dialog-open",
+          "optional": true
+        },
+        {
+          "selector": "input[type='checkbox']",
+          "state": "boot",
+          "note": "The file browser listing renders one per row."
+        },
+        {
+          "selector": "input[type='radio']",
+          "state": "boot",
+          "optional": true
+        }
+      ],
+      "nonQueryable": [
+        ".jp-InputGroup input::placeholder",
+        ".jp-DocumentSearch-input::placeholder",
+        ".lm-CommandPalette-input::placeholder",
+        "input.jp-mod-styled::placeholder",
+        ".jp-select-wrapper.jp-mod-focused select.jp-mod-styled"
+      ]
+    },
+    {
+      "file": "style/surfaces/buttons.css",
+      "upstream": [
+        "@jupyterlab/application 4.6.3 style/buttons.css",
+        "@jupyterlab/apputils 4.7.3 style/dialog.css",
+        "@jupyterlab/ui-components 4.6.3 style/base.css",
+        "@jupyterlab/ui-components 4.6.3 style/styling.css",
+        "@jupyterlab/ui-components 4.6.3 style/toolbar.css"
+      ],
+      "selectors": [
+        { "selector": "button.jp-mod-styled", "state": "dialog-open" },
+        {
+          "selector": "button.jp-mod-styled.jp-mod-accept",
+          "state": "dialog-open"
+        },
+        {
+          "selector": "button.jp-mod-styled.jp-mod-reject",
+          "state": "dialog-open"
+        },
+        {
+          "selector": "button.jp-mod-styled.jp-mod-warn",
+          "state": "dialog-warn-open",
+          "optional": true
+        },
+        {
+          "selector": "button.jp-mod-styled[aria-disabled='true']",
+          "state": "dialog-open",
+          "optional": true,
+          "note": "Some JupyterLab buttons express disabled with aria-disabled rather than the disabled attribute, so both are dimmed."
+        },
+        {
+          "selector": "button.jp-Dialog-close-button",
+          "state": "dialog-open",
+          "optional": true
+        },
+        {
+          "selector": ".jp-Button.jp-mod-minimal",
+          "state": "extension-manager-open",
+          "optional": true
+        },
+        { "selector": ".jp-Toolbar", "state": "document-open" },
+        {
+          "selector": ".jp-ToolbarButtonComponent",
+          "state": "document-open",
+          "note": "A <jp-button> custom element. Its control lives in a shadow root and is styled through ::part(control); asserting the host is as deep as querySelectorAll can go."
+        },
+        {
+          "selector": "button.jp-ToolbarButtonComponent",
+          "state": "document-open",
+          "optional": true,
+          "note": "The plain-DOM path core marks deprecated. Third-party toolbar items still render it, so it is styled; it may legitimately be absent from a stock boot."
+        }
+      ],
+      "nonQueryable": [
+        "button.jp-mod-styled:not(.jp-mod-accept, .jp-mod-reject, .jp-mod-warn)",
+        ".jp-ToolbarButtonComponent::part(control)",
+        ".jp-ToolbarButtonComponent[aria-pressed='true']::part(control)"
+      ]
+    },
+    {
+      "file": "style/surfaces/focus.css",
+      "upstream": [
+        "@jupyterlab/application 4.6.3 style/buttons.css",
+        "@jupyterlab/application 4.6.3 style/menus.css",
+        "@jupyterlab/application 4.6.3 style/tabs.css",
+        "@jupyterlab/apputils 4.7.3 style/dialog.css",
+        "@jupyterlab/ui-components 4.6.3 style/styling.css"
+      ],
+      "selectors": [
+        { "selector": ".lm-MenuBar-item", "state": "boot" },
+        { "selector": ".lm-TabBar-tab", "state": "boot" },
+        {
+          "selector": ".lm-TabBar-addButton",
+          "state": "document-open",
+          "optional": true
+        },
+        { "selector": ".jp-ToolbarButtonComponent", "state": "document-open" },
+        { "selector": "button.jp-Dialog-button", "state": "dialog-open" }
+      ],
+      "nonQueryable": [
+        ":focus-visible",
+        "button.jp-Dialog-button:focus:not(:focus-visible)"
+      ]
+    },
+    {
+      "file": "style/surfaces/motion.css",
+      "upstream": ["@jupyterlab/ui-components 4.6.3 style/spinner.css"],
+      "selectors": [
+        {
+          "selector": ".jp-SpinnerContent",
+          "state": "document-loading",
+          "optional": true,
+          "note": "The one element exempted from the reduced-motion block. If this class stops matching, the exemption is silently gone and a busy indicator freezes under prefers-reduced-motion (A8)."
+        }
+      ],
+      "nonQueryable": [
+        "*:not(.jp-SpinnerContent)",
+        "*:not(.jp-SpinnerContent)::before",
+        "*:not(.jp-SpinnerContent)::after"
+      ]
+    }
+  ]
+}

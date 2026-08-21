@@ -1,0 +1,58 @@
+{
+    "name": "@d4n/settings-forms",
+    "version": "0.1.0",
+    "private": true,
+    "description": "Data4Now design system — settings editor form styling and IFormRendererRegistry field renderers",
+    "license": "BSD-3-Clause",
+    "author": {
+        "name": "Data4Now",
+        "email": "platform@data4now.org"
+    },
+    "main": "lib/index.js",
+    "types": "lib/index.d.ts",
+    "style": "style/index.css",
+    "styleModule": "style/index.js",
+    "sideEffects": [
+        "style/*.css",
+        "style/index.js"
+    ],
+    "files": [
+        "lib/**/*.{d.ts,js,js.map}",
+        "src/**/*.ts",
+        "style/**/*.{css,js}"
+    ],
+    "scripts": {
+        "build:lib": "tsc --sourceMap",
+        "build:lib:prod": "tsc",
+        "build:labextension": "jupyter labextension build .",
+        "build:labextension:dev": "jupyter labextension build --development True .",
+        "clean:lib": "rimraf lib tsconfig.tsbuildinfo",
+        "watch:labextension": "jupyter labextension watch ."
+    },
+    "dependencies": {
+        "@jupyterlab/application": "^4.5.0",
+        "@jupyterlab/ui-components": "^4.5.0"
+    },
+    "devDependencies": {
+        "@jupyterlab/builder": "^4.5.0",
+        "rimraf": "^5.0.1",
+        "typescript": "~5.5.4"
+    },
+    "jupyterlab": {
+        "extension": true,
+        "outputDir": "../../jupyterlab_d4n/labextensions/@d4n/settings-forms",
+        "discovery": {
+            "server": {
+                "managers": [
+                    "pip"
+                ],
+                "base": {
+                    "name": "jupyterlab_d4n"
+                }
+            }
+        }
+    },
+    "publishConfig": {
+        "access": "public"
+    }
+}

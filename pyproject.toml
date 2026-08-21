@@ -1,0 +1,119 @@
+[build-system]
+requires = ["hatchling>=1.21", "jupyterlab>=4.5.0,<5", "hatch-nodejs-version>=0.3.2"]
+build-backend = "hatchling.build"
+
+[project]
+name = "jupyterlab_d4n"
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.10"
+classifiers = [
+    "Framework :: Jupyter",
+    "Framework :: Jupyter :: JupyterLab",
+    "Framework :: Jupyter :: JupyterLab :: 4",
+    "Framework :: Jupyter :: JupyterLab :: Extensions",
+    "Framework :: Jupyter :: JupyterLab :: Extensions :: Prebuilt",
+    "License :: OSI Approved :: BSD License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+# PRD §7.10 pins the JupyterLab minor range: this is a distribution, not a
+# loose add-on, and every owned selector is verified against one range. The pin
+# resolves PRD §16 Q6 toward "track current" — see docs/decisions.md D-006.
+dependencies = [
+    "jupyterlab>=4.5.0,<5",
+    "jupyter_server>=2.4.0,<3",
+]
+dynamic = ["version", "description", "authors", "urls", "keywords"]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-jupyter[server]>=0.6.0",
+    "pyyaml>=6.0",
+]
+
+[tool.hatch.version]
+source = "nodejs"
+
+[tool.hatch.metadata.hooks.nodejs]
+fields = ["description", "authors", "urls", "keywords"]
+
+[tool.hatch.build.targets.sdist]
+artifacts = ["jupyterlab_d4n/labextensions"]
+exclude = [".github", "binder", "design-reference", "scope", "notebooks"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["jupyterlab_d4n"]
+
+# --- Shipped data ------------------------------------------------------------
+# NOTE the shape here: unlike a single-extension scaffold, `labextensions/` maps
+# to the labextensions ROOT, because it CONTAINS the eight federated extension
+# directories (@d4n/theme-light, @d4n/icons, ...) rather than being one of them.
+# Mapping it one level too deep is the classic multi-extension packaging bug —
+# it installs, and then JupyterLab finds nothing.
+[tool.hatch.build.targets.wheel.shared-data]
+"jupyterlab_d4n/labextensions" = "share/jupyter/labextensions"
+"jupyter-config/server-config" = "etc/jupyter/jupyter_server_config.d"
+# Disabled core plugins for the four T3 replacements (PRD §7.10).
+"jupyter-config/labconfig" = "etc/jupyter/labconfig"
+# Default theme + toolbar/menu composition (PRD §5.4, §7.6).
+"jupyter-config/lab-settings" = "share/jupyter/lab/settings"
+# `install.json` is NOT mapped here. Every federated extension needs its own
+# copy (that is what `jupyter labextension list` reads to tell a user how to
+# uninstall), and shared-data cannot map one source file to eight destinations —
+# TOML forbids the duplicate key. scripts/stamp-install-json.mjs copies the root
+# install.json into each built labextension directory instead, so the wholesale
+# `labextensions` mapping above carries all eight.
+
+[tool.hatch.build.hooks.version]
+path = "jupyterlab_d4n/_version.py"
+
+[tool.hatch.build.hooks.jupyter-builder]
+dependencies = ["hatch-jupyter-builder>=0.9"]
+build-function = "hatch_jupyter_builder.npm_builder"
+# One target per federated extension: if any single package fails to build, the
+# wheel must not be produced. A single ensured-target would let a broken
+# package ship silently as "extension installed but does nothing".
+ensured-targets = [
+    "jupyterlab_d4n/labextensions/@d4n/theme-light/package.json",
+    "jupyterlab_d4n/labextensions/@d4n/theme-dark/package.json",
+    "jupyterlab_d4n/labextensions/@d4n/ui-overrides/package.json",
+    "jupyterlab_d4n/labextensions/@d4n/icons/package.json",
+    "jupyterlab_d4n/labextensions/@d4n/editor-theme/package.json",
+    "jupyterlab_d4n/labextensions/@d4n/settings-forms/package.json",
+    "jupyterlab_d4n/labextensions/@d4n/shell-chrome/package.json",
+    "jupyterlab_d4n/labextensions/@d4n/compat-shim/package.json",
+]
+skip-if-exists = ["jupyterlab_d4n/labextensions/@d4n/theme-light/package.json"]
+
+[tool.hatch.build.hooks.jupyter-builder.build-kwargs]
+build_cmd = "build:prod"
+npm = ["jlpm"]
+
+[tool.hatch.build.hooks.jupyter-builder.editable-build-kwargs]
+build_cmd = "install:extension"
+npm = ["jlpm"]
+source_dir = "packages"
+build_dir = "jupyterlab_d4n/labextensions"
+
+[tool.jupyter-releaser.options]
+version_cmd = "hatch version"
+
+[tool.jupyter-releaser.hooks]
+before-build-npm = [
+    "python -m pip install 'jupyterlab>=4.5.0,<5'",
+    "jlpm",
+    "jlpm build:prod"
+]
+before-build-python = ["jlpm clean:all"]
+
+[tool.check-wheel-contents]
+ignore = ["W002"]
+
+[tool.pytest.ini_options]
+testpaths = ["jupyterlab_d4n/tests"]

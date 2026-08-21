@@ -1,0 +1,9 @@
+/* The stable import path for this package's styles.
+ *
+ * The `--d4n-*` custom properties every rule below resolves against are shipped
+ * once by @d4n/ui-overrides, not re-imported here — see the long comment in
+ * packages/theme-light/src/index.ts for why duplicating the token stylesheet
+ * across federated bundles is the wrong trade.
+ */
+
+@import url('./settings-forms.css');

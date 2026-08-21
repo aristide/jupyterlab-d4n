@@ -1,0 +1,11 @@
+* text=auto eol=lf
+
+# Shell scripts are executed inside the Linux container — CRLF breaks the
+# shebang. Force LF regardless of the host checkout setting.
+*.sh text eol=lf
+
+# Design-system assets imported from Claude Design are binary; never let git
+# newline-normalise them.
+*.png binary
+*.woff2 binary
+*.ttf binary

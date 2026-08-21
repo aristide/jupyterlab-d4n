@@ -1,0 +1,418 @@
+{
+  "$description": "TIER 2 - SEMANTIC, LIGHT MODE. The only tier redefined per mode (PRD 5.2 rule 2). Every token here MUST have a dark counterpart in semantic-dark.tokens.json with the identical path; build.mjs fails the build on any asymmetry (PRD 5.2 rule 4). This is the layer that translates JupyterLab's POSITIONAL variables into the design system's SEMANTIC ones - the mismatch that PRD 1.1 identifies as the thing that sinks projects of this type.",
+  "color": {
+    "surface": {
+      "canvas": {
+        "$value": "{color.palette.neutral.0}",
+        "$type": "color",
+        "$description": "Deepest surface. Notebook and editor background."
+      },
+      "raised": {
+        "$value": "{color.palette.neutral.0}",
+        "$type": "color",
+        "$description": "Panels, toolbars, cards - one step above canvas. In light mode raised and canvas are the same white and separation is carried by BORDERS, not fill. Dark mode inverts that relationship (see the note in semantic-dark)."
+      },
+      "sunken": {
+        "$value": "{color.palette.neutral.50}",
+        "$type": "color",
+        "$description": "Inset surfaces - inputs, search fields, type-badge chips."
+      },
+      "overlay": {
+        "$value": "{color.palette.neutral.0}",
+        "$type": "color",
+        "$description": "Menus, dialogs, tooltips, popovers. Anything that portals out of the shell."
+      },
+      "hover": {
+        "$value": "#ECF0F6",
+        "$type": "color",
+        "$description": "Lightened from the design system's fog (neutral.100) by the contrast audit: secondary and muted text both measured 4.46:1 on fog, a hair under A1, and this surface carries menu items, list rows and TOC entries — the highest-traffic text-on-tinted-background pairing in the interface."
+      },
+      "active": { "$value": "#DFE6EF", "$type": "color" },
+      "selected": {
+        "$value": "#E3EDF6",
+        "$type": "color",
+        "$description": "Selected rows and the active TOC heading. A tinted neutral rather than a brand tint at low alpha: an alpha tint over an unknown backdrop is unpredictable inside menus, which portal to document.body. Paired with a 2px action.default left bar so selection is never carried by colour alone (A7)."
+      },
+      "code": {
+        "$value": "{color.palette.neutral.0}",
+        "$type": "color",
+        "$description": "Cell editor and terminal background."
+      },
+      "codeActive": {
+        "$value": "{color.palette.neutral.50}",
+        "$type": "color"
+      },
+      "inverse0": { "$value": "{color.palette.neutral.900}", "$type": "color" },
+      "inverse1": { "$value": "{color.palette.neutral.800}", "$type": "color" },
+      "inverse2": { "$value": "{color.palette.neutral.600}", "$type": "color" },
+      "inverse3": { "$value": "{color.palette.neutral.400}", "$type": "color" },
+      "inverse4": { "$value": "{color.palette.neutral.200}", "$type": "color" }
+    },
+
+    "text": {
+      "$description": "A four-step ramp where secondary is DARKER than muted, which reads backwards until you check the numbers: both roles land on the same tinted surfaces, and slate (600) is the lightest value that clears 4.5:1 there, so secondary has to take the step above it rather than below.",
+      "strong": { "$value": "{color.palette.neutral.900}", "$type": "color" },
+      "primary": { "$value": "{color.palette.neutral.800}", "$type": "color" },
+      "secondary": {
+        "$value": "{color.palette.neutral.700}",
+        "$type": "color"
+      },
+      "muted": {
+        "$value": "{color.palette.neutral.600}",
+        "$type": "color",
+        "$description": "Placeholders, disabled labels, timestamps. NOT the steel 400 the web design system uses for this role: placeholders are text and must clear 4.5:1 (PRD 8.8.1), and steel on white measures 2.90:1."
+      },
+      "link": {
+        "$value": "{color.palette.teal.600}",
+        "$type": "color",
+        "$description": "One step deeper than the design system's teal-deep. At teal.500 a link measured 4.09:1 on surface.hover and 4.04:1 on surface.selected — and links land on hovered rows constantly."
+      },
+      "onAction": { "$value": "{color.palette.neutral.0}", "$type": "color" },
+      "onBrand": { "$value": "{color.palette.neutral.0}", "$type": "color" },
+      "onDanger": { "$value": "{color.palette.neutral.0}", "$type": "color" },
+      "onWarning": {
+        "$value": "{color.palette.neutral.0}",
+        "$type": "color",
+        "$description": "White, not ink. Light-mode warning.default is a DEEP amber (#8C5807) — the amber that clears 4.5:1 on white — so dark text on it measures 2.77:1. The dark-mode warning is a light amber and takes ink. The two modes genuinely differ here; this is what PRD G2 means by peers rather than an inversion."
+      },
+      "onSuccess": { "$value": "{color.palette.neutral.0}", "$type": "color" },
+      "inverse0": { "$value": "{color.palette.neutral.0}", "$type": "color" },
+      "inverse1": { "$value": "{color.palette.neutral.50}", "$type": "color" },
+      "inverse2": { "$value": "{color.palette.neutral.200}", "$type": "color" },
+      "inverse3": { "$value": "{color.palette.neutral.400}", "$type": "color" }
+    },
+
+    "border": {
+      "$description": "strong/default/subtle/faint are DECORATIVE separators - panel edges, gridlines, menu dividers. WCAG 1.4.11 exempts pure decoration from the 3:1 rule, and 'subtle' that clears 3:1 is not subtle. `control` is the exception: it draws the boundary that identifies a component, which 1.4.11 DOES gate at 3:1.",
+      "strong": { "$value": "{color.palette.neutral.400}", "$type": "color" },
+      "default": { "$value": "{color.palette.neutral.200}", "$type": "color" },
+      "subtle": { "$value": "{color.palette.neutral.100}", "$type": "color" },
+      "faint": { "$value": "#EEF2F7", "$type": "color" },
+      "control": {
+        "$value": "{color.palette.neutral.500}",
+        "$type": "color",
+        "$description": "Input, select, checkbox and radio boundaries. Split out of border.default by the contrast audit: mist on paper measures 1.43:1, so a text field's outline was not perceivable at all - a real A3 failure hiding behind a token name that sounded right."
+      },
+      "focus": {
+        "$value": "{color.palette.teal.500}",
+        "$type": "color",
+        "$description": "teal.400 measured 2.61:1 on surface.hover. A focus ring that disappears on a hovered row fails A5 exactly where keyboard users need it."
+      }
+    },
+
+    "brand": {
+      "$description": "Navy. Identity, not interaction - see `action` for the interactive intent.",
+      "strong": { "$value": "{color.palette.navy.600}", "$type": "color" },
+      "default": { "$value": "{color.palette.navy.500}", "$type": "color" },
+      "subtle": { "$value": "{color.palette.navy.400}", "$type": "color" },
+      "faint": { "$value": "{color.palette.navy.100}", "$type": "color" }
+    },
+
+    "action": {
+      "$description": "Teal. Focus rings, active cell borders, links, primary interaction. Split from `brand` deliberately: a navy focus ring on a navy top panel is invisible, and the design system already uses teal for focus (--border-focus in colors_and_type.css).",
+      "strong": { "$value": "{color.palette.teal.600}", "$type": "color" },
+      "default": { "$value": "{color.palette.teal.500}", "$type": "color" },
+      "subtle": { "$value": "{color.palette.teal.400}", "$type": "color" },
+      "faint": { "$value": "{color.palette.teal.100}", "$type": "color" },
+      "hover": { "$value": "{color.palette.teal.600}", "$type": "color" },
+      "active": { "$value": "#0B4747", "$type": "color" },
+      "focus": { "$value": "{color.palette.teal.500}", "$type": "color" }
+    },
+
+    "danger": {
+      "strong": { "$value": "{color.palette.magenta.600}", "$type": "color" },
+      "default": { "$value": "{color.palette.magenta.500}", "$type": "color" },
+      "subtle": { "$value": "{color.palette.magenta.300}", "$type": "color" },
+      "faint": { "$value": "#FCE3E9", "$type": "color" },
+      "hover": { "$value": "{color.palette.magenta.600}", "$type": "color" },
+      "active": { "$value": "#71152B", "$type": "color" }
+    },
+    "warning": {
+      "strong": { "$value": "{color.palette.amber.500}", "$type": "color" },
+      "default": { "$value": "{color.palette.amber.400}", "$type": "color" },
+      "subtle": { "$value": "{color.palette.amber.200}", "$type": "color" },
+      "faint": { "$value": "#FBEFD8", "$type": "color" }
+    },
+    "success": {
+      "strong": { "$value": "{color.palette.green.600}", "$type": "color" },
+      "default": { "$value": "{color.palette.green.500}", "$type": "color" },
+      "subtle": { "$value": "{color.palette.green.300}", "$type": "color" },
+      "faint": { "$value": "#E3F4EB", "$type": "color" }
+    },
+    "info": {
+      "strong": { "$value": "{color.palette.teal.600}", "$type": "color" },
+      "default": { "$value": "{color.palette.teal.500}", "$type": "color" },
+      "subtle": { "$value": "{color.palette.teal.300}", "$type": "color" },
+      "faint": { "$value": "#DDF1F1", "$type": "color" }
+    },
+
+    "chrome": {
+      "$description": "THE APPLICATION FRAME IS DARK IN BOTH MODES.\n\nThis is the one place the design deliberately refuses to follow the mode. The `JupyterLab Theme.html` mockup paints the top panel navy (#0F3D6E) and both sidebar rails ink (#0B1F38) even in light mode - an inverted frame around a light content area, the same move the Data4Now web product makes with its header. Dark mode deepens both to near-black rather than flipping them.\n\nIt earns its own token group instead of borrowing `surface.inverse.*` for two reasons: the values differ per mode (they are not a fixed inverse of anything), and the frame needs its own foreground ramp because white-on-navy has nothing to do with the text ramp that runs on canvas.\n\nPractical consequence worth knowing: the logo lockup is ALWAYS the light-letterform asset, in both modes, because the bar behind it is always dark. That kills the light/dark logo swap and the flash it causes (PRD B1, §8.9.1).",
+      "topPanelBg": { "$value": "{color.palette.navy.500}", "$type": "color" },
+      "topPanelBorder": {
+        "$value": "{color.palette.navy.600}",
+        "$type": "color"
+      },
+      "topPanelFg": {
+        "$value": "{color.palette.neutral.50}",
+        "$type": "color"
+      },
+      "topPanelFgMuted": { "$value": "#B8C5D8", "$type": "color" },
+      "topPanelHover": {
+        "$value": "rgba(255, 255, 255, 0.08)",
+        "$type": "color"
+      },
+      "topPanelActive": {
+        "$value": "rgba(255, 255, 255, 0.14)",
+        "$type": "color"
+      },
+      "topPanelAccent": {
+        "$value": "{color.palette.teal.400}",
+        "$type": "color",
+        "$description": "The 2px teal pillar between the logo and the menu items, echoing the divider in the wordmark. The mockup and the imported draft theme disagree on how to place it - the mockup hangs it off the logo, the draft hard-codes `left: 230px` - and the draft breaks the moment the logo width changes. ui-overrides uses the mockup's approach."
+      },
+      "railBg": { "$value": "{color.palette.neutral.900}", "$type": "color" },
+      "railFg": { "$value": "{color.palette.neutral.400}", "$type": "color" },
+      "railFgHover": {
+        "$value": "{color.palette.neutral.200}",
+        "$type": "color"
+      },
+      "railFgActive": {
+        "$value": "{color.palette.teal.400}",
+        "$type": "color"
+      },
+      "railActiveBg": {
+        "$value": "rgba(255, 255, 255, 0.04)",
+        "$type": "color"
+      }
+    },
+
+    "selection": {
+      "$description": "Editor text selection. The tightest constraint in the editor theme: selected text KEEPS its syntax colour, so the selection backdrop must stay light enough for the whole syntax ramp to clear 4.5:1 on it, while staying dark enough to be visible against surface.code. Both values below are the result of that squeeze, not of picking a nice teal.",
+      "active": { "$value": "#D6EFEF", "$type": "color" },
+      "inactive": { "$value": "#EAEFF5", "$type": "color" }
+    },
+    "overlay": {
+      "scrim": { "$value": "rgba(11, 31, 56, 0.5)", "$type": "color" }
+    },
+
+    "log": {
+      "$description": "Log console level badges (PRD 8.5.3). Rendered as a badge, never as tinted body text - tinted 11px text fails A1 for the muted levels.",
+      "critical": { "$value": "{color.palette.magenta.600}", "$type": "color" },
+      "error": { "$value": "{color.palette.magenta.500}", "$type": "color" },
+      "warning": { "$value": "{color.palette.amber.400}", "$type": "color" },
+      "info": { "$value": "{color.palette.teal.500}", "$type": "color" },
+      "debug": { "$value": "{color.palette.neutral.600}", "$type": "color" }
+    },
+
+    "syntax": {
+      "$description": "Consumed by the CodeMirror 6 HighlightStyle (PRD 7.5) AND by the debugger variables tree (PRD 8.6.2 D5), so a string looks the same in the editor and in the inspector. Gated at 4.5:1 against surface.code (PRD A4).",
+      "keyword": { "$value": "{color.palette.navy.500}", "$type": "color" },
+      "controlKeyword": {
+        "$value": "{color.palette.navy.600}",
+        "$type": "color"
+      },
+      "name": { "$value": "{color.palette.neutral.900}", "$type": "color" },
+      "function": { "$value": "{color.palette.navy.600}", "$type": "color" },
+      "property": {
+        "$value": "{color.palette.teal.600}",
+        "$type": "color",
+        "$description": "teal.500 measured 4.38:1 on the search-match and execution-line backdrops. Property access is one of the densest tokens in Python, and it is exactly what a user searches for."
+      },
+      "type": { "$value": "{color.palette.navy.400}", "$type": "color" },
+      "number": { "$value": "{color.palette.amber.400}", "$type": "color" },
+      "string": { "$value": "{color.palette.green.500}", "$type": "color" },
+      "regexp": { "$value": "{color.palette.plum.400}", "$type": "color" },
+      "operator": { "$value": "{color.palette.magenta.500}", "$type": "color" },
+      "comment": { "$value": "{color.palette.neutral.600}", "$type": "color" },
+      "meta": { "$value": "{color.palette.magenta.500}", "$type": "color" },
+      "heading": { "$value": "{color.palette.navy.600}", "$type": "color" },
+      "link": { "$value": "{color.palette.teal.600}", "$type": "color" },
+      "invalid": { "$value": "{color.palette.magenta.500}", "$type": "color" },
+      "bracketMatchBg": { "$value": "#D6EFEF", "$type": "color" },
+      "bracketMatchBorder": {
+        "$value": "{color.palette.teal.500}",
+        "$type": "color"
+      }
+    },
+
+    "ansi": {
+      "$description": "THE single ANSI source (PRD 8.7.2, R15). This one group generates BOTH the xterm.js theme object pushed through the terminal bridge AND the 32-selector rendermime .ansi-*-fg/.ansi-*-bg override block. Neither artifact is hand-written; tests/contrast/lint-literals.mjs fails the build if either is edited by hand.\n\nTwo deliberate calls, both documented in docs/decisions.md D-002:\n(1) The terminal background FOLLOWS THE MODE. A dark terminal in light mode is not merely a style choice - it makes PRD T4 arithmetically unsatisfiable, because no colour can be 4.5:1 against both #FFFFFF and a near-black at once. Making terminal bg equal to the notebook output bg collapses PRD 8.7.2's 'tighter of the two backgrounds' gate to a single gate.\n(2) ANSI 0/8 (black) and 7/15 (white) are ANCHOR slots. They are supposed to sit near the background - that is what makes `ls` and `git diff` readable - so they are exempt from the 4.5:1 gate and audited at 3:1 instead. Slots 1-6 and 9-14 carry the full gate. PRD T4 as literally written ('all 16') cannot hold in either mode; see the open question in TODO.md.",
+      "black": { "$value": "{color.palette.neutral.900}", "$type": "color" },
+      "red": { "$value": "{color.palette.magenta.600}", "$type": "color" },
+      "green": { "$value": "{color.palette.green.600}", "$type": "color" },
+      "yellow": { "$value": "{color.palette.amber.500}", "$type": "color" },
+      "blue": { "$value": "{color.palette.navy.600}", "$type": "color" },
+      "magenta": { "$value": "{color.palette.plum.500}", "$type": "color" },
+      "cyan": { "$value": "{color.palette.teal.700}", "$type": "color" },
+      "white": { "$value": "{color.palette.neutral.500}", "$type": "color" },
+      "brightBlack": {
+        "$value": "{color.palette.neutral.600}",
+        "$type": "color"
+      },
+      "brightRed": {
+        "$value": "{color.palette.magenta.500}",
+        "$type": "color"
+      },
+      "brightGreen": {
+        "$value": "{color.palette.green.500}",
+        "$type": "color"
+      },
+      "brightYellow": {
+        "$value": "{color.palette.amber.400}",
+        "$type": "color"
+      },
+      "brightBlue": { "$value": "{color.palette.navy.500}", "$type": "color" },
+      "brightMagenta": {
+        "$value": "{color.palette.plum.400}",
+        "$type": "color"
+      },
+      "brightCyan": { "$value": "{color.palette.teal.600}", "$type": "color" },
+      "brightWhite": {
+        "$value": "{color.palette.neutral.400}",
+        "$type": "color"
+      },
+      "foreground": {
+        "$value": "{color.palette.neutral.800}",
+        "$type": "color"
+      },
+      "background": {
+        "$value": "{color.palette.neutral.0}",
+        "$type": "color",
+        "$description": "Identical to surface.canvas by design - see the note above."
+      },
+      "cursor": { "$value": "{color.palette.teal.500}", "$type": "color" },
+      "cursorAccent": {
+        "$value": "{color.palette.neutral.0}",
+        "$type": "color"
+      },
+      "selectionBackground": { "$value": "#D6EFEF", "$type": "color" }
+    },
+
+    "icon": {
+      "$description": "JupyterLab's LabIcon classes jp-icon-contrast0..4. Every shipped SVG fills with one of these or with currentColor - never a literal hex (PRD 7.8.4, I2).",
+      "contrast0": { "$value": "{color.palette.navy.500}", "$type": "color" },
+      "contrast1": { "$value": "{color.palette.teal.500}", "$type": "color" },
+      "contrast2": {
+        "$value": "{color.palette.magenta.500}",
+        "$type": "color"
+      },
+      "contrast3": { "$value": "{color.palette.amber.400}", "$type": "color" },
+      "contrast4": { "$value": "{color.palette.green.500}", "$type": "color" }
+    },
+
+    "search": {
+      "$description": "Unselected matches keep their syntax colour, so the unselected background is gated at 4.5:1 against EVERY syntax token (PRD S3). That is why it is a pale amber here and a deep amber in dark mode - not a tinted overlay of the same value. The selected match overrides the foreground to text.onWarning, so it carries no such gate, and it is therefore free to be the same amber in both modes: the current match reads identically whichever mode you are in.\n\nThis departs from the imported draft theme, which tinted unselected matches teal and selected matches magenta. PRD 8.8.2 specifies warning for both, and magenta is already the danger intent - a search hit is not an error.",
+      "unselectedMatchBg": { "$value": "#FBEFD8", "$type": "color" },
+      "unselectedMatchFg": {
+        "$value": "{color.palette.neutral.900}",
+        "$type": "color"
+      },
+      "selectedMatchBg": {
+        "$value": "{color.palette.amber.200}",
+        "$type": "color"
+      },
+      "selectedMatchFg": {
+        "$value": "{color.palette.neutral.900}",
+        "$type": "color"
+      }
+    },
+
+    "debug": {
+      "$description": "executionLineBg shares the search-unselected value on purpose: PRD D4 and S3 impose the identical gate (4.5:1 against every syntax token) and the palette supports exactly one warning-tinted highlight that satisfies it. Two separate values would be tuned twice and drift.",
+      "executionLineBg": { "$value": "#FBEFD8", "$type": "color" },
+      "executionLineBorder": {
+        "$value": "{color.palette.amber.400}",
+        "$type": "color"
+      },
+      "breakpoint": {
+        "$value": "{color.palette.magenta.500}",
+        "$type": "color"
+      },
+      "breakpointDisabled": {
+        "$value": "{color.palette.neutral.600}",
+        "$type": "color"
+      },
+      "breakpointConditional": {
+        "$value": "{color.palette.amber.400}",
+        "$type": "color"
+      }
+    },
+
+    "grid": {
+      "$description": "Lumino DataGrid (PRD 7.9, 8.6.2). Consumed by the shared buildGridStyle() factory that BOTH the CSV viewer and the debugger variables grid use - writing this bridge twice is how the two grids end up one shade apart.",
+      "void": { "$value": "{color.palette.neutral.50}", "$type": "color" },
+      "background": { "$value": "{color.palette.neutral.0}", "$type": "color" },
+      "rowStripe": { "$value": "{color.palette.neutral.50}", "$type": "color" },
+      "line": { "$value": "#EEF2F7", "$type": "color" },
+      "headerBackground": {
+        "$value": "{color.palette.neutral.50}",
+        "$type": "color"
+      },
+      "headerLine": {
+        "$value": "{color.palette.neutral.100}",
+        "$type": "color"
+      },
+      "headerText": {
+        "$value": "{color.palette.neutral.800}",
+        "$type": "color"
+      },
+      "text": {
+        "$value": "{color.palette.neutral.900}",
+        "$type": "color",
+        "$description": "Cell text comes from the TextRenderer, NOT from DataGrid.IStyle. Styling the frame and forgetting the renderer leaves stock black text in a themed grid - a bug in dark mode (PRD D2)."
+      },
+      "selectionFill": { "$value": "#D6EFEF", "$type": "color" },
+      "selectionBorder": {
+        "$value": "{color.palette.teal.500}",
+        "$type": "color"
+      },
+      "headerSelectionFill": {
+        "$value": "{color.palette.neutral.200}",
+        "$type": "color"
+      },
+      "cursorFill": { "$value": "#E4F4F4", "$type": "color" },
+      "cursorBorder": {
+        "$value": "{color.palette.teal.500}",
+        "$type": "color"
+      },
+      "scrollShadow": { "$value": "rgba(15, 61, 110, 0.16)", "$type": "color" }
+    },
+
+    "scrollbar": {
+      "track": { "$value": "transparent", "$type": "color" },
+      "thumb": {
+        "$value": "{color.palette.neutral.500}",
+        "$type": "color",
+        "$description": "A scrollbar thumb is a control, so A3 gates it at 3:1 against the surface it floats on. Steel measured 2.90:1 on white."
+      },
+      "thumbRgb": {
+        "$value": "107, 123, 145",
+        "$type": "color",
+        "$description": "JupyterLab's --jp-scrollbar-thumb-color is an unbracketed R, G, B TRIPLET, not a colour - core composes it into rgba(). Emitting a hex here silently disables every scrollbar rule."
+      }
+    }
+  },
+
+  "elevation": {
+    "$description": "Light mode carries elevation with soft, slightly cool shadows. Dark mode does NOT (PRD 9) - see semantic-dark.",
+    "0": { "$value": "none", "$type": "shadow" },
+    "1": { "$value": "0 1px 2px rgba(15, 61, 110, 0.06)", "$type": "shadow" },
+    "2": {
+      "$value": "0 1px 3px rgba(15, 61, 110, 0.08), 0 1px 2px rgba(15, 61, 110, 0.04)",
+      "$type": "shadow"
+    },
+    "3": {
+      "$value": "0 4px 12px rgba(15, 61, 110, 0.08), 0 2px 4px rgba(15, 61, 110, 0.04)",
+      "$type": "shadow"
+    },
+    "4": {
+      "$value": "0 12px 28px rgba(15, 61, 110, 0.12), 0 4px 8px rgba(15, 61, 110, 0.06)",
+      "$type": "shadow"
+    },
+    "5": {
+      "$value": "0 24px 48px rgba(15, 61, 110, 0.16), 0 8px 16px rgba(15, 61, 110, 0.08)",
+      "$type": "shadow"
+    }
+  }
+}

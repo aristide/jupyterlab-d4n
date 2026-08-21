@@ -1,0 +1,77 @@
+/* jupyterlab-variableinspector — `@lckr/jupyterlab_variableinspector` 3.1.x–3.2.x.
+ *
+ * WHAT IT HARDCODES
+ * -----------------
+ * The panel is a plain HTML <table> the extension builds itself, styled by its
+ * own stylesheet rather than by JupyterLab's rendermime table rules. That means
+ * the two things a data table lives or dies on — the rule lines between rows
+ * and the row hover — come from the extension, not from
+ * `--jp-rendermime-table-*`, and they were picked against a white canvas.
+ *
+ * This is the one P1 row that genuinely needs compat CSS rather than a variable
+ * map, which is what §10.4 says. It is styled from the `color.grid.*` group so
+ * that the variable inspector, the CSV viewer, and the debugger's variables
+ * grid are the same table — the three of them being one shade apart is the
+ * failure this token group exists to prevent (PRD §7.9).
+ *
+ * CONFIDENCE
+ * ----------
+ * Medium. The `jp-VarInspector*` prefix is stable across the 3.x line, but the
+ * inner element classes were not verified against a running install, so the
+ * rules deliberately hang off element selectors (`table`, `th`, `td`) scoped
+ * inside the panel class rather than off named inner classes. That survives a
+ * markup refactor that renames cells; it does not survive the panel class
+ * itself changing, and §10.3 selector integrity is what catches that.
+ */
+
+body[data-jp-theme-name^='Data4Now'] .jp-VarInspector {
+  background-color: var(--d4n-color-grid-background);
+  color: var(--d4n-color-grid-text);
+  font-family: var(--d4n-font-family-ui);
+  font-size: var(--d4n-font-size-ui-sm);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-VarInspector table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-VarInspector th {
+  background-color: var(--d4n-color-grid-header-background);
+  border-bottom: var(--d4n-border-width-thin) solid
+    var(--d4n-color-grid-header-line);
+  color: var(--d4n-color-grid-header-text);
+  font-weight: var(--d4n-font-weight-semibold);
+  padding: var(--d4n-space-1) var(--d4n-space-2);
+  text-align: left;
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-VarInspector td {
+  border-bottom: var(--d4n-border-width-thin) solid var(--d4n-color-grid-line);
+  color: var(--d4n-color-grid-text);
+  padding: var(--d4n-space-1) var(--d4n-space-2);
+}
+
+/* The size and shape columns are numeric; monospace stops them from ragging. */
+body[data-jp-theme-name^='Data4Now'] .jp-VarInspector td:nth-child(n + 3) {
+  font-family: var(--d4n-font-family-mono);
+  font-size: var(--d4n-font-size-code-compact);
+  font-variant-numeric: tabular-nums;
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-VarInspector tbody tr:hover {
+  background-color: var(--d4n-color-surface-hover);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-VarInspector-deleteButton {
+  background: transparent;
+  border: none;
+  border-radius: var(--d4n-toolbar-button-radius);
+  color: var(--d4n-color-text-muted);
+  cursor: pointer;
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-VarInspector-deleteButton:hover {
+  background-color: var(--d4n-button-ghost-bg-hover);
+  color: var(--d4n-color-danger-default);
+}

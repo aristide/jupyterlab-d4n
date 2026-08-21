@@ -1,0 +1,97 @@
+/* SURFACE: dialogs (PRD §8.3)
+ *
+ * Upstream selectors verified against:
+ *   @jupyterlab/apputils  4.7.3  style/dialog.css
+ *   (declared range: ^4.5.0)
+ *
+ * Every selector is mirrored in ../selectors.json (PRD §7.4(5)).
+ *
+ * Focus trapping, initial focus, Escape-to-close and focus restoration are all
+ * behaviours `Dialog` already implements in JS. Nothing here should try to
+ * reproduce them; the CSS owns surface, geometry and motion only.
+ */
+
+/* The backdrop colour arrives through the Tier-4 adapter as
+ * `--jp-dialog-background`, so only the blur is stated here. */
+body[data-jp-theme-name^='Data4Now'] .jp-Dialog.jp-ThemedContainer {
+  backdrop-filter: blur(var(--d4n-dialog-backdrop-blur));
+}
+
+/* A backdrop blur is a transparency effect, not a motion effect, and it is the
+ * one thing in this file that `prefers-reduced-motion` does NOT cover. */
+@media (prefers-reduced-transparency: reduce) {
+  body[data-jp-theme-name^='Data4Now'] .jp-Dialog.jp-ThemedContainer {
+    backdrop-filter: none;
+  }
+}
+
+/* Core ships 300px min / 1000px max and a 24px 24px 12px padding. The width is
+ * pinned to the token instead; `resize: both` upstream still lets a user drag a
+ * dialog larger, and an inline style from that drag outranks this rule, which
+ * is the intended precedence. */
+body[data-jp-theme-name^='Data4Now'] .jp-Dialog-content {
+  width: var(--d4n-dialog-width);
+  max-width: var(--d4n-dialog-max-width);
+  padding: var(--d4n-dialog-padding);
+  background: var(--d4n-dialog-surface);
+  color: var(--d4n-color-text-primary);
+  font-family: var(--d4n-font-family-ui);
+  font-size: var(--d4n-font-size-ui-sm);
+  border-radius: var(--d4n-dialog-radius);
+  box-shadow: var(--d4n-dialog-elevation);
+  animation: d4n-dialog-enter var(--d4n-dialog-entry-duration)
+    var(--d4n-motion-easing-out);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-Dialog-header {
+  padding-bottom: var(--d4n-space-3);
+  color: var(--d4n-color-text-strong);
+  font-size: var(--d4n-font-size-ui-lg);
+  font-weight: var(--d4n-font-weight-semibold);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-Dialog-body {
+  max-height: var(--d4n-dialog-max-body-height);
+  background: var(--d4n-dialog-surface);
+  color: var(--d4n-color-text-primary);
+}
+
+/* Footer buttons: right-aligned, `space.2` apart, primary rightmost in LTR.
+ * `Dialog` renders reject-then-accept, so the primary is ALREADY last in the
+ * DOM — this must stay a plain flex row. Reversing it here would put the
+ * primary rightmost visually while leaving it first in the tab order, which is
+ * the classic way to make a dialog fail a keyboard audit. */
+body[data-jp-theme-name^='Data4Now'] .jp-Dialog-footerButtons {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--d4n-dialog-footer-gap);
+}
+
+/* Core spaces the buttons with a 12px right margin on all but the last; the gap
+ * above replaces it, and leaving both in place double-spaces them. */
+body[data-jp-theme-name^='Data4Now']
+  .jp-Dialog-button.jp-mod-styled:not(:last-child) {
+  margin-right: 0;
+}
+
+@keyframes d4n-dialog-enter {
+  from {
+    opacity: 0;
+    transform: translateY(var(--d4n-dialog-entry-translate));
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Entry motion is decoration on a surface that is already announced by focus
+ * moving into it, so it is the first thing to go (A8). The global block in
+ * motion.css zeroes transitions everywhere; a named animation has to be turned
+ * off where it is declared. */
+@media (prefers-reduced-motion: reduce) {
+  body[data-jp-theme-name^='Data4Now'] .jp-Dialog-content {
+    animation: none;
+  }
+}

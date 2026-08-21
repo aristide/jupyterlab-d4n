@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Icon Set · Data4Now Design System</title>
+<link rel="stylesheet" href="preview-assets/colors_and_type.css">
+<style>
+  /* ============================================================
+     Data4Now Icon Set
+     One consistent line-icon family for every JupyterHub +
+     JupyterLab surface. All icons: 24×24 viewBox, stroke-based,
+     stroke-width 1.6, round caps + joins, currentColor — so they
+     inherit text color and scale cleanly. Replace the emoji/glyph
+     placeholders used in the mocks with these.
+     ============================================================ */
+  :root {
+    --bg: var(--d4n-paper);
+    --surface: var(--d4n-white);
+    --fg-1: var(--d4n-ink);
+    --fg-2: var(--d4n-graphite);
+    --fg-3: var(--d4n-slate);
+    --border: var(--d4n-fog);
+    --border-2: var(--d4n-mist);
+    --accent: var(--d4n-teal-deep);
+  }
+  body.is-dark {
+    --bg: #0B1F38;
+    --surface: #122A47;
+    --fg-1: #F4F6FA;
+    --fg-2: #C8D1DD;
+    --fg-3: #8A99AE;
+    --border: #1B385C;
+    --border-2: #2C4A75;
+    --accent: #4FD1D1;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--fg-1);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+
+  /* topbar */
+  .ic-top {
+    position: sticky; top: 0; z-index: 20;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  body.is-dark .ic-top { background: rgba(11,31,56,0.88); }
+  .ic-top-inner {
+    max-width: 1180px; margin: 0 auto;
+    height: 58px; padding: 0 28px;
+    display: flex; align-items: center; gap: 16px;
+  }
+  .ic-logo { height: 22px; width: auto; }
+  body.is-dark .ic-logo {
+    filter: brightness(0) saturate(100%) invert(99%) sepia(2%) saturate(330%) hue-rotate(190deg) brightness(101%) contrast(91%);
+  }
+  .ic-title {
+    font-family: var(--font-display);
+    font-size: 14px; font-weight: 600;
+    color: var(--fg-1); letter-spacing: -0.005em;
+  }
+  .ic-title .sub {
+    display: block; margin-top: 1px;
+    font-family: var(--font-mono);
+    font-size: 10px; font-weight: 500;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--accent);
+  }
+  .ic-spacer { flex: 1; }
+  .ic-count {
+    font-family: var(--font-mono);
+    font-size: 12px; color: var(--fg-3);
+  }
+  .ic-search {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border-2);
+    border-radius: 8px;
+    padding: 0 12px; height: 34px; width: 240px;
+  }
+  .ic-search:focus-within { border-color: var(--d4n-teal); box-shadow: 0 0 0 3px rgba(31,160,160,0.18); }
+  .ic-search svg { color: var(--fg-3); flex-shrink: 0; }
+  .ic-search input {
+    flex: 1; border: none; outline: none; background: transparent;
+    font-family: var(--font-body); font-size: 13px; color: var(--fg-1); min-width: 0;
+  }
+  .ic-search input::placeholder { color: var(--fg-3); }
+  .ic-mode {
+    display: flex; background: var(--border); border-radius: 6px; padding: 3px; gap: 2px;
+  }
+  .ic-mode button {
+    height: 26px; padding: 0 12px; border: none; background: transparent;
+    font-family: var(--font-display); font-size: 11px; font-weight: 600;
+    color: var(--fg-2); cursor: pointer; border-radius: 4px; letter-spacing: 0.04em;
+  }
+  .ic-mode button.is-on { background: var(--d4n-navy); color: #fff; }
+  body.is-dark .ic-mode button.is-on { background: var(--d4n-teal); color: var(--d4n-ink); }
+
+  /* shell */
+  .ic-shell { max-width: 1180px; margin: 0 auto; padding: 32px 28px 80px; }
+
+  .ic-hero { margin-bottom: 32px; padding-bottom: 22px; border-bottom: 1px solid var(--border); position: relative; }
+  .ic-hero::after { content: ''; position: absolute; left: 0; bottom: -1px; width: 64px; height: 2px; background: var(--d4n-teal); }
+  .ic-eyebrow {
+    font-family: var(--font-display); font-size: 11px; font-weight: 700;
+    letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); margin-bottom: 8px;
+  }
+  .ic-hero h1 {
+    font-family: var(--font-display); font-weight: 700; font-size: 30px;
+    letter-spacing: -0.02em; color: var(--fg-1); margin: 0 0 6px;
+  }
+  .ic-hero p {
+    font-family: var(--font-body); font-size: 14px; line-height: 1.55;
+    color: var(--fg-3); margin: 0; max-width: 70ch;
+  }
+  .ic-hero code {
+    font-family: var(--font-mono); font-size: 0.9em;
+    background: var(--surface); border: 1px solid var(--border);
+    padding: 1px 5px; border-radius: 3px; color: var(--fg-2);
+  }
+
+  /* sections */
+  .ic-section { margin-bottom: 40px; }
+  .ic-section h2 {
+    font-family: var(--font-display); font-weight: 700; font-size: 13px;
+    letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent);
+    margin: 0 0 16px; display: flex; align-items: baseline; gap: 10px;
+  }
+  .ic-section h2 .n { font-family: var(--font-mono); font-size: 11px; color: var(--fg-3); font-weight: 500; letter-spacing: 0; }
+
+  .ic-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+    gap: 10px;
+  }
+  .ic-cell {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 12px 12px;
+    display: flex; flex-direction: column; align-items: center; gap: 12px;
+    cursor: pointer;
+    transition: all 160ms cubic-bezier(0.2,0,0.1,1);
+    position: relative;
+  }
+  .ic-cell:hover {
+    border-color: var(--d4n-teal);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(15,61,110,0.08);
+  }
+  body.is-dark .ic-cell:hover { box-shadow: 0 6px 16px rgba(0,0,0,0.4); }
+  .ic-cell svg { color: var(--fg-1); width: 24px; height: 24px; }
+  .ic-cell .nm {
+    font-family: var(--font-mono); font-size: 10.5px;
+    color: var(--fg-3); text-align: center; line-height: 1.3;
+    word-break: break-word;
+  }
+  .ic-cell .copied {
+    position: absolute; inset: 0;
+    background: var(--d4n-teal); color: #fff;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display); font-size: 12px; font-weight: 600;
+    letter-spacing: 0.04em;
+    opacity: 0; pointer-events: none;
+    transition: opacity 160ms;
+  }
+  .ic-cell.copied-on .copied { opacity: 1; }
+  body.is-dark .ic-cell .copied { color: var(--d4n-ink); }
+
+  /* color-coded file/status icon variants in their own swatch */
+  .ic-cell.tinted svg { color: var(--tint, var(--fg-1)); }
+
+  .ic-foot {
+    margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border);
+    font-family: var(--font-body); font-size: 12.5px; color: var(--fg-3); line-height: 1.6;
+  }
+  .ic-foot code { font-family: var(--font-mono); font-size: 0.9em; background: var(--surface); border: 1px solid var(--border); padding: 1px 5px; border-radius: 3px; color: var(--fg-2); }
+  .ic-foot b { color: var(--fg-1); font-weight: 600; }
+</style>
+</head>
+<body>
+  <header class="ic-top">
+    <div class="ic-top-inner">
+      <img class="ic-logo" src="preview-assets/logo.png" alt="Data4Now">
+      <div class="ic-title">Icon Set <span class="sub">Design System</span></div>
+      <div class="ic-spacer"></div>
+      <span class="ic-count" id="ic-count">0 icons</span>
+      <div class="ic-search">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m20 20-4.5-4.5"/></svg>
+        <input id="ic-filter" placeholder="Filter icons…">
+      </div>
+      <div class="ic-mode">
+        <button id="m-light" class="is-on">Light</button>
+        <button id="m-dark">Dark</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="ic-shell">
+    <div class="ic-hero">
+      <div class="ic-eyebrow">Data4Now design system</div>
+      <h1>Icon set.</h1>
+      <p>One line-icon family for every Hub + Lab surface. All icons share a <code>0 0 24 24</code> viewBox, <code>stroke-width 1.6</code>, round caps/joins, and <code>currentColor</code> — so they inherit text color and scale anywhere. Click any icon to copy its SVG. Use these to replace the emoji/glyph placeholders in the mocks.</p>
+    </div>
+
+    <div id="ic-mount"></div>
+
+    <div class="ic-foot">
+      <b>Usage.</b> Drop inline, or build a sprite: wrap each in <code>&lt;symbol id="d4n-{name}" viewBox="0 0 24 24"&gt;…&lt;/symbol&gt;</code> inside one hidden <code>&lt;svg&gt;</code>, then reference with <code>&lt;svg class="icn"&gt;&lt;use href="#d4n-{name}"/&gt;&lt;/svg&gt;</code>. Size via CSS <code>width/height</code>; color via <code>color</code>. For JupyterLab, register through <code>@jupyterlab/ui-components</code> <code>LabIcon</code> using each icon's SVG string.
+    </div>
+  </div>
+
+  <script>
+  // Every icon as an inner-SVG string (24x24, currentColor, stroke 1.6).
+  const S = (inner) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`;
+
+  const ICONS = {
+    "File types": {
+      "folder":      S('<path d="M3 6.5a1 1 0 0 1 1-1h4l2 2h9a1 1 0 0 1 1 1V18a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6.5Z"/>'),
+      "folder-open": S('<path d="M3 7a1 1 0 0 1 1-1h4l2 2h8a1 1 0 0 1 1 1v1H6l-2 8H3V7Z"/><path d="m6 10 1.8 8H20l1.8-8H6Z"/>'),
+      "notebook":    S('<rect x="5" y="3" width="14" height="18" rx="1.5"/><path d="M9 3v18"/><path d="M12 8h4M12 11h4"/>'),
+      "python":      S('<path d="M9 4h4a3 3 0 0 1 3 3v3a3 3 0 0 1-3 3H8v2a3 3 0 0 0 3 3h2"/><path d="M8 7h.01"/>'),
+      "table":       S('<rect x="3" y="4" width="18" height="16" rx="1.5"/><path d="M3 9h18M3 14.5h18M9 9v11M15 4v16"/>'),
+      "csv":         S('<path d="M13 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9l-6-6Z"/><path d="M13 3v6h6"/><path d="M8 13h2M8 16h2M13 13h3M13 16h3"/>'),
+      "markdown":    S('<rect x="3" y="6" width="18" height="12" rx="1.5"/><path d="M6 15V9l2.5 3L11 9v6M15.5 9v6M15.5 15l-2-2.2M15.5 15l2-2.2"/>'),
+      "json":        S('<path d="M9 4c-2 0-2 1.5-2 3s0 3-2 3c2 0 2 1.5 2 3s0 3 2 3"/><path d="M15 4c2 0 2 1.5 2 3s0 3 2 3c-2 0-2 1.5-2 3s0 3-2 3"/>'),
+      "yaml-config": S('<circle cx="12" cy="12" r="3"/><path d="M12 3v2.5M12 18.5V21M21 12h-2.5M5.5 12H3M18 6l-1.8 1.8M7.8 16.2 6 18M18 18l-1.8-1.8M7.8 7.8 6 6"/>'),
+      "text-file":   S('<path d="M13 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9l-6-6Z"/><path d="M13 3v6h6"/><path d="M8 13h8M8 16.5h6"/>'),
+      "terminal-file":S('<rect x="3" y="4" width="18" height="16" rx="1.5"/><path d="m7 9 3 3-3 3M13 15h4"/>'),
+    },
+    "Toolbar": {
+      "save":        S('<path d="M5 3h11l3 3v15H5V3Z"/><path d="M8 3v5h7V3M8 21v-6h8v6"/>'),
+      "add-cell":    S('<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M12 8.5v7M8.5 12h7"/>'),
+      "cut":         S('<circle cx="6" cy="6" r="2.5"/><circle cx="6" cy="18" r="2.5"/><path d="M8 7.5 20 18M8 16.5 20 6"/>'),
+      "copy":        S('<rect x="8" y="8" width="12" height="12" rx="1.5"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/>'),
+      "paste":       S('<path d="M9 4H6a1 1 0 0 0-1 1v15a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1h-3"/><rect x="9" y="2.5" width="6" height="3.5" rx="1"/>'),
+      "run":         S('<path d="M7 4.5 19 12 7 19.5V4.5Z"/>'),
+      "run-all":     S('<path d="M5 5l7 7-7 7V5Z"/><path d="M14 5l5 7-5 7"/>'),
+      "stop":        S('<rect x="5.5" y="5.5" width="13" height="13" rx="2"/>'),
+      "restart":     S('<path d="M4 12a8 8 0 1 1 2.3 5.6"/><path d="M4 8v4h4"/>'),
+      "interrupt":   S('<circle cx="12" cy="12" r="8.5"/><rect x="9.5" y="9.5" width="5" height="5" rx="0.8"/>'),
+      "clear":       S('<path d="M4 7h16M10 4h4M6 7l1 13h10l1-13"/>'),
+    },
+    "Sidebar / rail": {
+      "files":       S('<path d="M3 6.5a1 1 0 0 1 1-1h4l2 2h9a1 1 0 0 1 1 1V18a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6.5Z"/>'),
+      "running":     S('<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v4.5l3 2"/>'),
+      "commands":    S('<rect x="3.5" y="4.5" width="17" height="15" rx="1.5"/><path d="M7 9h6M7 12h8M7 15h4"/>'),
+      "extensions":  S('<rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/>'),
+      "git":         S('<circle cx="6" cy="6" r="2.5"/><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="9" r="2.5"/><path d="M6 8.5v7M8.4 6.5c4 0 7.6.5 7.6 4"/>'),
+      "toc":         S('<path d="M4 6h12M4 12h14M4 18h9"/><circle cx="19.5" cy="6" r="1"/><circle cx="21" cy="12" r="1"/>'),
+      "settings":    S('<circle cx="12" cy="12" r="3"/><path d="M12 2.5v2.5M12 19v2.5M21.5 12H19M5 12H2.5M18.4 5.6l-1.8 1.8M7.4 16.6l-1.8 1.8M18.4 18.4l-1.8-1.8M7.4 7.4 5.6 5.6"/>'),
+      "debugger":    S('<rect x="7" y="6" width="10" height="12" rx="5"/><path d="M3 10h4M17 10h4M3 15h4M17 15h4M9 4l1.5 2.5M15 4l-1.5 2.5"/>'),
+      "inspector":   S('<circle cx="11" cy="11" r="7"/><path d="m16 16 4.5 4.5M11 8v6M8 11h6"/>'),
+      "comments":    S('<path d="M4 5.5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1V15a1 1 0 0 1-1 1H9l-4 4V5.5Z"/>'),
+      "kernel":      S('<circle cx="12" cy="12" r="2.5"/><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5v3M12 17.5v3M3.5 12h3M17.5 12h3"/>'),
+      "sidebar-left":  S('<rect x="3.5" y="4.5" width="17" height="15" rx="1.5"/><path d="M9 4.5v15"/><path d="M5.5 8h1.5M5.5 11h1.5"/>'),
+      "sidebar-right": S('<rect x="3.5" y="4.5" width="17" height="15" rx="1.5"/><path d="M15 4.5v15"/><path d="M17 8h1.5M17 11h1.5"/>'),
+      "wrap":        S('<path d="M4 6h16M4 12h13a3 3 0 0 1 0 6h-3M4 18h4M8 16l-2 2 2 2"/>'),
+      "line-numbers":S('<path d="M4 6h2M4 12h2M4 18h2M10 6h10M10 12h10M10 18h10"/>'),
+    },
+    "Status": {
+      "check":       S('<path d="M4 12.5 9.5 18 20 6.5"/>'),
+      "check-circle":S('<circle cx="12" cy="12" r="8.5"/><path d="m8 12 2.8 2.8L16 9"/>'),
+      "error-x":     S('<circle cx="12" cy="12" r="8.5"/><path d="m9 9 6 6M15 9l-6 6"/>'),
+      "warning":     S('<path d="M12 3.5 21 19H3L12 3.5Z"/><path d="M12 9.5v4.5M12 17h.01"/>'),
+      "info":        S('<circle cx="12" cy="12" r="8.5"/><path d="M12 11v5M12 8h.01"/>'),
+      "pending":     S('<circle cx="12" cy="12" r="8.5"/><path d="M12 8v4M12 12l3 1.5"/>'),
+      "idle-dot":    S('<circle cx="12" cy="12" r="4.5"/>'),
+      "live":        S('<circle cx="12" cy="12" r="3.5"/><path d="M6.5 6.5a8 8 0 0 0 0 11M17.5 6.5a8 8 0 0 1 0 11"/>'),
+    },
+    "Actions": {
+      "search":      S('<circle cx="10.5" cy="10.5" r="6.5"/><path d="m20 20-4.5-4.5"/>'),
+      "close":       S('<path d="M6 6l12 12M18 6 6 18"/>'),
+      "chevron-down":S('<path d="m6 9 6 6 6-6"/>'),
+      "chevron-right":S('<path d="m9 6 6 6-6 6"/>'),
+      "arrow-right": S('<path d="M4 12h15M13 6l6 6-6 6"/>'),
+      "external":    S('<path d="M14 4h6v6M20 4l-8 8"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>'),
+      "download":    S('<path d="M12 4v11M7 11l5 5 5-5"/><path d="M5 20h14"/>'),
+      "upload":      S('<path d="M12 20V9M7 13l5-5 5 5"/><path d="M5 4h14"/>'),
+      "refresh":     S('<path d="M4 12a8 8 0 0 1 13.7-5.6L20 8M20 4v4h-4"/><path d="M20 12a8 8 0 0 1-13.7 5.6L4 16M4 20v-4h4"/>'),
+      "more-h":      S('<circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/>'),
+      "more-v":      S('<circle cx="12" cy="5" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="12" cy="19" r="1.4"/>'),
+      "filter":      S('<path d="M3 5h18l-7 8v6l-4-2v-4L3 5Z"/>'),
+      "trash":       S('<path d="M4 7h16M9 7V4.5h6V7M6 7l1 13h10l1-13"/>'),
+      "edit":        S('<path d="M5 19h3l10-10-3-3L5 16v3Z"/><path d="m13.5 6.5 3 3"/>'),
+      "plus":        S('<path d="M12 5v14M5 12h14"/>'),
+      "link":        S('<path d="M9 14.5 14.5 9M8 11.5l-2 2a3 3 0 0 0 4.2 4.2l2-2M16 12.5l2-2a3 3 0 0 0-4.2-4.2l-2 2"/>'),
+      "eye":         S('<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="2.8"/>'),
+      "expand":      S('<path d="M9 4H4v5M15 4h5v5M9 20H4v-5M15 20h5v-5"/>'),
+      "undo":        S('<path d="M9 7H4V2"/><path d="M4 7a8 8 0 1 1-2 5.3"/>'),
+      "redo":        S('<path d="M15 7h5V2"/><path d="M20 7a8 8 0 1 0 2 5.3"/>'),
+      "zoom-in":     S('<circle cx="10.5" cy="10.5" r="6.5"/><path d="m20 20-4.5-4.5M10.5 7.5v6M7.5 10.5h6"/>'),
+      "zoom-out":    S('<circle cx="10.5" cy="10.5" r="6.5"/><path d="m20 20-4.5-4.5M7.5 10.5h6"/>'),
+      "fullscreen":  S('<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>'),
+      "presentation":S('<rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M12 16v4M8 20h8"/>'),
+      "open-path":   S('<path d="M3 7a1 1 0 0 1 1-1h5l2 2h9a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7Z"/><path d="M12 11v5M9.5 13.5 12 16l2.5-2.5"/>'),
+      "rename":      S('<path d="M4 7V5h10v2M9 5v14M7 19h4"/><rect x="15" y="11" width="6" height="8" rx="1"/>'),
+      "print":       S('<path d="M6 9V3h12v6M6 17H4a1 1 0 0 1-1-1v-5a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1h-2"/><rect x="6" y="14" width="12" height="6" rx="1"/>'),
+      "export":      S('<path d="M12 14V3M8 7l4-4 4 4"/><path d="M5 13v6a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-6"/>'),
+      "checkmark-item":S('<path d="M5 12.5 10 17.5 19 7"/>'),
+    },
+    "Compute / infra": {
+      "cpu":         S('<rect x="6" y="6" width="12" height="12" rx="1.5"/><rect x="9.5" y="9.5" width="5" height="5" rx="0.5"/><path d="M9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3"/>'),
+      "memory":      S('<rect x="3" y="7" width="18" height="10" rx="1.5"/><path d="M7 17v3M12 17v3M17 17v3M8 11v2M12 11v2M16 11v2"/>'),
+      "gpu":         S('<rect x="3" y="6" width="18" height="11" rx="1.5"/><circle cx="9" cy="11.5" r="2.5"/><path d="M14 9.5h4M14 13.5h4M6 17v2M15 17v2"/>'),
+      "server":      S('<rect x="4" y="4" width="16" height="7" rx="1.5"/><rect x="4" y="13" width="16" height="7" rx="1.5"/><path d="M8 7.5h.01M8 16.5h.01"/>'),
+      "database":    S('<ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v12c0 1.7 3.1 3 7 3s7-1.3 7-3V6"/><path d="M5 12c0 1.7 3.1 3 7 3s7-1.3 7-3"/>'),
+      "cluster":     S('<circle cx="12" cy="5" r="2.5"/><circle cx="5" cy="18" r="2.5"/><circle cx="19" cy="18" r="2.5"/><path d="M12 7.5v4M10.5 13 6.5 16M13.5 13l4 3"/>'),
+      "cloud":       S('<path d="M7 18a4 4 0 0 1 0-8 5 5 0 0 1 9.6-1.3A3.5 3.5 0 0 1 17.5 18H7Z"/>'),
+      "container":   S('<path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5v-7Z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/>'),
+    },
+    "Identity / security": {
+      "user":        S('<circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.9 3.1-6.5 7-6.5s7 2.6 7 6.5"/>'),
+      "users":       S('<circle cx="9" cy="8" r="3"/><path d="M3 19c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><path d="M16 5.5a3 3 0 0 1 0 5.8M21 19c0-2.6-1.5-4.6-3.8-5.2"/>'),
+      "lock":        S('<rect x="5" y="10.5" width="14" height="9.5" rx="1.5"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/>'),
+      "shield":      S('<path d="M12 3 5 5.5v5.5c0 4.2 3 7.6 7 9 4-1.4 7-4.8 7-9V5.5L12 3Z"/><path d="m9 12 2 2 4-4"/>'),
+      "key":         S('<circle cx="8" cy="14" r="4"/><path d="m11 11 8-8M16 6l2 2M14 8l2 2"/>'),
+      "logout":      S('<path d="M14 12H5M9 8l-4 4 4 4"/><path d="M13 4h6a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-6"/>'),
+      "login":       S('<path d="M10 12h9M15 8l4 4-4 4"/><path d="M11 4H5a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h6"/>'),
+      "mfa":         S('<rect x="6" y="10" width="12" height="9" rx="1.5"/><path d="M9 10V7.5a3 3 0 0 1 6 0V10M12 13.5v2"/>'),
+      "about-info":  S('<circle cx="12" cy="12" r="8.5"/><path d="M12 11v5M12 8h.01"/>'),
+      "support-mail":S('<rect x="3" y="6" width="18" height="12" rx="1.5"/><path d="m3.5 7 8.5 6 8.5-6"/>'),
+    },
+    "Data / pipeline": {
+      "zone-layers": S('<path d="M12 4 3 9l9 5 9-5-9-5Z"/><path d="m3 14 9 5 9-5"/>'),
+      "promote":     S('<path d="M12 20V7M7 11l5-5 5 5"/><path d="M6 4h12"/>'),
+      "hash":        S('<path d="M9 4 7 20M17 4l-2 16M4 9h16M3 15h16"/>'),
+      "audit":       S('<path d="M13 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9l-6-6Z"/><path d="M13 3v6h6"/><path d="m8.5 14 1.8 1.8 3.2-3.3"/>'),
+      "anonymize":   S('<circle cx="12" cy="9" r="3.5"/><path d="M5 20c0-3.6 3.1-6 7-6s7 2.4 7 6"/><path d="M3 4l18 16"/>'),
+      "branch":      S('<circle cx="7" cy="6" r="2.5"/><circle cx="7" cy="18" r="2.5"/><circle cx="17" cy="6" r="2.5"/><path d="M7 8.5v7M17 8.5c0 4-4 3.5-7 6.5"/>'),
+      "commit":      S('<circle cx="12" cy="12" r="3.5"/><path d="M12 3v5.5M12 15.5V21"/>'),
+      "schedule":    S('<rect x="4" y="5" width="16" height="16" rx="1.5"/><path d="M4 9h16M8 3v4M16 3v4"/><path d="M12 13v3l2 1"/>'),
+      "pull":        S('<path d="M12 3v11M8 10l4 4 4-4"/><path d="M5 18a7 7 0 0 0 14 0"/>'),
+      "push":        S('<path d="M12 21V10M8 14l4-4 4 4"/><path d="M5 6a7 7 0 0 1 14 0"/>'),
+      "stash":       S('<rect x="3" y="9" width="18" height="11" rx="1.5"/><path d="M3 9l3-5h12l3 5M9 13h6"/>'),
+      "clone":       S('<rect x="9" y="9" width="11" height="11" rx="1.5"/><path d="M15 9V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h4"/><path d="M14.5 14.5h-3M13 13v3"/>'),
+      "change-kernel":S('<path d="M4 8a8 8 0 0 1 14-2M20 6v4h-4"/><path d="M20 16a8 8 0 0 1-14 2M4 18v-4h4"/>'),
+      "history":     S('<circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3.5 2"/><path d="M3.5 12H2M5 6 4 5"/>'),
+    },
+    "Notebook / cell": {
+      "cell-code":   S('<rect x="4" y="5" width="16" height="14" rx="1.5"/><path d="m9 10-2 2 2 2M15 10l2 2-2 2"/>'),
+      "cell-md":     S('<rect x="4" y="5" width="16" height="14" rx="1.5"/><path d="M7 15V9l2.5 3L12 9v6M16 9v6M16 15l-1.8-2M16 15l1.8-2"/>'),
+      "output":      S('<path d="M5 5h14M5 10h14M5 15h9"/><path d="m15 18 2 2 4-4"/>'),
+      "kernel-idle": S('<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="2.5"/>'),
+      "launcher":    S('<rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><path d="M16.5 14v5M14 16.5h5"/>'),
+      "split-right": S('<rect x="3.5" y="5" width="17" height="14" rx="1.5"/><path d="M12 5v14"/>'),
+      "split-down":  S('<rect x="3.5" y="5" width="17" height="14" rx="1.5"/><path d="M3.5 12h17"/>'),
+      "new-window":  S('<rect x="3.5" y="5" width="17" height="14" rx="1.5"/><path d="M3.5 9h17M14 13l4 4M18 13v4h-4"/>'),
+    },
+    "Kernels / languages": {
+      "python":      S('<path d="M12 3c-2.5 0-4 1-4 3v2h4.2"/><path d="M8 8H6c-2 0-3 1.3-3 4s1 4 3 4h2v-2.2c0-1.6 1.2-2.8 2.8-2.8h3.4c1.5 0 2.8-1.2 2.8-2.8V6c0-2-1.7-3-4-3"/><circle cx="9.7" cy="5.6" r=".9" fill="currentColor" stroke="none"/><path d="M12 21c2.5 0 4-1 4-3v-2h-4.2"/><path d="M16 16h2c2 0 3-1.3 3-4"/><circle cx="14.3" cy="18.4" r=".9" fill="currentColor" stroke="none"/>'),
+      "r-lang":      S('<circle cx="12" cy="12" r="9"/><path d="M9 17V8h3.4a2.6 2.6 0 0 1 0 5.2H9M12.5 13.2 15.5 17"/>'),
+      "rstudio":     S('<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 8h18"/><circle cx="5.5" cy="6" r=".5" fill="currentColor" stroke="none"/><path d="M8.5 17v-6h2.6a2 2 0 0 1 0 4H8.5M11 15l2.5 2"/>'),
+      "julia":       S('<circle cx="7" cy="15" r="3"/><circle cx="17" cy="15" r="3"/><circle cx="12" cy="7" r="3"/>'),
+      "julia-dots":  S('<circle cx="6.5" cy="15.5" r="3" fill="currentColor" stroke="none"/><circle cx="17.5" cy="15.5" r="3" fill="currentColor" stroke="none"/><circle cx="12" cy="6.5" r="3" fill="currentColor" stroke="none"/>'),
+    },
+  };
+
+  // render
+  const mount = document.getElementById('ic-mount');
+  let total = 0;
+  const allCells = [];
+  for (const [section, set] of Object.entries(ICONS)) {
+    const names = Object.keys(set);
+    total += names.length;
+    const sec = document.createElement('div');
+    sec.className = 'ic-section';
+    sec.innerHTML = `<h2>${section} <span class="n">${names.length}</span></h2>`;
+    const grid = document.createElement('div');
+    grid.className = 'ic-grid';
+    for (const [name, svg] of Object.entries(set)) {
+      const cell = document.createElement('div');
+      cell.className = 'ic-cell';
+      cell.dataset.name = name;
+      cell.innerHTML = `${svg}<div class="nm">${name}</div><div class="copied">Copied ✓</div>`;
+      cell.addEventListener('click', () => {
+        const full = svg.replace('<svg ', '<svg width="24" height="24" ');
+        navigator.clipboard && navigator.clipboard.writeText(full);
+        cell.classList.add('copied-on');
+        setTimeout(() => cell.classList.remove('copied-on'), 900);
+      });
+      grid.appendChild(cell);
+      allCells.push({ cell, name, section });
+    }
+    sec.appendChild(grid);
+    mount.appendChild(sec);
+  }
+  document.getElementById('ic-count').textContent = total + ' icons';
+
+  // filter
+  document.getElementById('ic-filter').addEventListener('input', e => {
+    const q = e.target.value.trim().toLowerCase();
+    document.querySelectorAll('.ic-section').forEach(sec => {
+      let any = false;
+      sec.querySelectorAll('.ic-cell').forEach(c => {
+        const hit = c.dataset.name.includes(q);
+        c.style.display = hit ? '' : 'none';
+        if (hit) any = true;
+      });
+      sec.style.display = any ? '' : 'none';
+    });
+  });
+
+  // mode
+  const ml = document.getElementById('m-light'), md = document.getElementById('m-dark');
+  ml.addEventListener('click', () => { document.body.classList.remove('is-dark'); ml.classList.add('is-on'); md.classList.remove('is-on'); });
+  md.addEventListener('click', () => { document.body.classList.add('is-dark'); md.classList.add('is-on'); ml.classList.remove('is-on'); });
+  </script>
+</body>
+</html>

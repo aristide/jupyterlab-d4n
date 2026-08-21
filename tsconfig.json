@@ -1,0 +1,15 @@
+{
+  "//": "Solution-style root config. It compiles nothing itself; `tsc -b` walks the references below in dependency order. Each package owns its own tsconfig.json extending tsconfigbase.json.",
+  "files": [],
+  "references": [
+    { "path": "packages/tokens" },
+    { "path": "packages/icons" },
+    { "path": "packages/theme-light" },
+    { "path": "packages/theme-dark" },
+    { "path": "packages/ui-overrides" },
+    { "path": "packages/editor-theme" },
+    { "path": "packages/settings-forms" },
+    { "path": "packages/compat-shim" },
+    { "path": "packages/shell-chrome" }
+  ]
+}

@@ -1,0 +1,91 @@
+/* SURFACE: menu bar (PRD §6.1, §8.4.2)
+ *
+ * Upstream selectors verified against:
+ *   @lumino/widgets          2.9.0  style/menubar.css
+ *   @jupyterlab/application  4.6.3  style/menus.css
+ *   (declared ranges: @lumino/* ^2.0.0, @jupyterlab/* ^4.5.0)
+ *
+ * Every selector is mirrored in ../selectors.json (PRD §7.4(5)).
+ *
+ * TWO THINGS THAT LOOK LIKE MISTAKES AND ARE NOT
+ *
+ * 1. Every `:hover` rule is grouped with its `.lm-mod-active` twin in the same
+ *    selector list. Lumino's MenuBar tracks its own active index and moves it
+ *    on both pointer and keyboard, so `.lm-mod-active` is the state that must
+ *    carry the highlight; `:hover` alone leaves keyboard traversal invisible
+ *    (PRD §8.4.1(2), M1, R12). Grouping them means the two can never drift.
+ *
+ * 2. `.lm-MenuBar-itemMnemonic` is re-declared even though core already
+ *    underlines it. It is restated so that a future rule in this file which
+ *    resets `text-decoration` on items has something to collide with in review
+ *    rather than silently deleting the Alt affordance (M3).
+ */
+
+body[data-jp-theme-name^='Data4Now'] .lm-MenuBar {
+  height: var(--d4n-menu-bar-height);
+  background: var(--d4n-menu-bar-bg);
+  color: var(--d4n-menu-bar-item-fg);
+  font-family: var(--d4n-font-family-ui);
+  font-size: var(--d4n-menu-bar-font-size);
+  font-weight: var(--d4n-menu-bar-font-weight);
+}
+
+/* Zero gap between items: adjacent hit areas, no dead zones. Core paints a 1px
+ * transparent border on three sides to reserve room for the open-state border;
+ * the open state below uses a background and a radius instead, so the reserved
+ * border is removed and the line-height is restated without it. */
+body[data-jp-theme-name^='Data4Now'] .lm-MenuBar-item {
+  height: var(--d4n-menu-bar-height);
+  padding: 0 var(--d4n-menu-bar-item-padding-x);
+  border: 0;
+  line-height: var(--d4n-menu-bar-height);
+  color: var(--d4n-menu-bar-item-fg);
+}
+
+/* :hover and .lm-mod-active share one selector list so the two cannot drift.
+ * .lm-mod-active is the KEYBOARD-highlighted item, not a mouse state — Lumino
+ * keeps its own active index, so a rule that styled only :hover would leave
+ * Alt-and-arrow navigation with no visible indicator at all (PRD M1, R12).
+ *
+ * :not(.lm-mod-disabled) matches menu.css. Without it a disabled top-level menu
+ * lights up on hover and then does nothing when clicked, which reads as a broken
+ * menu rather than an unavailable one — the disabled rule below only changes
+ * colour and opacity, so it cannot undo a background on its own. */
+body[data-jp-theme-name^='Data4Now']
+  .lm-MenuBar-item:not(.lm-mod-disabled):hover,
+body[data-jp-theme-name^='Data4Now']
+  .lm-MenuBar-item:not(.lm-mod-disabled).lm-mod-active {
+  background: var(--d4n-menu-bar-item-bg-hover);
+  color: var(--d4n-menu-bar-item-fg-hover);
+}
+
+/* Open state. Higher specificity than the hover pair above, and than core's own
+ * `.lm-MenuBar.lm-mod-active .lm-MenuBar-item.lm-mod-active`, which paints a
+ * border and an elevation to fake a seam with the dropdown. We do not fake the
+ * seam: the dropdown carries its own elevation, so the trigger only needs to
+ * read as pressed. Top corners only — the bottom edge meets the dropdown. */
+body[data-jp-theme-name^='Data4Now']
+  .lm-MenuBar.lm-mod-active
+  .lm-MenuBar-item.lm-mod-active {
+  background: var(--d4n-menu-bar-item-bg-open);
+  color: var(--d4n-menu-bar-item-fg-hover);
+  border: 0;
+  border-radius: var(--d4n-radius-sm) var(--d4n-radius-sm) 0 0;
+  box-shadow: none;
+}
+
+body[data-jp-theme-name^='Data4Now'] .lm-MenuBar-item.lm-mod-disabled {
+  color: var(--d4n-menu-item-fg-disabled);
+  opacity: var(--d4n-menu-item-disabled-opacity);
+}
+
+body[data-jp-theme-name^='Data4Now'] .lm-MenuBar-itemMnemonic {
+  text-decoration: underline;
+}
+
+/* Overflow below `--d4n-menu-bar-overflow-breakpoint` (900px) collapses the
+ * trailing items into an overflow trigger. That needs a `MenuBar` subclass to
+ * emit the trigger item — it is not reachable from CSS, and the token exists
+ * for that work rather than for this file (TODO.md P2-02). Until
+ * then core's `overflow: hidden` / `:hover { overflow-x: auto }` still applies
+ * and nothing is lost, only clipped. */

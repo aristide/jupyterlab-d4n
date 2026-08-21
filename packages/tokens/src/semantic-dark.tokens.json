@@ -1,0 +1,384 @@
+{
+  "$description": "TIER 2 - SEMANTIC, DARK MODE. Key-for-key identical to semantic-light.tokens.json; build.mjs fails on any asymmetry. Dark is a PEER of light here, not a derived inversion (PRD G2) - the ANSI palette, the syntax ramp and the elevation model are each authored independently, because deriving them by flipping the light set is precisely what produces the drifted, flat dark themes PRD 2 describes.",
+  "color": {
+    "surface": {
+      "$description": "ELEVATION IS A LIGHTNESS STEP, NOT A SHADOW (PRD 9). Read the ramp: sunken(#0B1F38) < canvas(#0E2542) < raised(#122A47) < overlay(#15324F). A menu is lighter than the panel it opens over, which is lighter than the canvas behind it. A shadow-only elevation system is near-invisible on these surfaces and produces the flat, unreadable dark UI that R10 tracks.",
+      "canvas": { "$value": "{color.palette.deepNavy.700}", "$type": "color" },
+      "raised": { "$value": "{color.palette.deepNavy.500}", "$type": "color" },
+      "sunken": { "$value": "{color.palette.deepNavy.800}", "$type": "color" },
+      "overlay": { "$value": "{color.palette.deepNavy.300}", "$type": "color" },
+      "hover": { "$value": "{color.palette.deepNavy.200}", "$type": "color" },
+      "active": { "$value": "{color.palette.deepNavy.100}", "$type": "color" },
+      "selected": { "$value": "#1D4370", "$type": "color" },
+      "code": { "$value": "{color.palette.deepNavy.500}", "$type": "color" },
+      "codeActive": {
+        "$value": "{color.palette.deepNavy.300}",
+        "$type": "color"
+      },
+      "inverse0": { "$value": "{color.palette.neutral.50}", "$type": "color" },
+      "inverse1": { "$value": "{color.palette.neutral.0}", "$type": "color" },
+      "inverse2": { "$value": "{color.palette.neutral.100}", "$type": "color" },
+      "inverse3": { "$value": "{color.palette.neutral.200}", "$type": "color" },
+      "inverse4": { "$value": "{color.palette.neutral.400}", "$type": "color" }
+    },
+
+    "text": {
+      "strong": { "$value": "{color.palette.neutral.0}", "$type": "color" },
+      "primary": { "$value": "{color.palette.neutral.100}", "$type": "color" },
+      "secondary": {
+        "$value": "{color.palette.neutral.200}",
+        "$type": "color"
+      },
+      "muted": {
+        "$value": "{color.palette.neutral.300}",
+        "$type": "color",
+        "$description": "The imported draft theme used #6B7B91 here, which is far below 4.5:1 on every dark surface. Steel (400) got closer but still measured 4.10:1 on surface.hover — and this token carries placeholders and timestamps, which are text (PRD A1). 300 is the lightest step that clears it everywhere."
+      },
+      "link": { "$value": "{color.palette.teal.200}", "$type": "color" },
+      "onAction": {
+        "$value": "{color.palette.deepNavy.900}",
+        "$type": "color"
+      },
+      "onBrand": { "$value": "{color.palette.neutral.0}", "$type": "color" },
+      "onDanger": {
+        "$value": "{color.palette.deepNavy.900}",
+        "$type": "color"
+      },
+      "onWarning": {
+        "$value": "{color.palette.deepNavy.900}",
+        "$type": "color"
+      },
+      "onSuccess": {
+        "$value": "{color.palette.deepNavy.900}",
+        "$type": "color"
+      },
+      "inverse0": { "$value": "{color.palette.neutral.900}", "$type": "color" },
+      "inverse1": { "$value": "{color.palette.neutral.800}", "$type": "color" },
+      "inverse2": { "$value": "{color.palette.neutral.600}", "$type": "color" },
+      "inverse3": { "$value": "{color.palette.neutral.500}", "$type": "color" }
+    },
+
+    "border": {
+      "$description": "See the note in semantic-light: strong/default/subtle/faint are decorative separators; `control` is the one gated at 3:1 because it draws a component boundary.",
+      "strong": { "$value": "{color.palette.deepNavy.100}", "$type": "color" },
+      "default": { "$value": "{color.palette.deepNavy.200}", "$type": "color" },
+      "subtle": { "$value": "{color.palette.deepNavy.400}", "$type": "color" },
+      "faint": { "$value": "{color.palette.deepNavy.600}", "$type": "color" },
+      "control": {
+        "$value": "{color.palette.neutral.500}",
+        "$type": "color",
+        "$description": "The same value as light mode, and that is not an oversight - it is the one neutral that clears 3:1 against BOTH modes' input surfaces, so a text field's outline is equally perceivable in each."
+      },
+      "focus": { "$value": "{color.palette.teal.200}", "$type": "color" }
+    },
+
+    "brand": {
+      "strong": { "$value": "{color.palette.navy.200}", "$type": "color" },
+      "default": { "$value": "{color.palette.navy.300}", "$type": "color" },
+      "subtle": { "$value": "{color.palette.navy.400}", "$type": "color" },
+      "faint": { "$value": "{color.palette.navy.500}", "$type": "color" }
+    },
+
+    "action": {
+      "strong": { "$value": "{color.palette.teal.100}", "$type": "color" },
+      "default": { "$value": "{color.palette.teal.200}", "$type": "color" },
+      "subtle": { "$value": "{color.palette.teal.400}", "$type": "color" },
+      "faint": { "$value": "{color.palette.teal.500}", "$type": "color" },
+      "hover": { "$value": "{color.palette.teal.100}", "$type": "color" },
+      "active": { "$value": "{color.palette.teal.300}", "$type": "color" },
+      "focus": { "$value": "{color.palette.teal.200}", "$type": "color" }
+    },
+
+    "danger": {
+      "strong": { "$value": "{color.palette.magenta.100}", "$type": "color" },
+      "default": { "$value": "{color.palette.magenta.200}", "$type": "color" },
+      "subtle": { "$value": "{color.palette.magenta.400}", "$type": "color" },
+      "faint": { "$value": "#3D1420", "$type": "color" },
+      "hover": { "$value": "{color.palette.magenta.100}", "$type": "color" },
+      "active": { "$value": "{color.palette.magenta.300}", "$type": "color" }
+    },
+    "warning": {
+      "strong": { "$value": "{color.palette.amber.100}", "$type": "color" },
+      "default": { "$value": "{color.palette.amber.200}", "$type": "color" },
+      "subtle": { "$value": "{color.palette.amber.300}", "$type": "color" },
+      "faint": { "$value": "#3D2E10", "$type": "color" }
+    },
+    "success": {
+      "strong": { "$value": "{color.palette.green.100}", "$type": "color" },
+      "default": { "$value": "{color.palette.green.200}", "$type": "color" },
+      "subtle": { "$value": "{color.palette.green.300}", "$type": "color" },
+      "faint": { "$value": "#12331F", "$type": "color" }
+    },
+    "info": {
+      "strong": { "$value": "{color.palette.teal.100}", "$type": "color" },
+      "default": { "$value": "{color.palette.teal.200}", "$type": "color" },
+      "subtle": { "$value": "{color.palette.teal.400}", "$type": "color" },
+      "faint": { "$value": "#0F3436", "$type": "color" }
+    },
+
+    "chrome": {
+      "$description": "See the long note in semantic-light. Dark mode DEEPENS the frame rather than flipping it: the top panel and rails go to near-black so the frame still reads as a frame against a dark canvas, instead of collapsing into it.",
+      "topPanelBg": {
+        "$value": "{color.palette.deepNavy.900}",
+        "$type": "color"
+      },
+      "topPanelBorder": { "$value": "#000000", "$type": "color" },
+      "topPanelFg": {
+        "$value": "{color.palette.neutral.50}",
+        "$type": "color"
+      },
+      "topPanelFgMuted": { "$value": "#B8C5D8", "$type": "color" },
+      "topPanelHover": {
+        "$value": "rgba(255, 255, 255, 0.06)",
+        "$type": "color"
+      },
+      "topPanelActive": {
+        "$value": "rgba(255, 255, 255, 0.12)",
+        "$type": "color"
+      },
+      "topPanelAccent": {
+        "$value": "{color.palette.teal.200}",
+        "$type": "color"
+      },
+      "railBg": { "$value": "{color.palette.deepNavy.900}", "$type": "color" },
+      "railFg": { "$value": "{color.palette.neutral.400}", "$type": "color" },
+      "railFgHover": {
+        "$value": "{color.palette.neutral.200}",
+        "$type": "color"
+      },
+      "railFgActive": {
+        "$value": "{color.palette.teal.200}",
+        "$type": "color"
+      },
+      "railActiveBg": {
+        "$value": "rgba(255, 255, 255, 0.04)",
+        "$type": "color"
+      }
+    },
+
+    "selection": {
+      "$description": "See the note in semantic-light. Dark mode squeezes harder: the backdrop must be light enough to separate from surface.code (measured 1.37:1 here) yet dark enough that the whole syntax ramp still clears 4.5:1 on it. It is what forced syntax.comment one step lighter.",
+      "active": { "$value": "#123745", "$type": "color" },
+      "inactive": { "$value": "#16324F", "$type": "color" }
+    },
+    "overlay": {
+      "scrim": { "$value": "rgba(5, 15, 29, 0.65)", "$type": "color" }
+    },
+
+    "log": {
+      "critical": { "$value": "{color.palette.magenta.100}", "$type": "color" },
+      "error": { "$value": "{color.palette.magenta.200}", "$type": "color" },
+      "warning": { "$value": "{color.palette.amber.200}", "$type": "color" },
+      "info": { "$value": "{color.palette.teal.200}", "$type": "color" },
+      "debug": { "$value": "{color.palette.neutral.400}", "$type": "color" }
+    },
+
+    "syntax": {
+      "keyword": { "$value": "{color.palette.sky.300}", "$type": "color" },
+      "controlKeyword": {
+        "$value": "{color.palette.sky.200}",
+        "$type": "color"
+      },
+      "name": { "$value": "{color.palette.neutral.50}", "$type": "color" },
+      "function": { "$value": "{color.palette.teal.100}", "$type": "color" },
+      "property": { "$value": "{color.palette.teal.200}", "$type": "color" },
+      "type": {
+        "$value": "{color.palette.navy.150}",
+        "$type": "color",
+        "$description": "navy.200 measured 3.65:1 on surface.codeActive and on the execution-line highlight - an A4 failure on the surface a debugger user stares at."
+      },
+      "number": { "$value": "{color.palette.amber.200}", "$type": "color" },
+      "string": { "$value": "{color.palette.green.200}", "$type": "color" },
+      "regexp": { "$value": "{color.palette.plum.200}", "$type": "color" },
+      "operator": { "$value": "{color.palette.magenta.200}", "$type": "color" },
+      "comment": {
+        "$value": "{color.palette.neutral.300}",
+        "$type": "color",
+        "$description": "Comments are the token most often left failing A4 in dark themes, because they are deliberately de-emphasised - most popular dark themes put them around #5C6370, which measures under 3:1. This is lighter than convention wants, and that is the deliberate trade: A4 is a hard gate and 'de-emphasised' is a preference. It lands on the same value as text.muted, which is the right relationship anyway."
+      },
+      "meta": { "$value": "{color.palette.magenta.200}", "$type": "color" },
+      "heading": { "$value": "{color.palette.teal.100}", "$type": "color" },
+      "link": { "$value": "{color.palette.teal.200}", "$type": "color" },
+      "invalid": { "$value": "{color.palette.magenta.200}", "$type": "color" },
+      "bracketMatchBg": { "$value": "#1D4370", "$type": "color" },
+      "bracketMatchBorder": {
+        "$value": "{color.palette.teal.200}",
+        "$type": "color"
+      }
+    },
+
+    "ansi": {
+      "$description": "See the long note in semantic-light.tokens.json. Same two calls apply here, mirrored: the terminal background follows the mode (surface.canvas), and slots 0/7/8/15 are achromatic anchors held to an advisory 3:1 rather than the hard 4.5:1 gate the twelve chromatic slots carry.",
+      "black": { "$value": "{color.palette.deepNavy.50}", "$type": "color" },
+      "red": { "$value": "{color.palette.magenta.200}", "$type": "color" },
+      "green": { "$value": "{color.palette.green.200}", "$type": "color" },
+      "yellow": { "$value": "{color.palette.amber.200}", "$type": "color" },
+      "blue": { "$value": "{color.palette.sky.300}", "$type": "color" },
+      "magenta": { "$value": "{color.palette.plum.200}", "$type": "color" },
+      "cyan": { "$value": "{color.palette.teal.200}", "$type": "color" },
+      "white": { "$value": "{color.palette.neutral.200}", "$type": "color" },
+      "brightBlack": {
+        "$value": "{color.palette.neutral.500}",
+        "$type": "color"
+      },
+      "brightRed": {
+        "$value": "{color.palette.magenta.100}",
+        "$type": "color"
+      },
+      "brightGreen": {
+        "$value": "{color.palette.green.100}",
+        "$type": "color"
+      },
+      "brightYellow": {
+        "$value": "{color.palette.amber.100}",
+        "$type": "color"
+      },
+      "brightBlue": { "$value": "{color.palette.sky.200}", "$type": "color" },
+      "brightMagenta": {
+        "$value": "{color.palette.plum.100}",
+        "$type": "color"
+      },
+      "brightCyan": { "$value": "{color.palette.teal.100}", "$type": "color" },
+      "brightWhite": {
+        "$value": "{color.palette.neutral.50}",
+        "$type": "color"
+      },
+      "foreground": {
+        "$value": "{color.palette.neutral.100}",
+        "$type": "color"
+      },
+      "background": {
+        "$value": "{color.palette.deepNavy.700}",
+        "$type": "color"
+      },
+      "cursor": { "$value": "{color.palette.teal.200}", "$type": "color" },
+      "cursorAccent": {
+        "$value": "{color.palette.deepNavy.700}",
+        "$type": "color"
+      },
+      "selectionBackground": {
+        "$value": "#123745",
+        "$type": "color",
+        "$description": "Same value as selection.active, and gated the same way. PRD 8.7.3 leaves xterm's `selectionForeground` UNSET so each cell keeps its own colour under selection - which means this backdrop has to hold the full 16-colour ANSI palette at 4.5:1, exactly as the editor selection has to hold the syntax ramp."
+      }
+    },
+
+    "icon": {
+      "contrast0": { "$value": "{color.palette.sky.300}", "$type": "color" },
+      "contrast1": { "$value": "{color.palette.teal.200}", "$type": "color" },
+      "contrast2": {
+        "$value": "{color.palette.magenta.200}",
+        "$type": "color"
+      },
+      "contrast3": { "$value": "{color.palette.amber.200}", "$type": "color" },
+      "contrast4": { "$value": "{color.palette.green.200}", "$type": "color" }
+    },
+
+    "search": {
+      "$description": "Unselected matches keep their syntax colour, so the unselected background is gated at 4.5:1 against EVERY syntax token (PRD S3). That is why it is a deep amber here and a pale amber in light mode - not a tinted overlay of the same value. The selected match overrides the foreground to text.onWarning, so it carries no such gate.",
+      "unselectedMatchBg": { "$value": "#3D2E10", "$type": "color" },
+      "unselectedMatchFg": {
+        "$value": "{color.palette.neutral.100}",
+        "$type": "color"
+      },
+      "selectedMatchBg": {
+        "$value": "{color.palette.amber.200}",
+        "$type": "color"
+      },
+      "selectedMatchFg": {
+        "$value": "{color.palette.deepNavy.900}",
+        "$type": "color"
+      }
+    },
+
+    "debug": {
+      "$description": "executionLineBg shares the search-unselected value on purpose: PRD D4 and S3 impose the identical gate (4.5:1 against every syntax token) and the palette supports exactly one warning-tinted highlight that satisfies it. Two separate values would be tuned twice and drift.",
+      "executionLineBg": { "$value": "#3D2E10", "$type": "color" },
+      "executionLineBorder": {
+        "$value": "{color.palette.amber.200}",
+        "$type": "color"
+      },
+      "breakpoint": {
+        "$value": "{color.palette.magenta.200}",
+        "$type": "color"
+      },
+      "breakpointDisabled": {
+        "$value": "{color.palette.neutral.400}",
+        "$type": "color"
+      },
+      "breakpointConditional": {
+        "$value": "{color.palette.amber.200}",
+        "$type": "color"
+      }
+    },
+
+    "grid": {
+      "void": { "$value": "{color.palette.deepNavy.800}", "$type": "color" },
+      "background": {
+        "$value": "{color.palette.deepNavy.700}",
+        "$type": "color"
+      },
+      "rowStripe": {
+        "$value": "{color.palette.deepNavy.500}",
+        "$type": "color"
+      },
+      "line": { "$value": "{color.palette.deepNavy.400}", "$type": "color" },
+      "headerBackground": {
+        "$value": "{color.palette.deepNavy.500}",
+        "$type": "color"
+      },
+      "headerLine": {
+        "$value": "{color.palette.deepNavy.200}",
+        "$type": "color"
+      },
+      "headerText": {
+        "$value": "{color.palette.neutral.100}",
+        "$type": "color"
+      },
+      "text": { "$value": "{color.palette.neutral.50}", "$type": "color" },
+      "selectionFill": { "$value": "#1D4370", "$type": "color" },
+      "selectionBorder": {
+        "$value": "{color.palette.teal.200}",
+        "$type": "color"
+      },
+      "headerSelectionFill": {
+        "$value": "{color.palette.deepNavy.200}",
+        "$type": "color"
+      },
+      "cursorFill": { "$value": "#17435A", "$type": "color" },
+      "cursorBorder": {
+        "$value": "{color.palette.teal.200}",
+        "$type": "color"
+      },
+      "scrollShadow": { "$value": "rgba(0, 0, 0, 0.65)", "$type": "color" }
+    },
+
+    "scrollbar": {
+      "track": { "$value": "transparent", "$type": "color" },
+      "thumb": { "$value": "{color.palette.neutral.200}", "$type": "color" },
+      "thumbRgb": { "$value": "200, 209, 221", "$type": "color" }
+    }
+  },
+
+  "elevation": {
+    "$description": "Shadows here are a secondary depth cue only. The primary one is the surface lightness ramp above (PRD 9). These stay deliberately restrained: a heavy drop shadow on a near-black surface reads as a smudge, not as lift.",
+    "0": { "$value": "none", "$type": "shadow" },
+    "1": { "$value": "0 1px 2px rgba(0, 0, 0, 0.24)", "$type": "shadow" },
+    "2": {
+      "$value": "0 1px 3px rgba(0, 0, 0, 0.32), 0 1px 2px rgba(0, 0, 0, 0.16)",
+      "$type": "shadow"
+    },
+    "3": {
+      "$value": "0 4px 12px rgba(0, 0, 0, 0.36), 0 2px 4px rgba(0, 0, 0, 0.20)",
+      "$type": "shadow"
+    },
+    "4": {
+      "$value": "0 12px 28px rgba(0, 0, 0, 0.44), 0 4px 8px rgba(0, 0, 0, 0.24)",
+      "$type": "shadow"
+    },
+    "5": {
+      "$value": "0 24px 48px rgba(0, 0, 0, 0.52), 0 8px 16px rgba(0, 0, 0, 0.28)",
+      "$type": "shadow"
+    }
+  }
+}

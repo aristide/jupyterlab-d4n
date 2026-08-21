@@ -1,0 +1,148 @@
+/* SURFACE: text inputs, selects, checkboxes, radios and the search base
+ * (PRD §6.3, §8.8.1)
+ *
+ * Upstream selectors verified against:
+ *   @jupyterlab/ui-components  4.6.3  style/base.css, style/styling.css
+ *   @jupyterlab/documentsearch 4.6.3  style/base.css
+ *   @jupyterlab/apputils       4.7.3  style/commandpalette.css
+ *   (declared range: ^4.5.0)
+ *
+ * Every selector is mirrored in ../selectors.json (PRD §7.4(5)).
+ *
+ * THE SIX SEARCH INPUTS (§8.8)
+ *
+ * The point of §8.8 is that all six mounts render ONE component, so the base
+ * below is written once as a selector list and every mount joins it. Four of
+ * the six are plain DOM and are listed here:
+ *
+ *   .jp-InputGroup input   — panel filters (running, extensions, settings)
+ *   .jp-DocumentSearch-input — Ctrl/Cmd-F overlay
+ *   .lm-CommandPalette-input — command palette
+ *   input.jp-mod-styled      — dialogs and the settings editor
+ *
+ * The fifth, `.jp-FilterBox`, is a `<jp-search>` web component from
+ * `@jupyter/web-components`; its input lives in a shadow root and cannot be
+ * reached by a descendant selector at all. It is themed through the toolkit's
+ * own `--design-unit` / `--density` / colour custom properties, which is a
+ * separate mapping job (TODO.md P3-12). Adding
+ * `.jp-FilterBox input` here would look right, match nothing, and quietly fail
+ * — which is exactly the class of bug selectors.json exists to catch.
+ */
+
+body[data-jp-theme-name^='Data4Now'] .jp-InputGroup input,
+body[data-jp-theme-name^='Data4Now'] .jp-DocumentSearch-input,
+body[data-jp-theme-name^='Data4Now'] .lm-CommandPalette-input,
+body[data-jp-theme-name^='Data4Now'] input.jp-mod-styled {
+  box-sizing: border-box;
+  height: var(--d4n-input-height);
+  padding: 0 var(--d4n-input-padding-x);
+  background: var(--d4n-input-bg);
+  color: var(--d4n-input-fg);
+  font-family: var(--d4n-font-family-ui);
+  font-size: var(--d4n-input-font-size);
+  border: var(--d4n-border-width-thin) solid var(--d4n-input-border);
+  border-radius: var(--d4n-input-radius);
+}
+
+/* `.jp-InputGroup input` draws its border as an inset box-shadow, not a border,
+ * and reserves 28px on the right for the icon slot. Both are restated so the
+ * group input lines up with the other three rather than being a pixel taller
+ * and a pixel differently outlined. */
+body[data-jp-theme-name^='Data4Now'] .jp-InputGroup input {
+  padding-right: calc(var(--d4n-input-icon-size) + var(--d4n-space-3));
+  box-shadow: none;
+  line-height: var(--d4n-input-height);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-InputGroup input:focus {
+  box-shadow: none;
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-InputGroup input:hover,
+body[data-jp-theme-name^='Data4Now'] .jp-DocumentSearch-input:hover,
+body[data-jp-theme-name^='Data4Now'] .lm-CommandPalette-input:hover,
+body[data-jp-theme-name^='Data4Now'] input.jp-mod-styled:hover {
+  background: var(--d4n-input-bg-hover);
+}
+
+/* The border shifts to the accent on focus; the ring itself comes from
+ * focus.css, which owns the one focus spec in this package (A5/A6). */
+body[data-jp-theme-name^='Data4Now'] .jp-InputGroup input:focus,
+body[data-jp-theme-name^='Data4Now'] .jp-DocumentSearch-input:focus,
+body[data-jp-theme-name^='Data4Now'] .lm-CommandPalette-input:focus,
+body[data-jp-theme-name^='Data4Now'] input.jp-mod-styled:focus {
+  background: var(--d4n-input-bg-active);
+  border-color: var(--d4n-input-border-active);
+}
+
+/* A placeholder is text and is held to text contrast, not to a decorative
+ * grey — `--d4n-input-placeholder` resolves to `text.muted`, which the contrast
+ * audit covers (§8.8.1). */
+body[data-jp-theme-name^='Data4Now'] .jp-InputGroup input::placeholder,
+body[data-jp-theme-name^='Data4Now'] .jp-DocumentSearch-input::placeholder,
+body[data-jp-theme-name^='Data4Now'] .lm-CommandPalette-input::placeholder,
+body[data-jp-theme-name^='Data4Now'] input.jp-mod-styled::placeholder {
+  color: var(--d4n-input-placeholder);
+  opacity: 1;
+}
+
+/* Invalid: a bad regex in the document-search overlay. §8.8.1 asks for a
+ * `--d4n-input-border-invalid` border as well, but `SearchView` puts no class or
+ * `aria-invalid` on the input when it rejects a pattern — it only renders the
+ * message div below. Adding the border needs that flag emitted upstream
+ * (TODO.md P3-12). The message alone still satisfies A7: the
+ * signal is text, not a colour. */
+body[data-jp-theme-name^='Data4Now'] .jp-DocumentSearch-regex-error {
+  color: var(--d4n-color-danger-default);
+  font-size: var(--d4n-font-size-ui-xs);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-InputGroupAction {
+  color: var(--d4n-color-text-muted);
+}
+
+body[data-jp-theme-name^='Data4Now'] select.jp-mod-styled {
+  box-sizing: border-box;
+  height: var(--d4n-input-height);
+  padding-left: var(--d4n-input-padding-x);
+  padding-right: calc(var(--d4n-input-icon-size) + var(--d4n-space-3));
+  background: var(--d4n-input-bg);
+  color: var(--d4n-input-fg);
+  font-family: var(--d4n-font-family-ui);
+  font-size: var(--d4n-input-font-size);
+  border: var(--d4n-border-width-thin) solid var(--d4n-input-border);
+  border-radius: var(--d4n-input-radius);
+}
+
+/* Core's select hover paints a hardcoded inset black shadow on top of whatever
+ * the theme set. */
+body[data-jp-theme-name^='Data4Now'] select.jp-mod-styled:hover {
+  background-color: var(--d4n-input-bg-hover);
+  box-shadow: none;
+}
+
+body[data-jp-theme-name^='Data4Now'] select.jp-mod-styled:not([multiple]) {
+  height: var(--d4n-input-height);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-select-wrapper {
+  background-color: transparent;
+}
+
+body[data-jp-theme-name^='Data4Now']
+  .jp-select-wrapper.jp-mod-focused
+  select.jp-mod-styled {
+  background-color: var(--d4n-input-bg-active);
+  border-color: var(--d4n-input-border-active);
+  box-shadow: none;
+}
+
+/* Checkboxes and radios stay native controls. `accent-color` is the only lever
+ * that tints a native control's checked state without replacing it with a
+ * styled span, and replacing them is how form controls lose their keyboard and
+ * screen-reader behaviour. The `color-scheme` declaration that keeps the rest
+ * of the control in the right mode is set per theme, in the theme packages. */
+body[data-jp-theme-name^='Data4Now'] input[type='checkbox'],
+body[data-jp-theme-name^='Data4Now'] input[type='radio'] {
+  accent-color: var(--d4n-color-action-default);
+}

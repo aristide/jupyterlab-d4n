@@ -1,0 +1,219 @@
+/* ipywidgets — `@jupyter-widgets/base` + `@jupyter-widgets/controls`
+ * (`jupyterlab_widgets` 3.0.x, ipywidgets 8.0–8.1).
+ *
+ * Selectors verified against `@jupyter-widgets/controls`
+ * `css/widgets-base.css` and the `nouislider` 15.x stylesheet it vendors.
+ *
+ * WHAT IT HARDCODES
+ * -----------------
+ * Two separate problems, and they need two separate answers.
+ *
+ * 1. `--jp-widgets-*`. ipywidgets defines its own ~30-variable set on `:root`,
+ *    most of them chaining to a `--jp-*` core variable. Appendix A excludes
+ *    them from the Tier-4 adapter on purpose — they are ipywidgets' API, not
+ *    JupyterLab's, and a generated adapter has no business writing them. So
+ *    they are mapped here, by hand, and that mapping is the primary payload of
+ *    this file. Doing it explicitly (rather than relying on the default chain
+ *    through `--jp-*`) also lets us make different choices where ipywidgets'
+ *    default is wrong for us — the slider handle below is the clear case.
+ *
+ * 2. nouislider. The slider is not an ipywidgets control at all; it is the
+ *    vendored nouislider stylesheet, whose track, handle, tooltip, and pip
+ *    colours are literal hex (`#FAFAFA`, `#FFF`, `#D9D9D9`, `#3FB8AF`, `#CCC`).
+ *    No variable reaches them. In dark mode the slider stays a light-grey bar
+ *    on a dark canvas — the single most visible third-party break in the whole
+ *    matrix, which is why PRD §7.9 calls sliders out by name.
+ *
+ * Specificity, not load order, is what makes this win: federated bundles have
+ * no guaranteed order relative to ipywidgets', so every rule leans on the
+ * theme-gate attribute selector for weight rather than on coming last.
+ */
+
+/* ---- 1. The `--jp-widgets-*` map ---- */
+
+body[data-jp-theme-name^='Data4Now'] {
+  --jp-widgets-color: var(--d4n-color-text-primary);
+  --jp-widgets-label-color: var(--d4n-color-text-secondary);
+  --jp-widgets-readout-color: var(--d4n-color-text-primary);
+  --jp-widgets-font-size: var(--d4n-font-size-ui-sm);
+  --jp-widgets-margin: var(--d4n-space-1);
+  --jp-widgets-inline-margin: var(--d4n-space-1);
+  --jp-widgets-inline-height: var(--d4n-density-comfortable-control-height);
+  --jp-widgets-container-padding: var(--d4n-space-4);
+  --jp-widgets-input-padding: var(--d4n-space-1);
+  --jp-widgets-border-width: var(--d4n-border-width-thin);
+  --jp-widgets-menu-item-height: var(--d4n-menu-item-height);
+  --jp-widgets-horizontal-tab-height: var(--d4n-tab-height);
+  --jp-widgets-horizontal-tab-top-border: var(--d4n-border-width-thick);
+  --jp-widgets-disabled-opacity: var(--d4n-button-disabled-opacity);
+  --jp-widgets-input-color: var(--d4n-input-fg);
+  --jp-widgets-input-background-color: var(--d4n-input-bg);
+  --jp-widgets-input-border-color: var(--d4n-input-border);
+  --jp-widgets-input-focus-border-color: var(--d4n-input-border-active);
+  --jp-widgets-input-border-width: var(--d4n-border-width-thin);
+  --jp-widgets-slider-border-width: var(--d4n-border-width-thin);
+
+  /* ipywidgets defaults the handle to `--jp-layout-color1` on
+   * `--jp-border-color1`, i.e. the panel surface on a faint border. That is a
+   * control that disappears against a toolbar. Ours uses the input control
+   * border (the one token in the set picked for a 3:1 boundary, PRD A3) so the
+   * handle reads as a grabbable object in both modes. */
+  --jp-widgets-slider-handle-background-color: var(--d4n-color-surface-raised);
+  --jp-widgets-slider-handle-border-color: var(--d4n-color-border-control);
+  --jp-widgets-slider-active-handle-color: var(--d4n-color-action-default);
+
+  /* Deliberately NOT redefined: --jp-widgets-inline-width{,-short,-tiny},
+   * --jp-widgets-inline-label-width, --jp-widgets-vertical-height,
+   * --jp-widgets-horizontal-tab-width, --jp-widgets-progress-thickness,
+   * --jp-widgets-slider-track-thickness, --jp-widgets-slider-handle-size,
+   * --jp-widgets-radio-item-height*. Every one is a widget-specific dimension
+   * with no token behind it; overriding them with invented numbers would put
+   * literals in this file and change layout the design never specified. */
+}
+
+/* ---- 2. nouislider (`.widget-slider` covers h/v and range variants) ---- */
+
+body[data-jp-theme-name^='Data4Now'] .widget-slider .noUi-target {
+  background: var(--d4n-color-surface-sunken);
+  border: var(--d4n-border-width-thin) solid var(--d4n-color-border-default);
+  border-radius: var(--d4n-radius-pill);
+  box-shadow: none;
+}
+
+body[data-jp-theme-name^='Data4Now'] .widget-slider .noUi-connect {
+  background: var(--d4n-color-action-default);
+}
+
+body[data-jp-theme-name^='Data4Now'] .widget-slider [disabled] .noUi-connect {
+  background: var(--d4n-color-border-strong);
+}
+
+body[data-jp-theme-name^='Data4Now'] .widget-slider .noUi-handle {
+  background: var(--d4n-color-surface-raised);
+  border: var(--d4n-border-width-thin) solid var(--d4n-color-border-control);
+  border-radius: var(--d4n-radius-pill);
+  box-shadow: var(--d4n-elevation-1);
+}
+
+/* nouislider draws two grip lines with ::before/::after. They are decoration,
+ * and at our handle size they read as dirt — the border carries the affordance
+ * instead. */
+body[data-jp-theme-name^='Data4Now'] .widget-slider .noUi-handle::before,
+body[data-jp-theme-name^='Data4Now'] .widget-slider .noUi-handle::after {
+  background: transparent;
+}
+
+body[data-jp-theme-name^='Data4Now'] .widget-slider .noUi-handle:hover,
+body[data-jp-theme-name^='Data4Now'] .widget-slider .noUi-active {
+  border-color: var(--d4n-color-action-default);
+}
+
+body[data-jp-theme-name^='Data4Now'] .widget-slider .noUi-handle:focus-visible {
+  outline: var(--d4n-focus-ring-width) var(--d4n-focus-ring-style)
+    var(--d4n-focus-ring-color);
+  outline-offset: var(--d4n-focus-ring-offset);
+}
+
+body[data-jp-theme-name^='Data4Now'] .widget-slider .noUi-tooltip {
+  background: var(--d4n-tooltip-bg);
+  border: none;
+  border-radius: var(--d4n-tooltip-radius);
+  color: var(--d4n-tooltip-fg);
+  font-family: var(--d4n-font-family-ui);
+  font-size: var(--d4n-tooltip-font-size);
+  padding: var(--d4n-tooltip-padding-y) var(--d4n-tooltip-padding-x);
+}
+
+body[data-jp-theme-name^='Data4Now'] .widget-slider .noUi-marker,
+body[data-jp-theme-name^='Data4Now'] .widget-slider .noUi-marker-large,
+body[data-jp-theme-name^='Data4Now'] .widget-slider .noUi-marker-sub {
+  background: var(--d4n-color-border-strong);
+}
+
+body[data-jp-theme-name^='Data4Now'] .widget-slider .noUi-pips {
+  color: var(--d4n-color-text-muted);
+  font-family: var(--d4n-font-family-ui);
+  font-size: var(--d4n-font-size-ui-xs);
+}
+
+/* The readout is a live number that changes while dragging; proportional
+ * digits make it jitter and resize its own column. */
+body[data-jp-theme-name^='Data4Now'] .widget-readout {
+  font-family: var(--d4n-font-family-mono);
+  font-size: var(--d4n-font-size-code-compact);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- 3. Widget buttons, including file upload ---- */
+
+body[data-jp-theme-name^='Data4Now'] .jupyter-widgets.jupyter-button {
+  border-radius: var(--d4n-button-radius);
+  font-family: var(--d4n-font-family-ui);
+  font-size: var(--d4n-button-font-size);
+  font-weight: var(--d4n-button-font-weight);
+  transition: background-color var(--d4n-button-transition)
+    var(--d4n-motion-easing-standard);
+}
+
+/* ipywidgets' hover is a Material elevation built from `--md-shadow-*` opacity
+ * variables. Those are alpha values, not colours; our elevation tokens are
+ * whole shadows tuned per mode, so the opacity variables have nothing to map
+ * to and the shadow is replaced wholesale instead. */
+body[data-jp-theme-name^='Data4Now']
+  .jupyter-widgets.jupyter-button:hover:enabled,
+body[data-jp-theme-name^='Data4Now']
+  .jupyter-widgets.jupyter-button:focus:enabled {
+  box-shadow: var(--d4n-elevation-2);
+}
+
+body[data-jp-theme-name^='Data4Now']
+  .jupyter-widgets.jupyter-button:focus-visible {
+  outline: var(--d4n-focus-ring-width) var(--d4n-focus-ring-style)
+    var(--d4n-focus-ring-color);
+  outline-offset: var(--d4n-focus-ring-offset);
+}
+
+/* FileUpload renders a single <button class="jupyter-widgets jupyter-button
+ * widget-upload">, with the <input type="file"> hidden inside it. Its default
+ * flavour is `.mod-info`, so it arrives already coloured; what it lacks is a
+ * disabled treatment and the icon/label spacing every other control has. */
+body[data-jp-theme-name^='Data4Now'] .widget-upload {
+  gap: var(--d4n-space-2);
+}
+
+body[data-jp-theme-name^='Data4Now'] .widget-upload:disabled {
+  box-shadow: none;
+  opacity: var(--d4n-button-disabled-opacity);
+}
+
+/* ---- 4. Dropdown chevron ---- */
+
+/* `--jp-widgets-dropdown-arrow` is a data-URI SVG with a baked fill, so the
+ * arrow cannot be retinted without putting a colour literal in this file. It
+ * is removed and redrawn as a CSS triangle instead.
+ *
+ * The `:has(> select)` guard is the point of interest: if ipywidgets ever
+ * changes this markup, the guard fails with it and we lose the chevron rather
+ * than stacking a second one next to theirs. */
+body[data-jp-theme-name^='Data4Now'] .widget-dropdown:has(> select) {
+  position: relative;
+}
+
+body[data-jp-theme-name^='Data4Now'] .widget-dropdown > select {
+  background-image: none;
+  padding-right: var(--d4n-space-6);
+}
+
+body[data-jp-theme-name^='Data4Now'] .widget-dropdown:has(> select)::after {
+  position: absolute;
+  top: 50%;
+  right: var(--d4n-space-2);
+  width: 0;
+  height: 0;
+  margin-top: calc(var(--d4n-space-1) / -2);
+  border-top: var(--d4n-space-1) solid var(--d4n-color-text-secondary);
+  border-right: var(--d4n-space-1) solid transparent;
+  border-left: var(--d4n-space-1) solid transparent;
+  content: '';
+  pointer-events: none;
+}

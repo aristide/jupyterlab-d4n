@@ -1,0 +1,74 @@
+/* jupyterlab-git — `@jupyterlab/git` 0.50.x–0.51.x, plus the `nbdime` 4.x
+ * stylesheet it loads for notebook diffs.
+ *
+ * WHAT IT HARDCODES, AND WHY THIS FILE IS SHORT
+ * ---------------------------------------------
+ * Almost nothing, which is the finding worth recording. jupyterlab-git styles
+ * its panel with `typestyle` at runtime, and those generated rules read
+ * `--jp-*` variables rather than literals — so the Tier-4 adapter already
+ * reaches the whole sidebar, the branch menu, and the commit form. Shimming
+ * them would mean targeting hashed class names that change on every release,
+ * which is exactly the dead weight this package is supposed to avoid.
+ *
+ * The exception is the diff. Notebook diffs are rendered by nbdime, which
+ * defines four `--jp-diff-*` variables on `:root` as fixed rgba overlays
+ * (a yellow-green for additions, a saturated red for deletions) chosen for
+ * stock JupyterLab Light. Against our canvas they are both off-hue and, in
+ * dark mode, too light to sit under code. Appendix A routes `--jp-*` variables
+ * owned by third parties here rather than into the generated adapter, so this
+ * is where they get mapped.
+ *
+ * CONFIDENCE
+ * ----------
+ * The four nbdime variables: high — they are nbdime's public theming surface
+ * and have carried the same names since nbdime 2.
+ * The `.jp-git-diff-*` container classes: medium. They come from
+ * jupyterlab-git's hand-written `style/` CSS rather than from typestyle, but
+ * they were not checked against a running install. The §10.3 selector
+ * integrity run will fail loudly if any of them stops matching; that is the
+ * intended safety net, and the rule set is kept to three selectors so a miss
+ * costs little.
+ *
+ * Text (non-notebook) diffs in 0.51+ are CodeMirror 6 merge decorations, not
+ * CSS this package can reach. They belong to `@d4n/editor-theme`; see
+ * docs/compat-matrix.md, which tracks them as still unstyled.
+ */
+
+/* ---- nbdime diff colours ---- */
+
+body[data-jp-theme-name^='Data4Now'] {
+  /* Line-level: a tinted background the code still has to be legible on, so
+   * these take the `faint` step, which is the token tier defined as
+   * "background you put body text on" in both modes. */
+  --jp-diff-added-color: var(--d4n-color-success-faint);
+  --jp-diff-deleted-color: var(--d4n-color-danger-faint);
+
+  /* Character-level: painted on top of the line background to show which words
+   * inside a changed line moved. It has to beat the line tint, so it takes the
+   * `subtle` step. This is the one pairing in the file worth re-checking on a
+   * real diff — `subtle` under dark-mode code text is a deliberate legibility
+   * trade for making the intra-line highlight visible at all. */
+  --jp-diff-added-text-color: var(--d4n-color-success-subtle);
+  --jp-diff-deleted-text-color: var(--d4n-color-danger-subtle);
+}
+
+/* ---- Diff view container ---- */
+
+body[data-jp-theme-name^='Data4Now'] .jp-git-diff-root {
+  background-color: var(--d4n-color-surface-canvas);
+  color: var(--d4n-color-text-primary);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-git-diff-banner {
+  background-color: var(--d4n-color-surface-raised);
+  border-bottom: var(--d4n-border-width-thin) solid
+    var(--d4n-color-border-subtle);
+  color: var(--d4n-color-text-secondary);
+  font-family: var(--d4n-font-family-ui);
+  font-size: var(--d4n-font-size-ui-sm);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-git-diff-error {
+  background-color: var(--d4n-color-danger-faint);
+  color: var(--d4n-color-danger-strong);
+}

@@ -1,0 +1,128 @@
+/* SURFACE: sidebar rails and side-panel headers (PRD §6.1)
+ *
+ * Upstream selectors verified against:
+ *   @lumino/widgets            2.9.0  style/tabbar.css
+ *   @jupyterlab/application    4.6.3  style/sidepanel.css
+ *   @jupyterlab/ui-components  4.6.3  style/sidepanel.css
+ *   (declared ranges: @lumino/* ^2.0.0, @jupyterlab/* ^4.5.0)
+ *
+ * Every selector is mirrored in ../selectors.json (PRD §7.4(5)).
+ *
+ * The rails are `.lm-TabBar`s wearing `.jp-SideBar`. Everything here is written
+ * through `.jp-SideBar` so it cannot reach the dock tab bar, which tab-bar.css
+ * owns. Core sizes the rail from `--jp-private-sidebar-tab-width`; that name is
+ * private and off limits (PRD §7.4(3)), so the width is restated from
+ * `--d4n-sidebar-rail-width` on the two rules that actually bound it.
+ */
+
+/* The rail is brand chrome, not application surface: `--d4n-color-chrome-rail-*`
+ * is dark in BOTH modes, which is why nothing here reaches for the generic
+ * `--d4n-color-surface-*` / `--d4n-color-text-*` families. Using those would
+ * make the rail flip to a light plate in light mode and break the chrome. */
+body[data-jp-theme-name^='Data4Now'] .jp-SideBar.lm-TabBar {
+  background: var(--d4n-sidebar-rail-bg);
+  color: var(--d4n-sidebar-rail-fg);
+}
+
+body[data-jp-theme-name^='Data4Now']
+  .jp-SideBar.lm-TabBar[data-orientation='vertical'] {
+  min-width: calc(var(--d4n-sidebar-rail-width) + var(--d4n-border-width-thin));
+  max-width: calc(var(--d4n-sidebar-rail-width) + var(--d4n-border-width-thin));
+}
+
+body[data-jp-theme-name^='Data4Now']
+  .jp-SideBar[data-orientation='vertical']
+  .lm-TabBar-tab {
+  padding: var(--d4n-space-4) 0;
+}
+
+body[data-jp-theme-name^='Data4Now']
+  .jp-SideBar
+  .lm-TabBar-tabIcon.jp-SideBar-tabIcon {
+  min-width: var(--d4n-sidebar-rail-icon-size);
+  min-height: var(--d4n-sidebar-rail-icon-size);
+  background-size: var(--d4n-sidebar-rail-icon-size);
+}
+
+/* Three distinct rail states with only two backgrounds available: hover moves
+ * the foreground and leaves the plate alone, current takes the 4% wash AND the
+ * accent foreground AND the indicator below. Giving hover the same wash as
+ * current would leave the two indistinguishable while the pointer is over the
+ * selected tab, which is most of the time. */
+body[data-jp-theme-name^='Data4Now']
+  .jp-SideBar
+  .lm-TabBar-tab:hover:not(.lm-mod-current) {
+  color: var(--d4n-sidebar-rail-fg-hover);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-SideBar .lm-TabBar-tab.lm-mod-current {
+  background: var(--d4n-sidebar-rail-active-bg);
+  color: var(--d4n-sidebar-rail-fg-active);
+}
+
+/* Active indicator: an accent bar on the outer edge of the rail, so the left
+ * and right rails mirror each other rather than both pointing inward. Core
+ * already gives every rail tab `position: relative`, and its own
+ * `.lm-mod-current::after` is an inset border used to erase a seam — a separate
+ * pseudo-element is used here so the two do not fight. */
+body[data-jp-theme-name^='Data4Now']
+  .jp-SideBar.lm-TabBar.jp-mod-left
+  .lm-TabBar-tab.lm-mod-current::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: var(--d4n-sidebar-rail-indicator-width);
+  background: var(--d4n-sidebar-rail-indicator);
+}
+
+body[data-jp-theme-name^='Data4Now']
+  .jp-SideBar.lm-TabBar.jp-mod-right
+  .lm-TabBar-tab.lm-mod-current::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: var(--d4n-sidebar-rail-indicator-width);
+  background: var(--d4n-sidebar-rail-indicator);
+}
+
+/* Panel headers. `.jp-SidePanel-header` is a flex row upstream but has no
+ * height and only 2px of padding, so the label sits hard against the frame. */
+body[data-jp-theme-name^='Data4Now'] .jp-SidePanel-header {
+  align-items: center;
+  min-height: var(--d4n-sidebar-header-height);
+  padding: 0 var(--d4n-space-3);
+  color: var(--d4n-sidebar-header-fg);
+  font-size: var(--d4n-sidebar-header-font-size);
+  font-weight: var(--d4n-font-weight-semibold);
+  letter-spacing: var(--d4n-sidebar-header-letter-spacing);
+  border-bottom: var(--d4n-border-width-thin) solid
+    var(--d4n-color-border-subtle);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-SidePanel {
+  background: var(--d4n-color-surface-canvas);
+  color: var(--d4n-color-text-primary);
+  font-family: var(--d4n-font-family-ui);
+  font-size: var(--d4n-font-size-ui-sm);
+}
+
+/* Accordion section titles are the second kind of panel header in the sidebar
+ * (Debugger, Property Inspector). They take the same typography so the two do
+ * not read as two different products. */
+body[data-jp-theme-name^='Data4Now']
+  .lm-AccordionPanel
+  .jp-AccordionPanel-title {
+  min-height: var(--d4n-sidebar-header-height);
+  color: var(--d4n-sidebar-header-fg);
+  font-size: var(--d4n-sidebar-header-font-size);
+  font-weight: var(--d4n-font-weight-semibold);
+  letter-spacing: var(--d4n-sidebar-header-letter-spacing);
+  background: var(--d4n-color-surface-raised);
+  border-bottom: var(--d4n-border-width-thin) solid
+    var(--d4n-color-border-subtle);
+  box-shadow: none;
+}

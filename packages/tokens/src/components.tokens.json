@@ -1,0 +1,460 @@
+{
+  "$description": "TIER 3 - COMPONENT. Mode-INDEPENDENT: written once, referencing Tier 2 only (PRD 5.2 rules 2 and 3). Component CSS consumes these and never reaches past them to Tier 1; tests/contrast/lint-literals.mjs fails the build on a Tier-1 reference outside Tier 2.\n\nThese emit into a `body` rule rather than `:root`. That is not cosmetic. A custom property whose value contains var() is substituted at computed-value time ON THE ELEMENT WHERE IT IS DECLARED - so a Tier-3 property declared on :root, referencing a Tier-2 property that only exists on body[data-jp-theme-light], resolves against nothing and becomes guaranteed-invalid for the whole document. Declaring Tier 3 on `body` puts it in the same scope as Tier 2. See docs/decisions.md D-001.",
+
+  "button": {
+    "$description": "PRD 8.1. Four variants x five states. Disabled is 40% opacity + cursor:not-allowed with the hover transition suppressed.",
+    "radius": { "$value": "{radius.md}", "$type": "dimension" },
+    "paddingX": { "$value": "{space.3}", "$type": "dimension" },
+    "paddingY": { "$value": "{space.2}", "$type": "dimension" },
+    "height": {
+      "$value": "{density.comfortable.controlHeight}",
+      "$type": "dimension"
+    },
+    "heightCompact": {
+      "$value": "{density.compact.controlHeight}",
+      "$type": "dimension"
+    },
+    "fontSize": { "$value": "{font.size.ui.sm}", "$type": "dimension" },
+    "fontWeight": { "$value": "{font.weight.medium}", "$type": "fontWeight" },
+    "disabledOpacity": { "$value": "0.4", "$type": "number" },
+    "transition": { "$value": "{motion.duration.fast}", "$type": "duration" },
+    "primary": {
+      "bg": { "$value": "{color.action.default}", "$type": "color" },
+      "bgHover": { "$value": "{color.action.hover}", "$type": "color" },
+      "bgActive": { "$value": "{color.action.active}", "$type": "color" },
+      "fg": { "$value": "{color.text.onAction}", "$type": "color" }
+    },
+    "secondary": {
+      "bg": { "$value": "{color.surface.raised}", "$type": "color" },
+      "bgHover": { "$value": "{color.surface.hover}", "$type": "color" },
+      "bgActive": { "$value": "{color.surface.active}", "$type": "color" },
+      "fg": { "$value": "{color.text.primary}", "$type": "color" },
+      "border": { "$value": "{color.border.default}", "$type": "color" }
+    },
+    "ghost": {
+      "bg": { "$value": "transparent", "$type": "color" },
+      "bgHover": { "$value": "{color.surface.hover}", "$type": "color" },
+      "bgActive": { "$value": "{color.surface.active}", "$type": "color" },
+      "fg": { "$value": "{color.text.primary}", "$type": "color" }
+    },
+    "danger": {
+      "bg": { "$value": "{color.danger.default}", "$type": "color" },
+      "bgHover": { "$value": "{color.danger.hover}", "$type": "color" },
+      "bgActive": { "$value": "{color.danger.active}", "$type": "color" },
+      "fg": { "$value": "{color.text.onDanger}", "$type": "color" }
+    }
+  },
+
+  "focusRing": {
+    "$description": "PRD 5.1 and A5/A6: ONE spec, applied to every focusable element, both modes, :focus-visible only. Never a bare outline:none.",
+    "width": { "$value": "{border.width.thick}", "$type": "dimension" },
+    "offset": { "$value": "2px", "$type": "dimension" },
+    "color": { "$value": "{color.action.focus}", "$type": "color" },
+    "style": { "$value": "solid", "$type": "other" }
+  },
+
+  "input": {
+    "$description": "PRD 8.8.1 - the base for all SIX of JupyterLab's search inputs plus every settings field. One component, six configurations.",
+    "height": {
+      "$value": "{density.comfortable.inputHeight}",
+      "$type": "dimension"
+    },
+    "heightCompact": {
+      "$value": "{density.compact.inputHeight}",
+      "$type": "dimension"
+    },
+    "radius": { "$value": "{radius.md}", "$type": "dimension" },
+    "paddingX": { "$value": "{space.2}", "$type": "dimension" },
+    "bg": { "$value": "{color.surface.sunken}", "$type": "color" },
+    "bgHover": { "$value": "{color.surface.hover}", "$type": "color" },
+    "bgActive": { "$value": "{color.surface.sunken}", "$type": "color" },
+    "border": {
+      "$value": "{color.border.control}",
+      "$type": "color",
+      "$description": "border.control, NOT border.default. An input's outline is the boundary that identifies the component, which WCAG 1.4.11 gates at 3:1 — the decorative border ramp does not clear it, by design."
+    },
+    "borderActive": { "$value": "{color.action.default}", "$type": "color" },
+    "borderInvalid": { "$value": "{color.danger.default}", "$type": "color" },
+    "fg": { "$value": "{color.text.primary}", "$type": "color" },
+    "placeholder": {
+      "$value": "{color.text.muted}",
+      "$type": "color",
+      "$description": "Placeholders are TEXT. Never below 4.5:1 (PRD 8.8.1)."
+    },
+    "iconSize": { "$value": "16px", "$type": "dimension" },
+    "fontSize": { "$value": "{font.size.ui.sm}", "$type": "dimension" }
+  },
+
+  "menu": {
+    "$description": "PRD 8.4. Menus portal into document.body, so nothing scoped under .jp-LabShell reaches them (R13). The four-column grid is FIXED-width, not content-derived, or column alignment breaks across items with and without icons/shortcuts (M4).",
+    "bar": {
+      "$description": "The menu BAR sits on the dark application frame (color.chrome.*), in both modes. The menu DROPDOWNS below it do not - they are light overlays in light mode. Getting this wrong in either direction is very visible: a light bar breaks the frame, a dark dropdown reads as a different application.",
+      "height": {
+        "$value": "{density.comfortable.menuBarHeight}",
+        "$type": "dimension"
+      },
+      "heightCompact": {
+        "$value": "{density.compact.menuBarHeight}",
+        "$type": "dimension"
+      },
+      "bg": { "$value": "{color.chrome.topPanelBg}", "$type": "color" },
+      "border": { "$value": "{color.chrome.topPanelBorder}", "$type": "color" },
+      "itemFg": {
+        "$value": "{color.chrome.topPanelFgMuted}",
+        "$type": "color"
+      },
+      "itemFgHover": {
+        "$value": "{color.chrome.topPanelFg}",
+        "$type": "color"
+      },
+      "itemBgHover": {
+        "$value": "{color.chrome.topPanelHover}",
+        "$type": "color"
+      },
+      "itemBgOpen": {
+        "$value": "{color.chrome.topPanelActive}",
+        "$type": "color"
+      },
+      "itemPaddingX": { "$value": "{space.2}", "$type": "dimension" },
+      "fontSize": { "$value": "{font.size.ui.sm}", "$type": "dimension" },
+      "fontWeight": { "$value": "{font.weight.medium}", "$type": "fontWeight" },
+      "overflowBreakpoint": { "$value": "900px", "$type": "dimension" }
+    },
+    "surface": { "$value": "{color.surface.overlay}", "$type": "color" },
+    "border": { "$value": "{color.border.subtle}", "$type": "color" },
+    "radius": { "$value": "{radius.md}", "$type": "dimension" },
+    "elevation": { "$value": "{elevation.3}", "$type": "shadow" },
+    "minWidth": { "$value": "200px", "$type": "dimension" },
+    "minWidthContext": { "$value": "180px", "$type": "dimension" },
+    "maxWidth": { "$value": "360px", "$type": "dimension" },
+    "paddingY": { "$value": "{space.1}", "$type": "dimension" },
+    "itemHeight": {
+      "$value": "{density.comfortable.menuItemHeight}",
+      "$type": "dimension"
+    },
+    "itemHeightCompact": {
+      "$value": "{density.compact.menuItemHeight}",
+      "$type": "dimension"
+    },
+    "itemPaddingX": { "$value": "{space.2}", "$type": "dimension" },
+    "itemFg": { "$value": "{color.text.primary}", "$type": "color" },
+    "itemBgHover": {
+      "$value": "{color.surface.hover}",
+      "$type": "color",
+      "$description": "The .lm-mod-active (keyboard-highlighted) rule MUST use this same value. Lumino manages its own active-item index; a menu styled only on :hover has completely invisible keyboard navigation (PRD 8.4.1(2), M1, R12). tests/contrast/lint-menu-active.mjs enforces the pairing."
+    },
+    "itemFgDisabled": { "$value": "{color.text.muted}", "$type": "color" },
+    "itemDisabledOpacity": { "$value": "0.4", "$type": "number" },
+    "itemFgToggled": { "$value": "{color.text.strong}", "$type": "color" },
+    "separator": { "$value": "{color.border.faint}", "$type": "color" },
+    "iconColumnWidth": { "$value": "20px", "$type": "dimension" },
+    "shortcutColumnMinWidth": { "$value": "64px", "$type": "dimension" },
+    "shortcutFg": { "$value": "{color.text.muted}", "$type": "color" },
+    "shortcutFontSize": { "$value": "{font.size.ui.xs}", "$type": "dimension" },
+    "chevronSize": { "$value": "12px", "$type": "dimension" },
+    "chevronFg": { "$value": "{color.text.muted}", "$type": "color" }
+  },
+
+  "tab": {
+    "$description": "PRD 6.1. Lumino .lm-TabBar, used by the main dock, the bottom dock and every sidebar panel group.",
+    "height": { "$value": "32px", "$type": "dimension" },
+    "heightCompact": { "$value": "28px", "$type": "dimension" },
+    "bg": { "$value": "{color.surface.sunken}", "$type": "color" },
+    "bgActive": { "$value": "{color.surface.canvas}", "$type": "color" },
+    "bgHover": { "$value": "{color.surface.hover}", "$type": "color" },
+    "fg": { "$value": "{color.text.secondary}", "$type": "color" },
+    "fgActive": { "$value": "{color.text.primary}", "$type": "color" },
+    "border": { "$value": "{color.border.subtle}", "$type": "color" },
+    "indicator": { "$value": "{color.action.default}", "$type": "color" },
+    "indicatorWidth": {
+      "$value": "{border.width.thick}",
+      "$type": "dimension"
+    },
+    "dirtyDotSize": { "$value": "6px", "$type": "dimension" },
+    "dirtyDot": { "$value": "{color.action.default}", "$type": "color" },
+    "paddingX": { "$value": "{space.3}", "$type": "dimension" },
+    "fontSize": { "$value": "{font.size.ui.sm}", "$type": "dimension" },
+    "splitHandleHit": {
+      "$value": "{space.2}",
+      "$type": "dimension",
+      "$description": "8px hit area over a 1px visual. Core ships 4px, which is below every usable-target guideline (PRD 6.1)."
+    },
+    "splitHandleVisual": {
+      "$value": "{border.width.thin}",
+      "$type": "dimension"
+    }
+  },
+
+  "dialog": {
+    "$description": "PRD 8.3.",
+    "backdrop": { "$value": "{color.overlay.scrim}", "$type": "color" },
+    "backdropBlur": { "$value": "2px", "$type": "dimension" },
+    "surface": { "$value": "{color.surface.overlay}", "$type": "color" },
+    "radius": { "$value": "{radius.lg}", "$type": "dimension" },
+    "elevation": { "$value": "{elevation.4}", "$type": "shadow" },
+    "width": { "$value": "480px", "$type": "dimension" },
+    "widthWide": { "$value": "640px", "$type": "dimension" },
+    "maxWidth": { "$value": "90vw", "$type": "dimension" },
+    "maxBodyHeight": { "$value": "70vh", "$type": "dimension" },
+    "padding": { "$value": "{space.4}", "$type": "dimension" },
+    "footerGap": { "$value": "{space.2}", "$type": "dimension" },
+    "entryDuration": {
+      "$value": "{motion.duration.fast}",
+      "$type": "duration"
+    },
+    "entryTranslate": { "$value": "4px", "$type": "dimension" }
+  },
+
+  "toolbar": {
+    "bg": { "$value": "{color.surface.raised}", "$type": "color" },
+    "border": { "$value": "{color.border.subtle}", "$type": "color" },
+    "bgActive": { "$value": "{color.surface.active}", "$type": "color" },
+    "buttonSize": {
+      "$value": "{density.comfortable.toolbarButtonSize}",
+      "$type": "dimension"
+    },
+    "buttonSizeCompact": {
+      "$value": "{density.compact.toolbarButtonSize}",
+      "$type": "dimension"
+    },
+    "buttonRadius": { "$value": "{radius.sm}", "$type": "dimension" },
+    "iconSize": { "$value": "16px", "$type": "dimension" },
+    "gap": { "$value": "{space.1}", "$type": "dimension" }
+  },
+
+  "statusBar": {
+    "$description": "PRD 8.5. T3 - our plugin supplies the same IStatusBar token, and the WRAPPER enforces item shape so third-party items inherit padding, height, separators, hover and focus for free.",
+    "height": {
+      "$value": "{density.comfortable.statusBarHeight}",
+      "$type": "dimension"
+    },
+    "heightCompact": {
+      "$value": "{density.compact.statusBarHeight}",
+      "$type": "dimension"
+    },
+    "bg": { "$value": "{color.surface.raised}", "$type": "color" },
+    "border": { "$value": "{color.border.subtle}", "$type": "color" },
+    "fg": { "$value": "{color.text.secondary}", "$type": "color" },
+    "fgPassive": {
+      "$value": "{color.text.muted}",
+      "$type": "color",
+      "$description": "Passive readouts get cursor:default and no hover response. Distinguishing a readout from a control is one of the four things IStatusBar cannot do, and half the reason the status bar is T3 rather than T2."
+    },
+    "fgHover": { "$value": "{color.text.primary}", "$type": "color" },
+    "bgHover": { "$value": "{color.surface.hover}", "$type": "color" },
+    "separator": { "$value": "{color.border.faint}", "$type": "color" },
+    "paddingX": { "$value": "{space.2}", "$type": "dimension" },
+    "fontSize": { "$value": "{font.size.ui.xs}", "$type": "dimension" },
+    "overflowBreakpoint": { "$value": "1024px", "$type": "dimension" }
+  },
+
+  "bottomDock": {
+    "$description": "PRD 8.5.3. Core ships the 'down' area essentially unstyled because core barely uses it. Net-new design work.",
+    "defaultHeight": { "$value": "240px", "$type": "dimension" },
+    "collapsedHeight": { "$value": "32px", "$type": "dimension" },
+    "bg": { "$value": "{color.surface.raised}", "$type": "color" },
+    "border": { "$value": "{color.border.subtle}", "$type": "color" },
+    "resizeHandleHit": { "$value": "{space.2}", "$type": "dimension" }
+  },
+
+  "launcher": {
+    "$description": "PRD 8.11. T3 - our plugin re-provides ILauncher so every third-party registration keeps working while we own the presentation.",
+    "padding": { "$value": "{space.6}", "$type": "dimension" },
+    "maxWidth": { "$value": "1120px", "$type": "dimension" },
+    "bg": { "$value": "{color.surface.canvas}", "$type": "color" },
+    "sectionGap": { "$value": "{space.4}", "$type": "dimension" },
+    "cardWidth": { "$value": "160px", "$type": "dimension" },
+    "cardHeight": { "$value": "112px", "$type": "dimension" },
+    "cardGap": { "$value": "{space.3}", "$type": "dimension" },
+    "cardRadius": { "$value": "{radius.md}", "$type": "dimension" },
+    "cardBg": { "$value": "{color.surface.raised}", "$type": "color" },
+    "cardBgHover": { "$value": "{color.surface.hover}", "$type": "color" },
+    "cardBgActive": { "$value": "{color.surface.active}", "$type": "color" },
+    "cardBorder": { "$value": "{color.border.subtle}", "$type": "color" },
+    "cardBorderHover": { "$value": "{color.border.default}", "$type": "color" },
+    "cardElevationHover": { "$value": "{elevation.1}", "$type": "shadow" },
+    "iconSize": { "$value": "32px", "$type": "dimension" },
+    "kernelPlateBg": {
+      "$value": "{color.surface.sunken}",
+      "$type": "color",
+      "$description": "The neutral plate behind raster kernel logos (PRD 8.11.3). Kernel logos are server-served PNGs and cannot follow the theme; a plate kills the dark-mode halo and reframes the raster/vector split as a deliberate 'a language vs an action' distinction. This is the recommended default answer to PRD Q9 and it costs nothing."
+    },
+    "kernelPlateRadius": { "$value": "{radius.sm}", "$type": "dimension" },
+    "transition": { "$value": "{motion.duration.fast}", "$type": "duration" }
+  },
+
+  "toc": {
+    "$description": "PRD 8.10. Six heading levels in a ~200px column. Indent + weight with a CAPPED size ramp - a six-step size ramp reaches 9px by h4, and a six-step colour ramp puts levels 5-6 below 4.5:1 (TC2).",
+    "rowHeight": {
+      "$value": "{density.comfortable.rowHeight}",
+      "$type": "dimension"
+    },
+    "collapserWidth": { "$value": "16px", "$type": "dimension" },
+    "numberingWidth": { "$value": "32px", "$type": "dimension" },
+    "guide": { "$value": "{color.border.faint}", "$type": "color" },
+    "bgHover": { "$value": "{color.surface.hover}", "$type": "color" },
+    "bgActive": { "$value": "{color.surface.selected}", "$type": "color" },
+    "activeIndicator": { "$value": "{color.action.default}", "$type": "color" },
+    "level1": {
+      "size": { "$value": "{font.size.ui.sm}", "$type": "dimension" },
+      "weight": { "$value": "{font.weight.semibold}", "$type": "fontWeight" },
+      "indent": { "$value": "0", "$type": "dimension" },
+      "fg": { "$value": "{color.text.primary}", "$type": "color" }
+    },
+    "level2": {
+      "size": { "$value": "{font.size.ui.sm}", "$type": "dimension" },
+      "weight": { "$value": "{font.weight.medium}", "$type": "fontWeight" },
+      "indent": { "$value": "12px", "$type": "dimension" },
+      "fg": { "$value": "{color.text.primary}", "$type": "color" }
+    },
+    "level3": {
+      "size": { "$value": "{font.size.ui.sm}", "$type": "dimension" },
+      "weight": { "$value": "{font.weight.regular}", "$type": "fontWeight" },
+      "indent": { "$value": "24px", "$type": "dimension" },
+      "fg": { "$value": "{color.text.primary}", "$type": "color" }
+    },
+    "level4": {
+      "size": { "$value": "{font.size.ui.xs}", "$type": "dimension" },
+      "weight": { "$value": "{font.weight.regular}", "$type": "fontWeight" },
+      "indent": { "$value": "36px", "$type": "dimension" },
+      "fg": { "$value": "{color.text.secondary}", "$type": "color" }
+    },
+    "level5": {
+      "size": { "$value": "{font.size.ui.xs}", "$type": "dimension" },
+      "weight": { "$value": "{font.weight.regular}", "$type": "fontWeight" },
+      "indent": { "$value": "44px", "$type": "dimension" },
+      "fg": { "$value": "{color.text.secondary}", "$type": "color" }
+    },
+    "level6": {
+      "size": { "$value": "{font.size.ui.xs}", "$type": "dimension" },
+      "weight": { "$value": "{font.weight.regular}", "$type": "fontWeight" },
+      "indent": { "$value": "52px", "$type": "dimension" },
+      "fg": { "$value": "{color.text.secondary}", "$type": "color" }
+    }
+  },
+
+  "terminal": {
+    "$description": "PRD 8.7. Every value here is pushed through the xterm.js OPTIONS object by the shell-chrome bridge - none of it is reachable by CSS, because the cell grid is drawn to canvas/WebGL. Only the panel chrome and .xterm-viewport scrollbar are DOM.",
+    "fontSize": { "$value": "{font.size.code}", "$type": "dimension" },
+    "fontSizeCompact": {
+      "$value": "{font.size.codeCompact}",
+      "$type": "dimension"
+    },
+    "lineHeight": { "$value": "{font.lineHeight.terminal}", "$type": "number" },
+    "letterSpacing": {
+      "$value": "0",
+      "$type": "dimension",
+      "$description": "Non-zero breaks box-drawing alignment in htop/vim (T5)."
+    },
+    "cursorStyle": { "$value": "bar", "$type": "other" },
+    "cursorInactiveStyle": { "$value": "outline", "$type": "other" },
+    "scrollback": { "$value": "10000", "$type": "number" },
+    "minimumContrastRatio": {
+      "$value": "1",
+      "$type": "number",
+      "$description": "OFF, deliberately. Setting 4.5 would guarantee A1 and silently distort every designed colour, differently on every background. The palette is designed to pass and verified in the audit; a palette that needs runtime rescuing is a palette that was not finished (PRD 8.7.3)."
+    },
+    "allowTransparency": { "$value": "false", "$type": "other" },
+    "padding": { "$value": "{space.2}", "$type": "dimension" }
+  },
+
+  "notebook": {
+    "$description": "PRD 8.2.",
+    "cellGap": { "$value": "{space.2}", "$type": "dimension" },
+    "activeCellBg": { "$value": "{color.surface.raised}", "$type": "color" },
+    "activeCellIndicator": {
+      "$value": "{color.action.default}",
+      "$type": "color"
+    },
+    "activeCellIndicatorWidth": {
+      "$value": "{border.width.thick}",
+      "$type": "dimension"
+    },
+    "promptWidth": { "$value": "64px", "$type": "dimension" },
+    "promptFg": { "$value": "{color.text.muted}", "$type": "color" },
+    "promptRunningFg": { "$value": "{color.action.default}", "$type": "color" },
+    "collapserHitWidth": { "$value": "{space.6}", "$type": "dimension" },
+    "collapserVisualWidth": { "$value": "{space.1}", "$type": "dimension" },
+    "errorOutputBg": { "$value": "{color.danger.faint}", "$type": "color" },
+    "errorOutputBorder": {
+      "$value": "{color.danger.default}",
+      "$type": "color"
+    }
+  },
+
+  "sidebar": {
+    "railWidth": { "$value": "{space.12}", "$type": "dimension" },
+    "railIconSize": {
+      "$value": "20px",
+      "$type": "dimension",
+      "$description": "Authored at 20px, NOT scaled up from a 16px glyph - a scaled 16 reads soft next to a native 20 (PRD 7.8.4). The highest-visibility icons in the product: always visible, never labelled."
+    },
+    "railBg": { "$value": "{color.chrome.railBg}", "$type": "color" },
+    "railFg": { "$value": "{color.chrome.railFg}", "$type": "color" },
+    "railFgHover": { "$value": "{color.chrome.railFgHover}", "$type": "color" },
+    "railFgActive": {
+      "$value": "{color.chrome.railFgActive}",
+      "$type": "color"
+    },
+    "railActiveBg": {
+      "$value": "{color.chrome.railActiveBg}",
+      "$type": "color"
+    },
+    "railIndicator": {
+      "$value": "{color.chrome.railFgActive}",
+      "$type": "color"
+    },
+    "railIndicatorWidth": {
+      "$value": "{border.width.thick}",
+      "$type": "dimension"
+    },
+    "headerHeight": { "$value": "{space.8}", "$type": "dimension" },
+    "headerFg": { "$value": "{color.text.secondary}", "$type": "color" },
+    "headerFontSize": { "$value": "{font.size.ui.xs}", "$type": "dimension" },
+    "headerLetterSpacing": {
+      "$value": "{font.letterSpacing.wide}",
+      "$type": "dimension"
+    }
+  },
+
+  "topPanel": {
+    "height": {
+      "$value": "{density.comfortable.menuBarHeight}",
+      "$type": "dimension"
+    },
+    "bg": { "$value": "{color.chrome.topPanelBg}", "$type": "color" },
+    "border": { "$value": "{color.chrome.topPanelBorder}", "$type": "color" },
+    "fg": { "$value": "{color.chrome.topPanelFg}", "$type": "color" },
+    "fgMuted": { "$value": "{color.chrome.topPanelFgMuted}", "$type": "color" },
+    "logoHeight": { "$value": "22px", "$type": "dimension" },
+    "logoInset": { "$value": "{space.3}", "$type": "dimension" },
+    "accentPillar": {
+      "$value": "{color.chrome.topPanelAccent}",
+      "$type": "color"
+    },
+    "accentPillarWidth": {
+      "$value": "{border.width.thick}",
+      "$type": "dimension"
+    }
+  },
+
+  "tooltip": {
+    "bg": { "$value": "{color.surface.inverse0}", "$type": "color" },
+    "fg": { "$value": "{color.text.inverse0}", "$type": "color" },
+    "radius": { "$value": "{radius.sm}", "$type": "dimension" },
+    "maxWidth": { "$value": "280px", "$type": "dimension" },
+    "delay": { "$value": "500ms", "$type": "duration" },
+    "paddingX": { "$value": "{space.2}", "$type": "dimension" },
+    "paddingY": { "$value": "{space.1}", "$type": "dimension" },
+    "fontSize": { "$value": "{font.size.ui.xs}", "$type": "dimension" }
+  },
+
+  "scrollbar": {
+    "thumb": { "$value": "{color.scrollbar.thumb}", "$type": "color" },
+    "track": { "$value": "{color.scrollbar.track}", "$type": "color" },
+    "thickness": { "$value": "10px", "$type": "dimension" },
+    "radius": { "$value": "9px", "$type": "dimension" },
+    "margin": { "$value": "3.5px", "$type": "dimension" },
+    "endpad": { "$value": "3px", "$type": "dimension" }
+  }
+}

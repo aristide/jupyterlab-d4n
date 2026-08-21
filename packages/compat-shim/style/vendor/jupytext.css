@@ -1,0 +1,22 @@
+/* jupytext — `jupyterlab-jupytext` 1.4.x (shipped with Jupytext 1.16.x).
+ *
+ * THIS FILE INTENTIONALLY SHIPS NO RULES.
+ *
+ * §10.4 files jupytext as P1 "token mapping". The mapping is empty, and that
+ * is the finding: the extension's entire UI is command contributions — a
+ * "Jupytext" submenu of checkable pairing formats under File, matching entries
+ * in the command palette and the file-browser context menu, and a notebook
+ * metadata edit. It contributes no markup of its own and no stylesheet, so
+ * every pixel of it is a `lm-Menu` item already styled by `@d4n/ui-overrides`
+ * and already carrying the `.lm-mod-active` treatment that keyboard navigation
+ * of those menus depends on (PRD §8.4.1, R12).
+ *
+ * The file exists so the matrix row has a home and so the next person to open
+ * the P1 list does not spend an afternoon re-deriving "there is nothing to
+ * style here". A rule set invented to justify the file would be dead weight
+ * that still has to be maintained.
+ *
+ * If this changes — jupytext gaining a status-bar indicator for the pairing
+ * state is the plausible one — it lands here, and docs/compat-matrix.md is the
+ * place to check first.
+ */

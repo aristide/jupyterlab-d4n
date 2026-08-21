@@ -1,0 +1,214 @@
+/* =============================================================================
+ | Data4Now JupyterLab Theme — index.css
+ | -----------------------------------------------------------------------------
+ | Entry point. Pulls in JupyterLab's base shell stylesheet, then layers our
+ | brand variables and a handful of opinionated chrome touches that can't be
+ | expressed through --jp-* tokens alone (logo lockup, sidebar gradient, etc).
+ |===========================================================================*/
+
+@import url('~@jupyterlab/apputils/style/materialcolors.css');
+@import url('~@jupyterlab/application/style/scrollbar.css');
+@import url('~@jupyterlab/apputils/style/base.css');
+@import url('~@jupyterlab/ui-components/style/base.css');
+
+@import './variables.css';
+
+
+/* =============================================================================
+ | TOP MENU BAR
+ | Replace the off-the-shelf white menubar with the Data4Now navy header so
+ | every notebook reads as a Data4Now product. Teal pillar accent on the
+ | logo edge echoes the "FOR" element in the wordmark.
+ |===========================================================================*/
+
+#jp-top-panel,
+.jp-MenuPanel {
+  background: var(--d4n-navy) !important;
+  color: var(--d4n-white);
+  border-bottom: 1px solid var(--d4n-navy-deep);
+  position: relative;
+}
+
+#jp-top-panel::after {
+  /* teal pillar — pulled from the logo's "|" between FOR and NOW */
+  content: '';
+  position: absolute;
+  left: 230px;
+  top: 8px;
+  bottom: 8px;
+  width: 2px;
+  background: var(--d4n-teal);
+  opacity: 0.9;
+}
+
+#jp-MainLogo {
+  background-image: url('./images/logo.png');
+  background-repeat: no-repeat;
+  background-position: 12px center;
+  background-size: auto 22px;
+  min-width: 220px;
+}
+
+#jp-MainLogo svg { display: none; } /* hide stock Jupyter mark */
+
+.lm-MenuBar-itemLabel {
+  font-family: var(--jp-ui-font-family);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: rgba(255, 255, 255, 0.92) !important;
+}
+
+.lm-MenuBar-item.lm-mod-active,
+.lm-MenuBar-item:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+
+/* =============================================================================
+ | LEFT / RIGHT SIDEBARS
+ |===========================================================================*/
+
+.jp-SideBar {
+  background: var(--d4n-ink);
+  color: var(--d4n-mist);
+}
+
+.jp-SideBar .lm-TabBar-tab {
+  border: none;
+  background: transparent;
+}
+
+.jp-SideBar .lm-TabBar-tab.lm-mod-current {
+  background: var(--d4n-graphite);
+  box-shadow: inset 2px 0 0 var(--d4n-teal);
+}
+
+.jp-SideBar .lm-TabBar-tabIcon svg [fill] {
+  fill: var(--d4n-mist);
+}
+
+.jp-SideBar .lm-TabBar-tab.lm-mod-current .lm-TabBar-tabIcon svg [fill] {
+  fill: var(--d4n-teal);
+}
+
+
+/* =============================================================================
+ | TAB BAR (main dock area)
+ |===========================================================================*/
+
+.lm-DockPanel-tabBar .lm-TabBar-tab {
+  font-family: var(--jp-ui-font-family);
+  font-weight: 500;
+  font-size: var(--jp-ui-font-size1);
+  border-top: 2px solid transparent;
+}
+
+.lm-DockPanel-tabBar .lm-TabBar-tab.lm-mod-current {
+  background: var(--d4n-white);
+  border-top-color: var(--d4n-teal);
+  color: var(--d4n-ink);
+}
+
+.lm-DockPanel-tabBar .lm-TabBar-tab:not(.lm-mod-current) {
+  background: var(--d4n-paper);
+  color: var(--d4n-slate);
+}
+
+
+/* =============================================================================
+ | NOTEBOOK CELL — selected / active sidebar stripe
+ | Mirrors the design system's eyebrow accent: teal on edit, navy on selected.
+ |===========================================================================*/
+
+.jp-Cell {
+  border-radius: 6px;
+}
+
+.jp-Cell.jp-mod-active.jp-mod-selected .jp-Collapser {
+  background: var(--d4n-teal) !important;
+}
+
+.jp-Cell.jp-mod-selected .jp-Collapser {
+  background: var(--d4n-navy-soft) !important;
+}
+
+.jp-InputPrompt,
+.jp-OutputPrompt {
+  font-family: var(--jp-code-font-family);
+  font-weight: 500;
+}
+
+
+/* =============================================================================
+ | BUTTONS — primary
+ |===========================================================================*/
+
+.jp-mod-styled.jp-mod-accept,
+button.jp-Button.jp-mod-accept {
+  background: var(--d4n-navy);
+  color: var(--d4n-white);
+  border: 1px solid var(--d4n-navy-deep);
+  border-radius: 6px;
+  font-family: var(--jp-ui-font-family);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.jp-mod-styled.jp-mod-accept:hover {
+  background: var(--d4n-navy-deep);
+}
+
+
+/* =============================================================================
+ | LAUNCHER — the "new tab" page
+ |===========================================================================*/
+
+.jp-Launcher-section {
+  border-bottom: 1px solid var(--jp-border-color1);
+}
+
+.jp-Launcher-sectionTitle {
+  font-family: var(--jp-ui-font-family);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--d4n-teal-deep);
+}
+
+.jp-LauncherCard {
+  border-radius: 10px;
+  border: 1px solid var(--jp-border-color1);
+  background: var(--d4n-white);
+  transition: transform 200ms cubic-bezier(0.2, 0, 0.1, 1),
+              box-shadow 200ms cubic-bezier(0.2, 0, 0.1, 1);
+}
+
+.jp-LauncherCard:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--jp-elevation-z4);
+  border-color: var(--d4n-mist);
+}
+
+
+/* =============================================================================
+ | STATUS BAR
+ |===========================================================================*/
+
+#jp-bottom-panel,
+.jp-StatusBar {
+  background: var(--d4n-navy-deep);
+  color: var(--d4n-mist);
+  font-family: var(--jp-ui-font-family);
+  font-size: 11px;
+}
+
+
+/* =============================================================================
+ | DIALOGS / NOTIFICATIONS
+ |===========================================================================*/
+
+.jp-Dialog-content {
+  border-radius: 10px;
+  box-shadow: var(--jp-elevation-z8);
+}

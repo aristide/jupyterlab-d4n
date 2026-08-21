@@ -1,0 +1,45 @@
+/* SURFACE: motion (PRD §9, A8)
+ *
+ * Upstream selectors verified against:
+ *   @jupyterlab/ui-components  4.6.3  style/spinner.css
+ *   (declared range: ^4.5.0)
+ *
+ * Every selector is mirrored in ../selectors.json (PRD §7.4(5)).
+ *
+ * WHAT "NON-ESSENTIAL" MEANS HERE
+ *
+ * The rule below zeroes transitions and animations for everything under the
+ * Data4Now scope — ours, core's, and any third-party extension's — because a
+ * user who asked the operating system to reduce motion did not ask only this
+ * package to comply.
+ *
+ * `.jp-SpinnerContent` is excluded, and the exclusion is written as a `:not()`
+ * rather than as a restatement of the spinner's animation further down. That
+ * matters: a restatement would have to name core's `load3` / `fadeIn` keyframes
+ * and pin their durations, which is a dependency on an upstream internal that
+ * nothing would catch when it changed. Excluding the element instead leaves
+ * core's own rule to apply, untouched, at whatever it says today.
+ *
+ * The spinner is exempt because its rotation is the ONLY indication that a
+ * document is still loading; freezing it turns "working" into "hung". A8 says
+ * NON-essential, and a busy indicator is the textbook essential case.
+ *
+ * Named animations that this package declares are switched off at their
+ * declaration site instead of here — see the `prefers-reduced-motion` block at
+ * the bottom of dialog.css. Keeping the reason next to the code is worth the
+ * second media query; this file covers everything nobody here declared.
+ */
+
+@media (prefers-reduced-motion: reduce) {
+  body[data-jp-theme-name^='Data4Now'],
+  body[data-jp-theme-name^='Data4Now'] *:not(.jp-SpinnerContent),
+  body[data-jp-theme-name^='Data4Now'] *:not(.jp-SpinnerContent)::before,
+  body[data-jp-theme-name^='Data4Now'] *:not(.jp-SpinnerContent)::after {
+    animation-delay: var(--d4n-motion-duration-instant);
+    animation-duration: var(--d4n-motion-duration-instant);
+    animation-iteration-count: 1;
+    transition-delay: var(--d4n-motion-duration-instant);
+    transition-duration: var(--d4n-motion-duration-instant);
+    scroll-behavior: auto;
+  }
+}

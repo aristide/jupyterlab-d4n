@@ -1,0 +1,87 @@
+# Local dev environment. From the repo root:
+#   docker compose up -d          # pull (first time) + start everything — no image build, ever
+#   docker compose logs -f jupyter
+#   docker compose down           # stop (add -v to also wipe the JS/Python caches)
+#
+# JupyterLab is served automatically at http://localhost:8890/lab — no token.
+# (Host ports are offset from the JupyterLab defaults — 8890/9997 instead of
+# 8888/9999 — so this stack can run alongside the other extension projects on
+# this host: jupyterlab-db-explorer already claims 8888/9999 and
+# jupyterlab-airflow claims 8889/9998.)
+#
+# The `jupyter` service runs a pre-built, off-the-shelf Python+Node image
+# (nikolaik/python-nodejs) unmodified — there is no Dockerfile and nothing to
+# build, locally or in CI. Everything project-specific happens at container
+# start via docker/entrypoint.sh: it (re)installs JS and Python dependencies
+# from whatever is currently on disk, then runs `jlpm watch` (frontend) and
+# `jupyter lab --autoreload` (backend) so both sides pick up source changes
+# live, no restart needed.
+#
+# This replaces the previous .devcontainer/ setup, which required VS Code and a
+# hand-built `aristidetm/labextension-dev` image.
+#
+# See docker/README.md for details.
+
+services:
+  jupyter:
+    # Pre-built Python 3.12 + Node 22 image (Debian 'buildpack-deps' base, so
+    # git/build tooling is already there) — pulled from Docker Hub, never built.
+    # https://github.com/nikolaik/docker-python-nodejs
+    image: nikolaik/python-nodejs:python3.12-nodejs22
+    # The image's default user (`pn`) can't write the root-owned named volumes
+    # below without sudo, which isn't installed; running as root sidesteps
+    # that entirely — fine for a disposable local dev container.
+    user: root
+    entrypoint: ['bash', '/workspace/docker/entrypoint.sh']
+    volumes:
+      - .:/workspace
+      # Named volumes so installs stay on the container's own Linux filesystem
+      # (avoiding host/container binary mismatches) and persist across
+      # `docker compose down` + `up`, instead of living on the bind-mounted
+      # (and, on Windows/macOS, cross-platform) workspace or the base image's
+      # writable layer.
+      #
+      # NOTE: this is a jlpm/yarn WORKSPACE monorepo. Yarn hoists every
+      # dependency into the ROOT node_modules and leaves only symlinks in
+      # packages/*/node_modules, so persisting the root directory alone covers
+      # all nine packages. Do not add per-package node_modules volumes — they
+      # would shadow the workspace symlinks yarn creates and break resolution.
+      - node_modules:/workspace/node_modules
+      # /usr/local (Python packages + their /usr/local/bin launcher scripts,
+      # plus Node/yarn, which the base image also installs under /usr/local).
+      # `jupyter labextension develop` replaces real directories under
+      # /usr/local/share/jupyter/labextensions/ with symlinks into the
+      # bind-mounted workspace; because this volume persists, those symlinks
+      # persist too and confuse the NEXT `pip install -e .`. docker/entrypoint.sh
+      # wipes this package's own install footprint before every install to keep
+      # that from happening — see the comment there.
+      - usr-local:/usr/local
+      # Optional: point HOST_SSH_DIR (in .env) at your real ~/.ssh to use
+      # your own keys for git inside the container. Defaults to an empty,
+      # gitignored folder so this is a no-op out of the box.
+      - ${HOST_SSH_DIR:-./docker/ssh-keys}:/root/.ssh:ro
+    working_dir: /workspace
+    ports:
+      # Host ports offset from the container's own 8888/9999 (see the top-of-
+      # file note) to avoid colliding with the other extension projects'
+      # jupyter services on the same host.
+      - 0.0.0.0:8890:8888
+      - 0.0.0.0:9997:9999
+    environment:
+      # Which theme the container starts on. The shipped overrides.json default
+      # is adaptive (follow the OS preference); set this to 'Data4Now Light' or
+      # 'Data4Now Dark' to pin one mode for a screenshot run or a Galata
+      # baseline without editing the committed overrides.
+      JUPYTERLAB_D4N_THEME: ${JUPYTERLAB_D4N_THEME:-}
+      # Density: 'comfortable' (default) or 'compact' (PRD §11 P5). Read by the
+      # shell-chrome plugin at activate() so a density sweep is a restart, not
+      # a rebuild.
+      JUPYTERLAB_D4N_DENSITY: ${JUPYTERLAB_D4N_DENSITY:-comfortable}
+      # Set to 0 to boot stock JupyterLab with every D4N plugin disabled — the
+      # opt-out escape hatch from PRD §15 Stage 4, and the fastest way to tell
+      # "our bug" from "upstream's bug" while developing.
+      JUPYTERLAB_D4N: ${JUPYTERLAB_D4N:-1}
+
+volumes:
+  node_modules:
+  usr-local:

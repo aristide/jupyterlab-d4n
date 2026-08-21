@@ -1,0 +1,179 @@
+/* SURFACE: main dock tab bar and dock split handles (PRD §6.1)
+ *
+ * Upstream selectors verified against:
+ *   @lumino/widgets            2.9.0  style/tabbar.css, style/dockpanel.css,
+ *                                     style/splitpanel.css
+ *   @jupyterlab/application    4.6.3  style/tabs.css, style/dockpanel.css
+ *   @jupyterlab/ui-components  4.6.3  style/tabbar.css, style/icons.css
+ *   (declared ranges: @lumino/* ^2.0.0, @jupyterlab/* ^4.5.0)
+ *
+ * Every selector is mirrored in ../selectors.json (PRD §7.4(5)).
+ *
+ * The left/right sidebar rails are also `.lm-TabBar`s but never
+ * `.lm-DockPanel-tabBar`; they live in sidebar.css. Nothing here may be written
+ * as a bare `.lm-TabBar` rule or it will leak into the rails.
+ *
+ * `--jp-private-horizontal-tab-*` drive core's geometry. They are private by
+ * name and off limits (PRD §7.4(3)), so the geometry is restated from tokens
+ * rather than redefined through them.
+ */
+
+body[data-jp-theme-name^='Data4Now'] .lm-DockPanel-tabBar,
+body[data-jp-theme-name^='Data4Now'] .lm-TabPanel-tabBar {
+  background: var(--d4n-color-surface-sunken);
+  color: var(--d4n-tab-fg);
+  font-family: var(--d4n-font-family-ui);
+  font-size: var(--d4n-tab-font-size);
+}
+
+body[data-jp-theme-name^='Data4Now'] .lm-DockPanel-tabBar .lm-TabBar-tab,
+body[data-jp-theme-name^='Data4Now'] .lm-TabPanel-tabBar .lm-TabBar-tab {
+  min-height: var(--d4n-tab-height);
+  padding: 0 var(--d4n-tab-padding-x);
+  background: var(--d4n-tab-bg);
+  color: var(--d4n-tab-fg);
+  border: var(--d4n-border-width-thin) solid var(--d4n-tab-border);
+  border-bottom: none;
+  border-top-left-radius: var(--d4n-radius-sm);
+  border-top-right-radius: var(--d4n-radius-sm);
+}
+
+/* Core's hover rule already excludes the current tab and sits at four
+ * compounds; the `:not()` is repeated here to clear it rather than to add
+ * meaning. */
+body[data-jp-theme-name^='Data4Now']
+  .lm-DockPanel-tabBar
+  .lm-TabBar-tab:hover:not(.lm-mod-current),
+body[data-jp-theme-name^='Data4Now']
+  .lm-TabPanel-tabBar
+  .lm-TabBar-tab:hover:not(.lm-mod-current) {
+  background: var(--d4n-tab-bg-hover);
+  color: var(--d4n-tab-fg-active);
+}
+
+/* `.lm-mod-current` is the current tab of ITS tab bar — every split has one. */
+body[data-jp-theme-name^='Data4Now']
+  .lm-DockPanel-tabBar
+  .lm-TabBar-tab.lm-mod-current,
+body[data-jp-theme-name^='Data4Now']
+  .lm-TabPanel-tabBar
+  .lm-TabBar-tab.lm-mod-current {
+  background: var(--d4n-tab-bg-active);
+  color: var(--d4n-tab-fg-active);
+}
+
+/* `.jp-mod-current` is the application-level current tab — exactly one exists
+ * across every split, which is what makes it the right hook for the accent
+ * indicator. Core already positions this pseudo-element; only its thickness and
+ * colour are ours. */
+body[data-jp-theme-name^='Data4Now']
+  .lm-DockPanel-tabBar
+  .lm-TabBar-tab.jp-mod-current::before {
+  height: var(--d4n-tab-indicator-width);
+  background: var(--d4n-tab-indicator);
+}
+
+/* Dirty state. Core swaps the close glyph for a filled dot by hiding
+ * `.jp-icon3` and revealing `.jp-icon-busy` whenever the tab is dirty and the
+ * close affordance is not hovered — so hovering still offers "close", and the
+ * dot is only a rest-state signal. That behaviour is kept; only the fill is
+ * ours. The dot's 6px geometry (`--d4n-tab-dirty-dot-size`) lives inside the
+ * busy icon's SVG and is resized with the rest of the icon set
+ * (TODO.md P5-01). */
+body[data-jp-theme-name^='Data4Now']
+  .lm-DockPanel-tabBar
+  .lm-TabBar-tab.lm-mod-closable.jp-mod-dirty
+  > .lm-TabBar-tabCloseIcon
+  > :not(:hover)
+  > .jp-icon-busy[fill] {
+  fill: var(--d4n-tab-dirty-dot);
+}
+
+body[data-jp-theme-name^='Data4Now']
+  .lm-DockPanel-tabBar
+  .lm-TabBar-tabCloseIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--d4n-toolbar-icon-size);
+  height: var(--d4n-toolbar-icon-size);
+  margin-left: var(--d4n-space-1);
+  border-radius: var(--d4n-radius-sm);
+}
+
+body[data-jp-theme-name^='Data4Now']
+  .lm-DockPanel-tabBar
+  .lm-TabBar-tabCloseIcon:hover {
+  background: var(--d4n-color-surface-active);
+}
+
+body[data-jp-theme-name^='Data4Now'] .lm-DockPanel-tabBar .lm-TabBar-tabLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The drag ghost and the drop-zone overlay (`.lm-mod-drag-image`,
+ * `.lm-DockPanel-overlay`) are their own §6.1 row and still carry core's
+ * hardcoded blue; they are restyled with the rest of the drag affordances
+ * (TODO.md P2-05). */
+
+/* SPLIT HANDLES — 8px hit area, 1px visual line.
+ *
+ * Lumino sizes the handle itself from the layout's spacing, then stretches a
+ * `::after` pseudo-element with an 8px minimum across it purely as a hit
+ * target. That split is exactly the spec, so the hit target is restated from
+ * the token (so it tracks the design rather than Lumino's default) and the
+ * visible line is drawn as a separate `::before`, which upstream does not use.
+ * The handle carries an inline `position: absolute` from `SplitLayout` /
+ * `DockLayout`, so both pseudo-elements have a containing block. */
+body[data-jp-theme-name^='Data4Now']
+  .lm-SplitPanel[data-orientation='horizontal']
+  > .lm-SplitPanel-handle::after,
+body[data-jp-theme-name^='Data4Now']
+  .lm-DockPanel-handle[data-orientation='horizontal']::after {
+  min-width: var(--d4n-tab-split-handle-hit);
+}
+
+body[data-jp-theme-name^='Data4Now']
+  .lm-SplitPanel[data-orientation='vertical']
+  > .lm-SplitPanel-handle::after,
+body[data-jp-theme-name^='Data4Now']
+  .lm-DockPanel-handle[data-orientation='vertical']::after {
+  min-height: var(--d4n-tab-split-handle-hit);
+}
+
+body[data-jp-theme-name^='Data4Now']
+  .lm-SplitPanel[data-orientation='horizontal']
+  > .lm-SplitPanel-handle::before,
+body[data-jp-theme-name^='Data4Now']
+  .lm-DockPanel-handle[data-orientation='horizontal']::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: var(--d4n-tab-split-handle-visual);
+  background: var(--d4n-color-border-subtle);
+  transform: translateX(-50%);
+}
+
+body[data-jp-theme-name^='Data4Now']
+  .lm-SplitPanel[data-orientation='vertical']
+  > .lm-SplitPanel-handle::before,
+body[data-jp-theme-name^='Data4Now']
+  .lm-DockPanel-handle[data-orientation='vertical']::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 0;
+  left: 0;
+  height: var(--d4n-tab-split-handle-visual);
+  background: var(--d4n-color-border-subtle);
+  transform: translateY(-50%);
+}
+
+body[data-jp-theme-name^='Data4Now'] .lm-SplitPanel-handle:hover::before,
+body[data-jp-theme-name^='Data4Now'] .lm-DockPanel-handle:hover::before {
+  background: var(--d4n-color-action-default);
+}

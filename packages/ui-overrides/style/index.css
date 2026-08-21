@@ -1,0 +1,40 @@
+/* @d4n/ui-overrides — the one stylesheet that is always in the document.
+ *
+ * It carries two things that must not be split apart:
+ *
+ *   1. The token surface (all four tiers, both modes). It ships HERE rather
+ *      than from the theme packages because `IThemeManager.loadCSS()` fetches
+ *      on every switch, and a fetch between unload and load is the unstyled
+ *      frame G4 forbids. With the tokens already resident, switching mode is an
+ *      attribute swap on <body> — a repaint, not a fetch (PRD §5.3).
+ *
+ *   2. The structural rules that consume those tokens, one file per surface,
+ *      each scoped under `body[data-jp-theme-name^='Data4Now']` so selecting a
+ *      stock JupyterLab theme returns stock JupyterLab (PRD AC10).
+ *
+ * The token import is a RELATIVE path across the monorepo, not `~@d4n/tokens`
+ * or a bare specifier. Both of those hand resolution to css-loader's module
+ * lookup, which depends on hoisting layout and on whether the workspace symlink
+ * survived the install. A relative path inside one build is deterministic, and
+ * it fails loudly at build time rather than silently shipping a stylesheet with
+ * no custom properties in it.
+ */
+
+@import url('../../tokens/style/index.css');
+
+/* Surfaces. Order is load-bearing only where two rules tie on specificity:
+ * `focus.css` and `motion.css` come last because both must be able to override
+ * a surface rule (a focus ring that a surface rule painted over, an animation a
+ * surface rule declared) without reaching for `!important`. */
+@import url('./surfaces/top-panel.css');
+@import url('./surfaces/menu-bar.css');
+@import url('./surfaces/menu.css');
+@import url('./surfaces/tab-bar.css');
+@import url('./surfaces/sidebar.css');
+@import url('./surfaces/scrollbars.css');
+@import url('./surfaces/dialog.css');
+@import url('./surfaces/notebook.css');
+@import url('./surfaces/inputs.css');
+@import url('./surfaces/buttons.css');
+@import url('./surfaces/focus.css');
+@import url('./surfaces/motion.css');

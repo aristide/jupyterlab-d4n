@@ -1,0 +1,24 @@
+/* jupyterlab-execute-time — `jupyterlab-execute-time` 3.1.x–3.2.x.
+ *
+ * WHAT IT HARDCODES: nothing. §10.4 files this as "token mapping", and the
+ * mapping turns out to be free — the extension's stylesheet already reads
+ * `--jp-ui-font-color2`, `--jp-ui-font-size0` and `--jp-layout-color*`, all of
+ * which the Tier-4 adapter feeds. Recording that is the point of this file;
+ * the next person should not have to re-derive it.
+ *
+ * What is left is typographic, not chromatic. The timestamp is a live value
+ * that rewrites itself while a cell runs, and in a proportional face the digits
+ * change width on every tick, so the whole label shifts under the cursor. Two
+ * declarations fix it.
+ *
+ * CONFIDENCE: medium on `.execute-time`. It is the class the extension has
+ * used since 2.x, but it was not verified against a running install. The rules
+ * are cosmetic — if the selector is stale, nothing breaks, the timestamp just
+ * jitters as it does today.
+ */
+
+body[data-jp-theme-name^='Data4Now'] .execute-time {
+  font-family: var(--d4n-font-family-ui);
+  font-size: var(--d4n-font-size-ui-xs);
+  font-variant-numeric: tabular-nums;
+}

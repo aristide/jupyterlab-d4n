@@ -1,0 +1,59 @@
+/* SURFACE: top panel (PRD §6.1)
+ *
+ * Upstream selectors verified against:
+ *   @jupyterlab/application  4.6.3  style/core.css
+ *   (declared range: ^4.5.0)
+ *
+ * Ids used here are shell slots, not markup details: `#jp-top-panel` and
+ * `#jp-menu-panel` are assigned by `LabShell`, `#jp-MainLogo` by
+ * `@jupyterlab/application-extension:logo`. Every selector is mirrored in
+ * ../selectors.json (PRD §7.4(5)).
+ *
+ * P1 scope: height, background, bottom border, logo slot spacing. The
+ * right-side action cluster and the 2px teal pillar between the logo and the
+ * menu items are net-new markup and belong to the shell rework (TODO.md P2-01).
+ *
+ * The bar is NAVY IN BOTH MODES (docs/decisions.md D-007), so --d4n-top-panel-*
+ * resolves to chrome tokens rather than to the surface ramp, and the logo is
+ * always the light-letterform asset.
+ */
+
+/* Like the sidebar rail, the top panel is brand chrome rather than application
+ * surface: `--d4n-color-chrome-top-panel-*` is dark in BOTH modes. Setting the
+ * foreground here matters as much as the background — inherited, it is what
+ * keeps anything a third-party plugin drops into the panel legible against a
+ * plate that does not follow the light/dark switch. */
+body[data-jp-theme-name^='Data4Now'] #jp-top-panel {
+  min-height: var(--d4n-top-panel-height);
+  background: var(--d4n-top-panel-bg);
+  color: var(--d4n-top-panel-fg);
+  border-bottom: var(--d4n-border-width-thin) solid var(--d4n-top-panel-border);
+}
+
+/* The menu panel is a child of the top panel and must not draw a second rule
+ * across the same edge; it only needs to agree on height and surface. Core
+ * re-adds a bottom border here in single-document mode, where the top panel
+ * drops its own — that swap is correct and deliberately left alone. */
+body[data-jp-theme-name^='Data4Now'] #jp-menu-panel {
+  min-height: var(--d4n-top-panel-height);
+  background: var(--d4n-top-panel-bg);
+}
+
+/* `#jp-top-panel` is a CSS flex row with the default `align-items: stretch`,
+ * so the logo slot is already full-bar height; it centres its own mark rather
+ * than the panel centring its children — changing the panel's alignment would
+ * stop the menu bar filling the bar. */
+/* stylelint-disable selector-id-pattern -- `jp-MainLogo` is the id
+ * `@jupyterlab/application-extension:logo` assigns to the shell slot. It is not
+ * kebab-case and it is not ours to rename. */
+body[data-jp-theme-name^='Data4Now'] #jp-MainLogo {
+  display: flex;
+  align-items: center;
+  padding: 0 var(--d4n-top-panel-logo-inset);
+}
+
+body[data-jp-theme-name^='Data4Now'] #jp-MainLogo svg {
+  height: var(--d4n-top-panel-logo-height);
+  width: auto;
+}
+/* stylelint-enable selector-id-pattern */

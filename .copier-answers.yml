@@ -1,0 +1,15 @@
+# Changes here will be overwritten by Copier; NEVER EDIT MANUALLY
+_commit: v4.5.2
+_src_path: https://github.com/jupyterlab/extension-template
+author_email: platform@data4now.org
+author_name: Data4Now
+has_ai_rules: false
+has_binder: false
+has_settings: true
+kind: frontend-and-server
+labextension_name: jupyterlab-d4n
+project_short_description: Data4Now JupyterLab 4 extension
+python_name: jupyterlab_d4n
+repository: https://github.com/aristide/jupyterlab-d4n
+test: false
+

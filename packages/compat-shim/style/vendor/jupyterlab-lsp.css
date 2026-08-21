@@ -1,0 +1,113 @@
+/* jupyterlab-lsp — `@jupyter-lsp/jupyterlab-lsp` 5.0.x–5.1.x.
+ *
+ * WHAT IT HARDCODES
+ * -----------------
+ * LSP 5 renders diagnostics through `@codemirror/lint`, and that is where the
+ * literals are. `@codemirror/lint`'s base theme paints squiggly underlines as
+ * data-URI SVGs with baked stroke colours (`#d11` for errors, `orange` for
+ * warnings, `#66f` for info) and gives the lint tooltip and panel a
+ * `border-left` in the same fixed colours. None of it reads a CSS variable, so
+ * none of it responds to a theme — in dark mode the error squiggle is a red we
+ * never chose sitting on a canvas it was never contrast-checked against.
+ *
+ * The fix for the squiggle is `text-decoration: underline wavy <token>`, which
+ * is what the data URI was emulating in the first place. It retints, it scales
+ * with the font, and it costs one declaration.
+ *
+ * CONFIDENCE
+ * ----------
+ * `.cm-lintRange-*`, `.cm-diagnostic*`, `.cm-tooltip-lint`, `.cm-panel-lint`:
+ * high — these are `@codemirror/lint` class names, stable across CM6 and not
+ * LSP's to rename.
+ *
+ * `.lsp-diagnostics-listing` and `.lsp-statusbar-item`: medium — LSP's own
+ * class names, taken from its published stylesheets and not verified against a
+ * running install. Kept to two selectors for that reason. The rest of LSP's
+ * surface (hover boxes, signature help, the completer) reads `--jp-*` and is
+ * already covered by the Tier-4 adapter; nothing is added here for surfaces
+ * that do not need it.
+ */
+
+/* ---- Diagnostic underlines ---- */
+
+body[data-jp-theme-name^='Data4Now'] .cm-lintRange {
+  /* Kill the baked SVG for every severity in one place, so a severity we do
+   * not enumerate below degrades to "no underline" rather than to the stock
+   * red-on-anything. */
+  background-image: none;
+  text-decoration-skip-ink: none;
+  text-decoration-thickness: from-font;
+}
+
+body[data-jp-theme-name^='Data4Now'] .cm-lintRange-error {
+  text-decoration: underline wavy var(--d4n-color-danger-default);
+}
+
+body[data-jp-theme-name^='Data4Now'] .cm-lintRange-warning {
+  text-decoration: underline wavy var(--d4n-color-warning-default);
+}
+
+body[data-jp-theme-name^='Data4Now'] .cm-lintRange-info {
+  text-decoration: underline wavy var(--d4n-color-info-default);
+}
+
+body[data-jp-theme-name^='Data4Now'] .cm-lintRange-hint {
+  text-decoration: underline dotted var(--d4n-color-text-muted);
+}
+
+/* ---- Lint tooltip and panel ---- */
+
+body[data-jp-theme-name^='Data4Now'] .cm-tooltip-lint {
+  background-color: var(--d4n-color-surface-overlay);
+  border: var(--d4n-border-width-thin) solid var(--d4n-color-border-subtle);
+  border-radius: var(--d4n-radius-md);
+  box-shadow: var(--d4n-elevation-3);
+  color: var(--d4n-color-text-primary);
+}
+
+body[data-jp-theme-name^='Data4Now'] .cm-diagnostic {
+  font-family: var(--d4n-font-family-ui);
+  font-size: var(--d4n-font-size-ui-sm);
+  padding: var(--d4n-space-1) var(--d4n-space-2);
+}
+
+body[data-jp-theme-name^='Data4Now'] .cm-diagnostic-error {
+  border-left-color: var(--d4n-color-danger-default);
+}
+
+body[data-jp-theme-name^='Data4Now'] .cm-diagnostic-warning {
+  border-left-color: var(--d4n-color-warning-default);
+}
+
+body[data-jp-theme-name^='Data4Now'] .cm-diagnostic-info {
+  border-left-color: var(--d4n-color-info-default);
+}
+
+/* The lint panel's selected row is keyboard-reachable, so it needs a real
+ * selected surface rather than CM's fixed light-blue. */
+body[data-jp-theme-name^='Data4Now'] .cm-panel.cm-panel-lint {
+  background-color: var(--d4n-color-surface-raised);
+  border-top: var(--d4n-border-width-thin) solid var(--d4n-color-border-subtle);
+}
+
+body[data-jp-theme-name^='Data4Now']
+  .cm-panel.cm-panel-lint
+  ul
+  [aria-selected='true'] {
+  background-color: var(--d4n-color-surface-selected);
+  color: var(--d4n-color-text-primary);
+}
+
+/* ---- LSP's own chrome ---- */
+
+body[data-jp-theme-name^='Data4Now'] .lsp-diagnostics-listing {
+  background-color: var(--d4n-color-grid-background);
+  color: var(--d4n-color-grid-text);
+  font-family: var(--d4n-font-family-ui);
+  font-size: var(--d4n-font-size-ui-sm);
+}
+
+body[data-jp-theme-name^='Data4Now'] .lsp-statusbar-item {
+  color: var(--d4n-status-bar-fg);
+  font-size: var(--d4n-status-bar-font-size);
+}

@@ -1,0 +1,206 @@
+/* SURFACE: buttons (PRD §8.1)
+ *
+ * Upstream selectors verified against:
+ *   @jupyterlab/application    4.6.3  style/buttons.css
+ *   @jupyterlab/apputils       4.7.3  style/dialog.css
+ *   @jupyterlab/ui-components  4.6.3  style/base.css, style/styling.css,
+ *                                     style/toolbar.css
+ *   (declared range: ^4.5.0)
+ *
+ * Every selector is mirrored in ../selectors.json (PRD §7.4(5)).
+ *
+ * HOW THE FOUR VARIANTS MAP ONTO JUPYTERLAB'S THREE CLASSES
+ *
+ *   primary   -> .jp-mod-accept   the affirmative action of a dialog
+ *   secondary -> .jp-mod-reject   the dismissive action
+ *   danger    -> .jp-mod-warn     destructive confirmation
+ *   ghost     -> .jp-mod-styled with none of the above, plus toolbar buttons
+ *
+ * That mapping is the whole reason the variants are not invented as new class
+ * names: `Dialog` decides which class a button gets from `Dialog.IButton`, so
+ * anything this file names itself would never be applied by core dialogs.
+ *
+ * `--jp-accept-color-*`, `--jp-reject-color-*` and `--jp-warn-color-*` are the
+ * variables core reads. They are intentionally NOT in the Tier-4 adapter: each
+ * has a hardcoded Material fallback baked into core's `var()` call, so mapping
+ * them still leaves the geometry (32px line-height, 0.8px letter-spacing,
+ * square corners) untouched. The variants are stated as real declarations here
+ * instead, once, with the geometry.
+ */
+
+body[data-jp-theme-name^='Data4Now'] button.jp-mod-styled {
+  height: var(--d4n-button-height);
+  padding: 0 var(--d4n-button-padding-x);
+  color: var(--d4n-button-secondary-fg);
+  font-family: var(--d4n-font-family-ui);
+  font-size: var(--d4n-button-font-size);
+  font-weight: var(--d4n-button-font-weight);
+  line-height: var(--d4n-button-height);
+  letter-spacing: var(--d4n-font-letter-spacing-normal);
+  border: 0;
+  border-radius: var(--d4n-button-radius);
+  cursor: pointer;
+  transition: background-color var(--d4n-button-transition)
+    var(--d4n-motion-easing-out);
+}
+
+/* Ghost: everything that is `.jp-mod-styled` and claims no role.
+ *
+ * The selector-list form of `:not()` is what stylelint-config-standard
+ * requires; it also takes the specificity of its single most specific argument
+ * rather than adding one per exclusion, which is the reason the role variants
+ * below still outrank this rule despite being shorter. */
+body[data-jp-theme-name^='Data4Now']
+  button.jp-mod-styled:not(.jp-mod-accept, .jp-mod-reject, .jp-mod-warn) {
+  background: var(--d4n-button-ghost-bg);
+  color: var(--d4n-button-ghost-fg);
+}
+
+body[data-jp-theme-name^='Data4Now']
+  button.jp-mod-styled:not(.jp-mod-accept, .jp-mod-reject, .jp-mod-warn):hover {
+  background: var(--d4n-button-ghost-bg-hover);
+}
+
+body[data-jp-theme-name^='Data4Now']
+  button.jp-mod-styled:not(
+    .jp-mod-accept,
+    .jp-mod-reject,
+    .jp-mod-warn
+  ):active {
+  background: var(--d4n-button-ghost-bg-active);
+}
+
+body[data-jp-theme-name^='Data4Now'] button.jp-mod-styled.jp-mod-accept {
+  background: var(--d4n-button-primary-bg);
+  color: var(--d4n-button-primary-fg);
+  border: 0;
+}
+
+body[data-jp-theme-name^='Data4Now'] button.jp-mod-styled.jp-mod-accept:hover {
+  background: var(--d4n-button-primary-bg-hover);
+}
+
+body[data-jp-theme-name^='Data4Now'] button.jp-mod-styled.jp-mod-accept:active {
+  background: var(--d4n-button-primary-bg-active);
+}
+
+/* Secondary is the one variant with a border, so its box has to lose a pixel of
+ * padding on each side to stay the same 32px as the others. */
+body[data-jp-theme-name^='Data4Now'] button.jp-mod-styled.jp-mod-reject {
+  background: var(--d4n-button-secondary-bg);
+  color: var(--d4n-button-secondary-fg);
+  border: var(--d4n-border-width-thin) solid var(--d4n-button-secondary-border);
+  box-sizing: border-box;
+}
+
+body[data-jp-theme-name^='Data4Now'] button.jp-mod-styled.jp-mod-reject:hover {
+  background: var(--d4n-button-secondary-bg-hover);
+}
+
+body[data-jp-theme-name^='Data4Now'] button.jp-mod-styled.jp-mod-reject:active {
+  background: var(--d4n-button-secondary-bg-active);
+}
+
+body[data-jp-theme-name^='Data4Now'] button.jp-mod-styled.jp-mod-warn {
+  background: var(--d4n-button-danger-bg);
+  color: var(--d4n-button-danger-fg);
+  border: 0;
+}
+
+body[data-jp-theme-name^='Data4Now'] button.jp-mod-styled.jp-mod-warn:hover {
+  background: var(--d4n-button-danger-bg-hover);
+}
+
+body[data-jp-theme-name^='Data4Now'] button.jp-mod-styled.jp-mod-warn:active {
+  background: var(--d4n-button-danger-bg-active);
+}
+
+/* Disabled loses the transition as well as the opacity: a disabled control that
+ * still animates on hover reads as interactive. Core sets 0.6 opacity on
+ * dialog buttons specifically; this rule outranks it so every button dims by
+ * the same amount. */
+body[data-jp-theme-name^='Data4Now'] button.jp-mod-styled:disabled,
+body[data-jp-theme-name^='Data4Now']
+  button.jp-mod-styled[aria-disabled='true'] {
+  opacity: var(--d4n-button-disabled-opacity);
+  cursor: not-allowed;
+  transition: none;
+}
+
+/* Icon-only. `aria-label` is mandatory on these and is core's responsibility;
+ * what is ours is that the target stays square and at least as large as the
+ * text buttons, so the hit area does not shrink with the glyph. */
+body[data-jp-theme-name^='Data4Now'] button.jp-Dialog-close-button {
+  width: var(--d4n-button-height);
+  height: var(--d4n-button-height);
+  padding: 0;
+  border-radius: var(--d4n-button-radius);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-Button.jp-mod-minimal {
+  background: var(--d4n-button-ghost-bg);
+  color: var(--d4n-button-ghost-fg);
+  border-radius: var(--d4n-button-radius);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-Button.jp-mod-minimal:hover {
+  background-color: var(--d4n-button-ghost-bg-hover);
+}
+
+/* TOOLBAR VARIANT
+ *
+ * `ToolbarButtonComponent` renders `<jp-button appearance="stealth">` from
+ * `@jupyter/react-components` — a custom element whose real control lives in a
+ * shadow root. A `background` on the host paints BEHIND that control and is
+ * invisible. `::part(control)` is the element's declared styling hook and is
+ * what core itself uses for the focus ring, so it is what is used here.
+ *
+ * The bare `button.jp-ToolbarButtonComponent` rules that follow cover the
+ * plain-DOM path: core marks it deprecated, but third-party toolbar items still
+ * render it and it is cheaper to style than to shim (§10.4).
+ */
+body[data-jp-theme-name^='Data4Now'] .jp-ToolbarButtonComponent::part(control) {
+  min-width: var(--d4n-toolbar-button-size);
+  height: var(--d4n-toolbar-button-size);
+  background: var(--d4n-button-ghost-bg);
+  border-radius: var(--d4n-toolbar-button-radius);
+}
+
+body[data-jp-theme-name^='Data4Now']
+  .jp-ToolbarButtonComponent:hover::part(control) {
+  background: var(--d4n-button-ghost-bg-hover);
+}
+
+body[data-jp-theme-name^='Data4Now']
+  .jp-ToolbarButtonComponent:active::part(control) {
+  background: var(--d4n-button-ghost-bg-active);
+}
+
+/* A pressed toolbar toggle uses the toolbar's own active surface rather than
+ * the ghost active state — it is a persistent on-state, not a press (§8.8.2
+ * makes the same point about the search filter toggles). */
+body[data-jp-theme-name^='Data4Now']
+  .jp-ToolbarButtonComponent[aria-pressed='true']::part(control) {
+  background: var(--d4n-toolbar-bg-active);
+}
+
+body[data-jp-theme-name^='Data4Now'] button.jp-ToolbarButtonComponent {
+  min-width: var(--d4n-toolbar-button-size);
+  height: var(--d4n-toolbar-button-size);
+  background: var(--d4n-button-ghost-bg);
+  border-radius: var(--d4n-toolbar-button-radius);
+}
+
+body[data-jp-theme-name^='Data4Now'] button.jp-ToolbarButtonComponent:hover {
+  background: var(--d4n-button-ghost-bg-hover);
+}
+
+/* The toolbar bar itself — background, border, shadow, height — is entirely
+ * Tier-4 (`--jp-toolbar-background`, `--jp-toolbar-border-color`,
+ * `--jp-toolbar-box-shadow`, `--jp-toolbar-micro-height`) and is deliberately
+ * not restated here. The one thing the adapter cannot carry is the spacing
+ * between items, because `<jp-toolbar>` lays its children out inside a shadow
+ * root and exposes `--toolbar-item-gap` as the only handle. */
+body[data-jp-theme-name^='Data4Now'] .jp-Toolbar {
+  --toolbar-item-gap: var(--d4n-toolbar-gap);
+}

@@ -1,0 +1,238 @@
+/* SURFACE: menu dropdowns, submenus and context menus (PRD §6.1, §8.4.3-§8.4.4)
+ *
+ * Upstream selectors verified against:
+ *   @lumino/widgets          2.9.0  style/menu.css
+ *   @jupyterlab/application  4.6.3  style/menus.css
+ *   (declared ranges: @lumino/* ^2.0.0, @jupyterlab/* ^4.5.0)
+ *
+ * Every selector is mirrored in ../selectors.json (PRD §7.4(5)).
+ *
+ * THE THREE STRUCTURAL FACTS THIS FILE IS BUILT AROUND (PRD §8.4.1)
+ *
+ * 1. A `.lm-Menu` is portalled into `document.body`, not into the shell. That
+ *    is exactly why the scope in this project is `body[data-jp-theme-name^=…]`
+ *    and not `.jp-LabShell` — a shell-scoped rule misses every menu in the
+ *    application and they render stock while their surroundings do not.
+ *
+ * 2. `.lm-mod-active` — not `:hover`, not `:focus` — is the keyboard highlight.
+ *    Lumino owns the active index. Every hover rule below is written as one
+ *    selector list with its `.lm-mod-active` twin so the two treatments are
+ *    literally the same declaration block and cannot drift (M1, R12).
+ *
+ * 3. Items are a four-column grid whose widths are FIXED, not content-derived,
+ *    so columns line up across items that have an icon and no shortcut, a
+ *    shortcut and no icon, neither, or a submenu (M4). Lumino ships the item as
+ *    a `display: table-row`, which aligns columns but will not take a height, a
+ *    radius or a padding; the rows are re-declared as grids of identical
+ *    template instead. Identical template + identical item width = identical
+ *    column positions, which is what the table was buying us.
+ */
+
+/* `.lm-MenuBar-menu.jp-ThemedContainer` is listed alongside `.lm-Menu` because
+ * core gives menus opened from the menu bar a four-layer gradient background to
+ * fake scroll shadows, at a specificity that beats a bare `.lm-Menu` rule. The
+ * gradient is built from `--jp-layout-color0` (canvas), not the overlay
+ * surface, so it cannot be left in place; `background-image: none` removes it
+ * and the token surface applies uniformly to every menu.
+ *
+ * No `max-height` is set: Lumino clamps the node to the available viewport
+ * space when it opens, and `.lm-Menu { overflow-y: auto }` upstream does the
+ * rest. Declaring our own would fight that calculation and is how the last item
+ * of a long menu ends up clipped (M6). */
+body[data-jp-theme-name^='Data4Now'] .lm-Menu,
+body[data-jp-theme-name^='Data4Now'] .lm-MenuBar-menu.jp-ThemedContainer {
+  min-width: var(--d4n-menu-min-width);
+  max-width: var(--d4n-menu-max-width);
+  padding: var(--d4n-menu-padding-y) 0;
+  background-color: var(--d4n-menu-surface);
+  background-image: none;
+  color: var(--d4n-menu-item-fg);
+  font-family: var(--d4n-font-family-ui);
+  font-size: var(--d4n-font-size-ui-sm);
+  font-weight: var(--d4n-font-weight-regular);
+  border: var(--d4n-border-width-thin) solid var(--d4n-menu-border);
+  border-radius: var(--d4n-menu-radius);
+  box-shadow: var(--d4n-menu-elevation);
+}
+
+/* Context menus and submenus are the same component with a narrower floor.
+ * Both lack `.lm-MenuBar-menu`, which is the only class that distinguishes a
+ * menu-bar dropdown — catching submenus here as well is intended, not a
+ * side effect: a submenu of a File menu should not inherit the 200px floor of
+ * the menu it hangs off. */
+body[data-jp-theme-name^='Data4Now'] .lm-Menu:not(.lm-MenuBar-menu) {
+  min-width: var(--d4n-menu-min-width-context);
+}
+
+body[data-jp-theme-name^='Data4Now'] .lm-Menu-content {
+  display: block;
+}
+
+/* The four-column grid. Widths in order: icon, label, shortcut, chevron.
+ *
+ * - Icon and chevron are fixed. The chevron column is derived from the glyph
+ *   size plus one space unit rather than written as 16px, so it tracks the
+ *   token if the chevron ever changes size.
+ * - The label is `minmax(0, 1fr)`; the zero minimum is what lets it actually
+ *   truncate instead of forcing the menu past `max-width`.
+ * - The shortcut column keeps its 64px floor even in menus where no item has a
+ *   shortcut. That is deliberate (PRD §8.4.3: fixed, not content-derived) —
+ *   content-derived widths are what make a menu's columns jump as items are
+ *   enabled and disabled.
+ *
+ * `min-height`/`max-height` are both set because core pins both to 24px, and
+ * leaving `max-height` alone silently caps the 28px comfortable row. */
+body[data-jp-theme-name^='Data4Now'] .lm-Menu-item {
+  display: grid;
+  grid-template-columns:
+    var(--d4n-menu-icon-column-width)
+    minmax(0, 1fr)
+    minmax(var(--d4n-menu-shortcut-column-min-width), max-content)
+    calc(var(--d4n-menu-chevron-size) + var(--d4n-space-1));
+  column-gap: var(--d4n-space-2);
+  align-items: center;
+  box-sizing: border-box;
+  min-height: var(--d4n-menu-item-height);
+  max-height: var(--d4n-menu-item-height);
+  padding: 0 var(--d4n-menu-item-padding-x);
+  color: var(--d4n-menu-item-fg);
+  line-height: var(--d4n-menu-item-height);
+  cursor: pointer;
+}
+
+body[data-jp-theme-name^='Data4Now'] .lm-Menu-itemIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  margin: 0;
+  padding: 0;
+}
+
+body[data-jp-theme-name^='Data4Now'] .lm-Menu-itemLabel {
+  display: block;
+  min-width: 0;
+  padding: 0;
+  overflow: hidden;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+body[data-jp-theme-name^='Data4Now'] .lm-Menu-itemMnemonic {
+  text-decoration: underline;
+}
+
+body[data-jp-theme-name^='Data4Now'] .lm-Menu-itemShortcut {
+  display: block;
+  justify-self: end;
+  padding: 0;
+  color: var(--d4n-menu-shortcut-fg);
+  font-family: var(--d4n-font-family-mono);
+  font-size: var(--d4n-menu-shortcut-font-size);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+body[data-jp-theme-name^='Data4Now'] .lm-Menu-itemSubmenuIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  padding: 0;
+  color: var(--d4n-menu-chevron-fg);
+  font-size: var(--d4n-menu-chevron-size);
+}
+
+/* Hover and keyboard-active: ONE rule, two selectors. Do not split this into
+ * two blocks — see the header, M1 and R12. `:not(.lm-mod-disabled)` is what
+ * gives disabled items "no hover response" without a second override. */
+body[data-jp-theme-name^='Data4Now'] .lm-Menu-item:hover:not(.lm-mod-disabled),
+body[data-jp-theme-name^='Data4Now']
+  .lm-Menu-item.lm-mod-active:not(.lm-mod-disabled) {
+  background: var(--d4n-menu-item-bg-hover);
+  color: var(--d4n-menu-item-fg);
+}
+
+/* Same pairing for the chevron. A submenu whose parent is open carries
+ * `.lm-mod-active` on that parent, so the open state and the hover state are
+ * the same rule here too, which is what §8.4.3 asks for. */
+body[data-jp-theme-name^='Data4Now']
+  .lm-Menu-item:hover:not(.lm-mod-disabled)
+  > .lm-Menu-itemSubmenuIcon,
+body[data-jp-theme-name^='Data4Now']
+  .lm-Menu-item.lm-mod-active:not(.lm-mod-disabled)
+  > .lm-Menu-itemSubmenuIcon {
+  color: var(--d4n-color-text-primary);
+}
+
+body[data-jp-theme-name^='Data4Now'] .lm-Menu-item.lm-mod-disabled {
+  color: var(--d4n-menu-item-fg-disabled);
+  opacity: var(--d4n-menu-item-disabled-opacity);
+  cursor: default;
+}
+
+/* The item already carries the 40% opacity, so core's separate 40% on the icon
+ * and the chevron would compound to 16% and make them invisible. The submenu
+ * selector repeats core's `[data-type='submenu']` compound purely to clear its
+ * specificity — without it the two rules tie and the outcome depends on
+ * stylesheet insertion order. */
+body[data-jp-theme-name^='Data4Now']
+  .lm-Menu-item.lm-mod-disabled
+  > .lm-Menu-itemIcon,
+body[data-jp-theme-name^='Data4Now']
+  .lm-Menu-item[data-type='submenu'].lm-mod-disabled
+  > .lm-Menu-itemSubmenuIcon {
+  opacity: 1;
+}
+
+/* Toggled state carries THREE signals, only one of which is colour (A7, M5):
+ * a check glyph in the icon column, a heavier label, and `text.strong`.
+ *
+ * The glyph is unconditional rather than gated on `.lm-Menu-itemIcon:empty`,
+ * because an icon cell that Lumino leaves childless is not reliably `:empty`
+ * across renderers — `MenuSvg` may insert an element — and a toggled item that
+ * silently loses its only non-colour signal fails A7. The cost is that a
+ * toggled item which ALSO has an icon shows both; that combination is rare in
+ * JupyterLab's command set and is the safe side to be wrong on. */
+body[data-jp-theme-name^='Data4Now'] .lm-Menu-item.lm-mod-toggled {
+  color: var(--d4n-menu-item-fg-toggled);
+  font-weight: var(--d4n-font-weight-medium);
+}
+
+body[data-jp-theme-name^='Data4Now']
+  .lm-Menu-item.lm-mod-toggled
+  > .lm-Menu-itemIcon::before {
+  content: '✓';
+  color: var(--d4n-color-action-default);
+  font-size: var(--d4n-font-size-ui-sm);
+  line-height: 1;
+}
+
+/* Separator. Core renders it as four zero-height cells each drawing their own
+ * `::after` border, which is a continuous line only as long as the columns
+ * touch. Under the grid above they do not, so the item itself becomes the line
+ * and its cells are dropped. Inset one space unit from both edges, one space
+ * unit of air above and below. */
+body[data-jp-theme-name^='Data4Now'] .lm-Menu-item[data-type='separator'] {
+  display: block;
+  min-height: 0;
+  max-height: none;
+  height: var(--d4n-border-width-thin);
+  margin: var(--d4n-space-1) var(--d4n-space-2);
+  padding: 0;
+  background: var(--d4n-menu-separator);
+}
+
+body[data-jp-theme-name^='Data4Now']
+  .lm-Menu-item[data-type='separator']
+  > div {
+  display: none;
+}
+
+/* Motion: none on open, by design. Menus are opened hundreds of times a day and
+ * a 120ms entry reads as lag, not polish (PRD §8.4.3). The submenu open delay
+ * is Lumino's `Menu.timeout`, a JS constant — `--d4n-motion-submenu-delay` is
+ * the value the shell plugin feeds it (TODO.md P2-03), not
+ * something this file can express. */

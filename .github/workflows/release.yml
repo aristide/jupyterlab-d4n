@@ -1,0 +1,111 @@
+name: "Release"
+on:
+  workflow_dispatch:
+
+jobs:
+
+  build-release:
+    name: Build-release
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Base Setup
+      uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
+
+    - name: Install dependencies
+      run: python -m pip install -U "jupyterlab>=4.5.0,<5"
+
+    - name: Lint the extension
+      run: |
+        set -eux
+        jlpm
+        jlpm run lint:check
+
+    - name: Design gates
+      # A release must not be able to ship what a PR could not merge. Contrast
+      # failures and unresolvable custom properties are both silent at runtime,
+      # so this is the last place they can be caught.
+      run: |
+        set -eux
+        jlpm build:tokens
+        git diff --exit-code -- packages/tokens/style/generated \
+                                packages/tokens/src/generated \
+                                packages/tokens/dist
+        jlpm test:contrast
+        jlpm lint:design
+
+    - name: Build the extension
+      run: |
+        set -eux
+
+        python -m pip install .
+
+        jupyter server extension list
+        jupyter server extension list 2>&1 | sed 's/\x1b\[[0-9;]*m//g' | grep -ie "jupyterlab_d4n.*OK"
+
+        # All EIGHT federated extensions, checked individually. A single grep
+        # would pass while seven of them silently failed to build — and the
+        # wheel would publish.
+        jupyter labextension list
+        for ext in theme-light theme-dark ui-overrides icons editor-theme \
+                   settings-forms shell-chrome compat-shim; do
+          jupyter labextension list 2>&1 \
+            | sed 's/\x1b\[[0-9;]*m//g' \
+            | grep -ie "@d4n/${ext}.*ok" \
+            || { echo "::error::@d4n/${ext} did not install — refusing to release"; exit 1; }
+        done
+        python -m jupyterlab.browser_check
+
+    - name: Package the extension
+      run: |
+        set -eux
+
+        pip install build
+        python -m build
+        pip uninstall -y "jupyterlab-d4n" jupyterlab
+
+    - name: upload python build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: dist
+        path: dist
+        retention-days: 5
+
+    - name: upload typescript build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: lib
+        path: packages/*/lib
+        retention-days: 5
+
+  publish-python:
+    name: Publish python package
+    needs: build-release
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Base Setup
+        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+
+      - name: List artifacts
+        run: ls -R
+
+      - name: Publish a Python distribution to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_TOKEN }}
+          skip-existing: true

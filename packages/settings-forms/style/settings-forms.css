@@ -1,0 +1,669 @@
+/* @d4n/settings-forms — the RJSF global pass (PRD §7.7 step 1).
+ *
+ * SELECTORS VERIFIED AGAINST
+ *   @jupyterlab/ui-components 4.6.3
+ *     - style/rjsfTemplates.css        (every rule this file overrides)
+ *     - lib/components/form.js         (the jp-FormGroup-* template markup)
+ *   @rjsf/core 5.x default templates   (.form-group, .field-*, .control-label,
+ *                                       .field-description, .array-item,
+ *                                       .checkbox, .error-detail)
+ *   @jupyterlab/settingeditor 4.5.x    (shell + plugin list) — NOT installed in
+ *     this workspace, so the shell block below is asserted from upstream source
+ *     rather than read from disk. `jlpm test:selectors` is the gate that turns
+ *     that assertion into a fact; a wrong selector here is dead CSS, not a
+ *     visual regression, which is why it is survivable in the meantime.
+ *
+ * WHAT THIS FILE IS AND IS NOT RESPONSIBLE FOR
+ *   Colour is NOT this file's job. `mapping/jp-adapter.yaml` already repoints
+ *   --jp-input-*, --jp-border-color*, --jp-ui-font-* and friends at our tokens,
+ *   so the stock rules in rjsfTemplates.css are already painting in the right
+ *   palette. What they are NOT doing is density, radius, focus, typography and
+ *   rhythm — those are baked into that stylesheet as literals (`padding: 6px
+ *   8px`, `margin-left: 7px`, `border-radius: 4px`, `outline-offset: -1px`).
+ *   Those literals are what this file exists to replace.
+ *
+ *   The generic paint of a checkbox, a <select> or a button belongs to
+ *   @d4n/ui-overrides, which owns those controls everywhere in the product. We
+ *   only fix what the RJSF templates do to them *here* — layout, hit area and
+ *   the rules that are scoped tightly enough to beat the global ones.
+ *
+ * Every rule is scoped under body[data-jp-theme-name^='Data4Now'] so selecting
+ * a stock JupyterLab theme returns stock JupyterLab (PRD AC10). The scope also
+ * buys one attribute + one type of specificity, which is how each rule beats
+ * its upstream counterpart without !important.
+ */
+
+body[data-jp-theme-name^='Data4Now'] {
+  /* Composition values used only by this stylesheet. They are derived from
+   * tokens with calc() rather than written as literals so the no-hardcoded-
+   * values lint holds; if any of them turns out to be reused by another
+   * surface, promote it into packages/tokens instead of copying it. */
+  --d4n-settings-label-min-width: calc(var(--d4n-space-16) * 2);
+  --d4n-settings-list-width: calc(var(--d4n-space-16) * 4);
+  --d4n-settings-nest-indent: var(--d4n-space-4);
+  --d4n-settings-indicator-width: var(--d4n-space-1);
+}
+
+/* ---------------------------------------------------------------------------
+ * 1. Settings editor shell
+ * ------------------------------------------------------------------------ */
+
+body[data-jp-theme-name^='Data4Now'] .jp-SettingsPanel {
+  background-color: var(--d4n-color-surface-canvas);
+  color: var(--d4n-color-text-primary);
+  font-family: var(--d4n-font-family-ui);
+  font-size: var(--d4n-font-size-ui-sm);
+  line-height: var(--d4n-font-line-height-normal);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-SettingsHeader {
+  padding: var(--d4n-space-4) var(--d4n-space-4) var(--d4n-space-3);
+  border-bottom: var(--d4n-border-width-thin) solid
+    var(--d4n-color-border-subtle);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-SettingsHeader-title {
+  margin: var(--d4n-space-0);
+  color: var(--d4n-color-text-strong);
+  font-size: var(--d4n-font-size-ui-lg);
+  font-weight: var(--d4n-font-weight-semibold);
+  line-height: var(--d4n-font-line-height-snug);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-SettingsHeader-description {
+  margin: var(--d4n-space-1) var(--d4n-space-0) var(--d4n-space-0);
+  color: var(--d4n-color-text-secondary);
+  font-size: var(--d4n-font-size-ui-sm);
+}
+
+/* ---------------------------------------------------------------------------
+ * 2. Plugin list (left pane)
+ *
+ * Row density comes from the density scale rather than from padding maths, so
+ * a future compact-mode switch moves this list with everything else.
+ * ------------------------------------------------------------------------ */
+
+body[data-jp-theme-name^='Data4Now'] .jp-PluginList {
+  width: var(--d4n-settings-list-width);
+  background-color: var(--d4n-color-surface-raised);
+  border-right: var(--d4n-border-width-thin) solid
+    var(--d4n-color-border-subtle);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-PluginList ul {
+  margin: var(--d4n-space-0);
+  padding: var(--d4n-space-1) var(--d4n-space-0);
+  list-style: none;
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-PluginList li {
+  display: flex;
+  align-items: center;
+  gap: var(--d4n-space-2);
+  min-height: var(--d4n-density-comfortable-row-height);
+  padding: var(--d4n-space-1) var(--d4n-space-3);
+  border-radius: var(--d4n-radius-sm);
+  color: var(--d4n-color-text-secondary);
+  font-size: var(--d4n-font-size-ui-sm);
+  cursor: pointer;
+  transition: background-color var(--d4n-motion-duration-fast)
+    var(--d4n-motion-easing-standard);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-PluginList li:hover {
+  background-color: var(--d4n-color-surface-hover);
+  color: var(--d4n-color-text-primary);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-PluginList li.jp-mod-selected {
+  background-color: var(--d4n-color-surface-selected);
+  color: var(--d4n-color-text-strong);
+  font-weight: var(--d4n-font-weight-medium);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-PluginList li:focus-visible {
+  outline: var(--d4n-focus-ring-width) var(--d4n-focus-ring-style)
+    var(--d4n-focus-ring-color);
+  outline-offset: calc(var(--d4n-focus-ring-offset) * -1);
+}
+
+/* ---------------------------------------------------------------------------
+ * 3. Form group scaffolding
+ *
+ * `.jp-FormGroup-contentNormal` is the settings-editor layout;
+ * `.jp-FormGroup-contentCompact` is the notebook metadata form. They share
+ * templates but not rhythm, so they are tuned separately below.
+ * ------------------------------------------------------------------------ */
+
+body[data-jp-theme-name^='Data4Now'] .jp-FormGroup-content {
+  font-family: var(--d4n-font-family-ui);
+  font-size: var(--d4n-font-size-ui-sm);
+  color: var(--d4n-color-text-primary);
+}
+
+/* Replaces the hardcoded `margin-left: 7px` in rjsfTemplates.css. Using a gap
+ * on the flex container instead of a margin on the item means the label, the
+ * control and the modified indicator all sit on the same rhythm, and an item
+ * that wraps to a second line no longer carries a stray leading indent. */
+body[data-jp-theme-name^='Data4Now'] .jp-FormGroup-contentNormal {
+  gap: var(--d4n-space-2);
+  padding: var(--d4n-space-1) var(--d4n-space-0);
+}
+
+body[data-jp-theme-name^='Data4Now']
+  .jp-FormGroup-contentNormal
+  .jp-FormGroup-contentItem {
+  margin-left: var(--d4n-space-0);
+  color: var(--d4n-color-text-primary);
+}
+
+body[data-jp-theme-name^='Data4Now']
+  .jp-FormGroup-contentNormal
+  .jp-FormGroup-fieldLabel {
+  min-width: var(--d4n-settings-label-min-width);
+  color: var(--d4n-color-text-primary);
+  font-size: var(--d4n-font-size-ui-sm);
+  font-weight: var(--d4n-font-weight-medium);
+}
+
+body[data-jp-theme-name^='Data4Now']
+  .jp-FormGroup-contentNormal
+  .jp-FormGroup-description,
+body[data-jp-theme-name^='Data4Now']
+  .jp-FormGroup-contentNormal
+  .jp-FormGroup-default {
+  padding: var(--d4n-space-1) var(--d4n-space-0);
+  color: var(--d4n-color-text-secondary);
+  font-size: var(--d4n-font-size-ui-xs);
+  line-height: var(--d4n-font-line-height-normal);
+}
+
+/* The default value is machine-shaped text ("[]", "{"a": 1}", "Accel S"), so
+ * it reads in the mono face even though its label around it does not. */
+body[data-jp-theme-name^='Data4Now']
+  .jp-FormGroup-contentNormal
+  .jp-FormGroup-default {
+  color: var(--d4n-color-text-muted);
+  font-family: var(--d4n-font-family-mono);
+}
+
+body[data-jp-theme-name^='Data4Now']
+  .jp-FormGroup-contentNormal
+  fieldset:not(:first-child) {
+  margin-left: var(--d4n-space-0);
+}
+
+/* RJSF's own FieldTemplate root. `.small-field` is the class JupyterLab's
+ * template adds for label-less and boolean fields. */
+body[data-jp-theme-name^='Data4Now'] .jp-FormGroup-content .form-group {
+  margin-bottom: var(--d4n-space-1);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-FormGroup-content .field-description {
+  color: var(--d4n-color-text-secondary);
+  font-size: var(--d4n-font-size-ui-xs);
+  line-height: var(--d4n-font-line-height-normal);
+}
+
+/* ---------------------------------------------------------------------------
+ * 3b. Stock RJSF templates
+ *
+ * READ THIS BEFORE ASSUMING THESE RULES ARE LIVE. JupyterLab replaces RJSF's
+ * `FieldTemplate` wholesale (ui-components/lib/components/form.js,
+ * `CustomTemplateFactory`) and emits only `form-group`/`small-field` — it drops
+ * RJSF's `classNames` prop, which is where `field`, `field-string`,
+ * `field-boolean`, `field-error` and `control-label` would have come from. So
+ * inside the settings editor these selectors match nothing.
+ *
+ * They are kept anyway, and deliberately: `IFormRendererRegistry` renderers and
+ * third-party extensions that mount a plain `@rjsf/core` form get the stock
+ * templates, and without this block those forms render in browser defaults
+ * inside a Data4Now shell. The cost of being wrong here is dead CSS; the cost
+ * of omitting it is an unstyled form. `.array-item`, `.field-array`,
+ * `.field-description` and `.checkbox` in the sections around this one ARE live
+ * in the settings editor — they come from RJSF templates JupyterLab does not
+ * replace.
+ * ------------------------------------------------------------------------ */
+
+body[data-jp-theme-name^='Data4Now'] .jp-FormGroup-content .control-label {
+  color: var(--d4n-color-text-primary);
+  font-size: var(--d4n-font-size-ui-sm);
+  font-weight: var(--d4n-font-weight-medium);
+}
+
+body[data-jp-theme-name^='Data4Now']
+  .jp-FormGroup-content
+  .control-label
+  .required {
+  margin-left: var(--d4n-space-1);
+  color: var(--d4n-color-danger-default);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-FormGroup-content .field-string,
+body[data-jp-theme-name^='Data4Now'] .jp-FormGroup-content .field-number,
+body[data-jp-theme-name^='Data4Now'] .jp-FormGroup-content .field-integer {
+  color: var(--d4n-color-text-primary);
+  font-size: var(--d4n-font-size-ui-sm);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-FormGroup-content .field-boolean {
+  display: flex;
+  align-items: center;
+}
+
+/* ---------------------------------------------------------------------------
+ * 4. Text, number and select controls
+ *
+ * Beating `.jp-FormGroup-content fieldset .jp-inputFieldWrapper > input` (0,3,1
+ * plus two type selectors) needs the same shape plus our scope, hence the long
+ * selectors. `height: inherit` upstream makes the control the height of
+ * whatever wrapper it lands in; pinning it to the input density token is what
+ * makes a row of mixed field types line up.
+ * ------------------------------------------------------------------------ */
+
+body[data-jp-theme-name^='Data4Now']
+  .jp-FormGroup-content
+  fieldset
+  .jp-inputFieldWrapper
+  > input,
+body[data-jp-theme-name^='Data4Now']
+  .jp-FormGroup-content
+  fieldset
+  .jp-inputFieldWrapper
+  > select,
+body[data-jp-theme-name^='Data4Now']
+  .jp-FormGroup-content
+  fieldset
+  .jp-inputFieldWrapper
+  > textarea {
+  height: var(--d4n-input-height);
+  padding: var(--d4n-space-0) var(--d4n-input-padding-x);
+  border-width: var(--d4n-border-width-thin);
+  border-style: solid;
+  border-color: var(--d4n-input-border);
+  border-radius: var(--d4n-input-radius);
+  background-color: var(--d4n-input-bg);
+  color: var(--d4n-input-fg);
+  font-family: var(--d4n-font-family-ui);
+  font-size: var(--d4n-input-font-size);
+  transition: border-color var(--d4n-motion-duration-fast)
+    var(--d4n-motion-easing-standard);
+}
+
+/* A textarea is multi-line by definition, so the fixed control height above is
+ * wrong for it and only for it. */
+body[data-jp-theme-name^='Data4Now']
+  .jp-FormGroup-content
+  fieldset
+  .jp-inputFieldWrapper
+  > textarea {
+  height: auto;
+  padding: var(--d4n-space-1) var(--d4n-input-padding-x);
+  font-family: var(--d4n-font-family-mono);
+  line-height: var(--d4n-font-line-height-code);
+}
+
+body[data-jp-theme-name^='Data4Now']
+  .jp-FormGroup-content
+  fieldset
+  .jp-inputFieldWrapper
+  > input::placeholder,
+body[data-jp-theme-name^='Data4Now']
+  .jp-FormGroup-content
+  fieldset
+  .jp-inputFieldWrapper
+  > textarea::placeholder {
+  color: var(--d4n-input-placeholder);
+}
+
+/* Upstream paints the hover state with --jp-border-color2 — a BORDER token used
+ * as a background, which lands a full step darker than any other hover surface
+ * in the product. The surface hover token is the correct value. */
+body[data-jp-theme-name^='Data4Now']
+  .jp-FormGroup-content
+  fieldset
+  .jp-inputFieldWrapper
+  > input:hover:not(:focus),
+body[data-jp-theme-name^='Data4Now']
+  .jp-FormGroup-content
+  fieldset
+  .jp-inputFieldWrapper
+  > select:hover:not(:focus) {
+  background-color: var(--d4n-input-bg-hover);
+
+  /* Deliberately no border-color here. `:hover:not(:focus)` carries three
+   * pseudo-classes, so any border it set would outrank the invalid-state rule
+   * in §8 and the red border would vanish the moment the pointer touched a
+   * field that failed validation. Hover is carried by the surface alone. */
+}
+
+/* Upstream pulls the ring inside the control with `outline-offset: -1px`, which
+ * makes it overlap the border and lose contrast against the field. Ours sits
+ * outside, per the focus ring tokens, and drops the box-shadow that was there
+ * to compensate.
+ *
+ * The `>` combinator is load-bearing, not decoration: a checkbox lives at
+ * `.jp-inputFieldWrapper .checkbox > label > input`, so a descendant selector
+ * here would put a text field's border treatment on it. Checkboxes get their
+ * own focus rule in §5. */
+body[data-jp-theme-name^='Data4Now']
+  .jp-FormGroup-content
+  fieldset
+  .jp-inputFieldWrapper
+  > input:focus,
+body[data-jp-theme-name^='Data4Now']
+  .jp-FormGroup-content
+  fieldset
+  .jp-inputFieldWrapper
+  > select:focus,
+body[data-jp-theme-name^='Data4Now']
+  .jp-FormGroup-content
+  fieldset
+  .jp-inputFieldWrapper
+  > textarea:focus {
+  border-color: var(--d4n-input-border-active);
+  outline: var(--d4n-focus-ring-width) var(--d4n-focus-ring-style)
+    var(--d4n-focus-ring-color);
+  outline-offset: var(--d4n-focus-ring-offset);
+  box-shadow: none;
+}
+
+/* The <select> popup list is OS-rendered and cannot be styled (PRD R5); the
+ * option background is the one lever that still reaches it in Firefox and on
+ * Linux/Chromium. */
+body[data-jp-theme-name^='Data4Now']
+  .jp-FormGroup-content
+  .jp-inputFieldWrapper
+  > select
+  > option {
+  background-color: var(--d4n-color-surface-overlay);
+  color: var(--d4n-color-text-primary);
+}
+
+/* ---------------------------------------------------------------------------
+ * 5. Boolean fields
+ *
+ * The checkbox glyph itself is drawn by @d4n/ui-overrides, which owns
+ * `input[type='checkbox']` everywhere. What is wrong *here* is placement:
+ * upstream nudges it with `position: relative; top: 2px`, a hand-correction for
+ * the stock control's optical centre that is wrong for ours. Flex alignment
+ * removes the need for the nudge entirely.
+ * ------------------------------------------------------------------------ */
+
+body[data-jp-theme-name^='Data4Now']
+  .jp-FormGroup-content
+  fieldset
+  input[type='checkbox'] {
+  position: static;
+  top: auto;
+  margin: var(--d4n-space-0);
+  flex-shrink: 0;
+}
+
+/* Plain `:focus`, not `:focus-visible`: upstream already rings a checkbox on
+ * `:focus` through its generic `fieldset input:focus` rule, so narrowing to
+ * `:focus-visible` here would not remove the mouse-click ring — it would leave
+ * the stock one showing at `outline-offset: -1px` next to ours. Replacing it
+ * outright is the only way to get one ring instead of two. */
+body[data-jp-theme-name^='Data4Now']
+  .jp-FormGroup-content
+  fieldset
+  input[type='checkbox']:focus,
+body[data-jp-theme-name^='Data4Now']
+  .jp-FormGroup-content
+  fieldset
+  input[type='radio']:focus {
+  outline: var(--d4n-focus-ring-width) var(--d4n-focus-ring-style)
+    var(--d4n-focus-ring-color);
+  outline-offset: var(--d4n-focus-ring-offset);
+  box-shadow: none;
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-FormGroup-content .checkbox label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--d4n-space-2);
+  min-height: var(--d4n-density-comfortable-row-height);
+  color: var(--d4n-color-text-primary);
+  font-size: var(--d4n-font-size-ui-sm);
+}
+
+/* ---------------------------------------------------------------------------
+ * 6. Array fields
+ * ------------------------------------------------------------------------ */
+
+body[data-jp-theme-name^='Data4Now'] .jp-arrayFieldWrapper legend {
+  padding: var(--d4n-space-1) var(--d4n-space-0);
+  border-bottom: var(--d4n-border-width-thin) solid
+    var(--d4n-color-border-subtle);
+  color: var(--d4n-color-text-strong);
+  font-size: var(--d4n-font-size-ui-sm);
+  font-weight: var(--d4n-font-weight-semibold);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-arrayFieldWrapper .field-description {
+  padding: var(--d4n-space-1) var(--d4n-space-0);
+  color: var(--d4n-color-text-secondary);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-arrayFieldWrapper .array-item {
+  margin: var(--d4n-space-1) var(--d4n-space-0);
+  padding: var(--d4n-space-1) var(--d4n-space-2);
+  border: var(--d4n-border-width-thin) solid var(--d4n-color-border-faint);
+  border-radius: var(--d4n-radius-md);
+  background-color: var(--d4n-color-surface-raised);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-arrayFieldWrapper .array-item:hover,
+body[data-jp-theme-name^='Data4Now']
+  .jp-arrayFieldWrapper
+  .array-item:focus-within {
+  border-color: var(--d4n-color-border-default);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-ArrayOperations {
+  margin-left: var(--d4n-space-2);
+  gap: var(--d4n-toolbar-gap);
+}
+
+body[data-jp-theme-name^='Data4Now']
+  .jp-ArrayOperations
+  .jp-ArrayOperationsButton {
+  margin: var(--d4n-space-0);
+  height: var(--d4n-button-height);
+  padding: var(--d4n-space-0) var(--d4n-button-padding-x);
+  border-radius: var(--d4n-button-radius);
+  font-size: var(--d4n-button-font-size);
+  font-weight: var(--d4n-button-font-weight);
+  transition: background-color var(--d4n-button-transition)
+    var(--d4n-motion-easing-standard);
+}
+
+body[data-jp-theme-name^='Data4Now']
+  button.jp-ArrayOperationsButton.jp-mod-styled:disabled {
+  opacity: var(--d4n-button-disabled-opacity);
+  cursor: not-allowed;
+}
+
+/* The array-of-object toolbox is absolutely positioned by upstream against the
+ * item box. Re-anchoring it to our padding keeps it clear of the first field
+ * rather than sitting on top of it. */
+body[data-jp-theme-name^='Data4Now']
+  .field-array-of-object
+  .jp-ArrayOperations {
+  top: var(--d4n-space-1);
+  right: var(--d4n-space-1);
+}
+
+/* ---------------------------------------------------------------------------
+ * 7. Object fields
+ *
+ * Upstream indents nested groups with --jp-private-settingeditor-modifier-
+ * indent. Private variables are off limits (they can be renamed or dropped in
+ * any patch release), so we set our own indent from the space scale. The
+ * knock-on is that the negative margin on .jp-modifiedIndicator — which is
+ * still computed from the private variable — no longer lines up with our
+ * indent; that is why the indicator is repositioned in §8 rather than left
+ * alone.
+ * ------------------------------------------------------------------------ */
+
+body[data-jp-theme-name^='Data4Now']
+  .jp-FormGroup-contentNormal
+  .jp-objectFieldWrapper
+  .form-group {
+  margin-top: var(--d4n-space-1);
+  padding: var(--d4n-space-1) var(--d4n-space-2) var(--d4n-space-1)
+    var(--d4n-settings-nest-indent);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-objectFieldWrapper > fieldset {
+  padding-left: var(--d4n-space-0);
+}
+
+/* ---------------------------------------------------------------------------
+ * 8. Modified indicator and validation
+ * ------------------------------------------------------------------------ */
+
+body[data-jp-theme-name^='Data4Now']
+  .jp-FormGroup-content
+  .jp-modifiedIndicator {
+  width: var(--d4n-settings-indicator-width);
+  margin-left: calc(var(--d4n-settings-nest-indent) * -1);
+  border-radius: var(--d4n-radius-pill);
+  background-color: var(--d4n-color-action-default);
+}
+
+body[data-jp-theme-name^='Data4Now']
+  .jp-FormGroup-content
+  .jp-modifiedIndicator.jp-errorIndicator {
+  margin-right: var(--d4n-space-2);
+  background-color: var(--d4n-color-danger-default);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-FormGroup-content .validationErrors {
+  color: var(--d4n-color-danger-strong);
+  font-size: var(--d4n-font-size-ui-xs);
+}
+
+/* `.jp-errorIndicator` is the settings editor's own signal (see §3b on why
+ * `.field-error` is not); pairing it with the invalid border is what puts the
+ * error on the control rather than only in the gutter. The sibling combinator
+ * is safe: `CustomTemplateFactory` always renders the indicator immediately
+ * before `.jp-FormGroup-content` inside the same `.form-group`. */
+body[data-jp-theme-name^='Data4Now']
+  .jp-errorIndicator
+  ~ .jp-FormGroup-content
+  .jp-inputFieldWrapper
+  > input,
+body[data-jp-theme-name^='Data4Now']
+  .jp-errorIndicator
+  ~ .jp-FormGroup-content
+  .jp-inputFieldWrapper
+  > textarea,
+body[data-jp-theme-name^='Data4Now']
+  .jp-FormGroup-content
+  .field-error
+  .jp-inputFieldWrapper
+  > input,
+body[data-jp-theme-name^='Data4Now']
+  .jp-FormGroup-content
+  .field-error
+  .jp-inputFieldWrapper
+  > textarea {
+  border-color: var(--d4n-input-border-invalid);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-FormGroup-content ul.error-detail {
+  margin: var(--d4n-space-1) var(--d4n-space-0);
+  padding-inline-start: var(--d4n-space-4);
+  border-radius: var(--d4n-radius-sm);
+  color: var(--d4n-color-danger-strong);
+  font-size: var(--d4n-font-size-ui-xs);
+  list-style: none;
+}
+
+body[data-jp-theme-name^='Data4Now']
+  .jp-FormGroup-content
+  ul.error-detail
+  .text-danger {
+  color: var(--d4n-color-danger-strong);
+}
+
+/* ---------------------------------------------------------------------------
+ * 9. Compact form (notebook metadata / property inspector)
+ *
+ * Same templates, different container. §6.5 lists the property inspector as
+ * sharing form controls with Settings, so it inherits everything above; only
+ * the rhythm differs.
+ * ------------------------------------------------------------------------ */
+
+body[data-jp-theme-name^='Data4Now'] .jp-FormGroup-contentCompact .form-group {
+  padding: var(--d4n-space-2) var(--d4n-space-1) var(--d4n-space-2)
+    var(--d4n-space-0);
+  gap: var(--d4n-space-2);
+}
+
+body[data-jp-theme-name^='Data4Now']
+  .jp-FormGroup-contentCompact
+  .jp-FormGroup-fieldLabel {
+  padding-bottom: var(--d4n-space-1);
+  color: var(--d4n-color-text-primary);
+  font-size: var(--d4n-font-size-ui-xs);
+  font-weight: var(--d4n-font-weight-medium);
+}
+
+body[data-jp-theme-name^='Data4Now']
+  .jp-FormGroup-contentCompact
+  .jp-FormGroup-compactTitle
+  .jp-FormGroup-description {
+  color: var(--d4n-color-text-secondary);
+  font-size: var(--d4n-font-size-ui-xs);
+}
+
+body[data-jp-theme-name^='Data4Now']
+  .jp-FormGroup-contentCompact
+  .jp-objectFieldWrapper
+  .jp-objectFieldWrapper
+  .form-group {
+  margin-top: var(--d4n-space-1);
+  padding: var(--d4n-space-1) var(--d4n-space-2) var(--d4n-space-1)
+    var(--d4n-settings-nest-indent);
+}
+
+body[data-jp-theme-name^='Data4Now']
+  .jp-FormGroup-contentCompact
+  ul.error-detail {
+  margin: var(--d4n-space-1) var(--d4n-space-0);
+  padding-inline-start: var(--d4n-space-4);
+}
+
+/* ---------------------------------------------------------------------------
+ * 10. Reduced motion
+ *
+ * Every transition in this file is a colour or border cross-fade, so removing
+ * them costs nothing but the ease (PRD §6.5, progress/spinner clause).
+ * ------------------------------------------------------------------------ */
+
+@media (prefers-reduced-motion: reduce) {
+  body[data-jp-theme-name^='Data4Now'] .jp-PluginList li,
+  body[data-jp-theme-name^='Data4Now']
+    .jp-FormGroup-content
+    fieldset
+    .jp-inputFieldWrapper
+    > input,
+  body[data-jp-theme-name^='Data4Now']
+    .jp-FormGroup-content
+    fieldset
+    .jp-inputFieldWrapper
+    > select,
+  body[data-jp-theme-name^='Data4Now']
+    .jp-FormGroup-content
+    fieldset
+    .jp-inputFieldWrapper
+    > textarea,
+  body[data-jp-theme-name^='Data4Now']
+    .jp-ArrayOperations
+    .jp-ArrayOperationsButton {
+    transition: none;
+  }
+}

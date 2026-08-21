@@ -1,0 +1,20 @@
+/* Data4Now Dark — the file `IThemeManager.loadCSS()` fetches on switch.
+ *
+ * It is intentionally almost empty. The tokens live in @d4n/ui-overrides, which
+ * is always loaded and carries BOTH modes scoped on <body> (PRD §5.3), so the
+ * mode switch is an attribute swap rather than a stylesheet fetch — see the long
+ * comment in packages/theme-light/src/index.ts.
+ *
+ * Keeping this file tiny is what makes G4 (< 100ms switch, no FOUC) achievable:
+ * whatever lands here is fetched from disk on every single theme change.
+ *
+ * The one thing it does carry is the dark-mode `color-scheme` declaration,
+ * which is NOT expressible as a token: it tells the browser to render native
+ * form controls, the caret, and OS-rendered <select> popups in dark mode. PRD
+ * R5 accepts that native select popups cannot be themed — this is the one lever
+ * that still influences them.
+ */
+
+body[data-jp-theme-name='Data4Now Dark'] {
+  color-scheme: dark;
+}

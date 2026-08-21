@@ -1,0 +1,224 @@
+name: Build
+
+on:
+  push:
+    branches: master
+  pull_request:
+    branches: '*'
+  # PRD G5: CI runs against JupyterLab `latest` nightly, so an upstream markup
+  # change surfaces as a failing job rather than as a user-reported regression.
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # The design gates run FIRST and independently of the extension build.
+  #
+  # They need neither JupyterLab nor a browser — they read the token source and
+  # the shipped CSS — so they finish in seconds and fail fast. PRD §10.2 makes
+  # the point directly: this is the cheapest possible place to catch a contrast
+  # failure, before a single line of CSS is written.
+  # ---------------------------------------------------------------------------
+  design-gates:
+    name: Design gates
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install node dependencies
+        run: |
+          corepack enable
+          yarn install --immutable
+
+      - name: Rebuild tokens and assert the tree is clean
+        # PRD §7.2: the generated CSS/TS/JSON are committed so a token change
+        # arrives as a reviewable diff. Rebuilding and diffing is a stronger
+        # guarantee than a lint rule against hand-editing the output — it also
+        # catches someone editing the SOURCE and forgetting to rebuild, which is
+        # the more common mistake.
+        run: |
+          set -eux
+          yarn build:tokens
+          git diff --exit-code -- packages/tokens/style/generated \
+                                  packages/tokens/src/generated \
+                                  packages/tokens/dist \
+            || {
+              echo "::error::Generated token files are stale. Run 'jlpm build:tokens' and commit the result."
+              exit 1
+            }
+
+      - name: Contrast audit (PRD §10.2 — gates A1, A2, A3, A4, T4)
+        run: yarn test:contrast
+
+      - name: Design lints (PRD AC4, §7.4(4), I2, M1)
+        run: yarn lint:design
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Base Setup
+        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
+
+      - name: Install dependencies
+        run: python -m pip install -U "jupyterlab>=4.5.0,<5"
+
+      - name: Install node dependencies
+        run: jlpm
+
+      - name: Lint the extension
+        run: |
+          set -eux
+          jlpm run lint:check
+
+      - name: Build and install the extension
+        run: |
+          set -eux
+
+          # Clean any pre-existing build so hatch-jupyter-builder runs the full
+          # build during pip install. NOTE the plural directory: this
+          # distribution ships eight federated extensions under an @d4n scope,
+          # not one at the top level.
+          rm -rf jupyterlab_d4n/labextensions
+
+          python -m pip install .
+
+          jupyter server extension list
+          jupyter server extension list 2>&1 | sed 's/\x1b\[[0-9;]*m//g' | grep -ie "jupyterlab_d4n.*OK"
+
+          # Assert ALL EIGHT federated extensions installed. A single grep would
+          # pass while seven of them silently failed to build.
+          jupyter labextension list
+          for ext in theme-light theme-dark ui-overrides icons editor-theme \
+                     settings-forms shell-chrome compat-shim; do
+            jupyter labextension list 2>&1 \
+              | sed 's/\x1b\[[0-9;]*m//g' \
+              | grep -ie "@d4n/${ext}.*ok" \
+              || { echo "::error::@d4n/${ext} did not install"; exit 1; }
+          done
+
+          python -m jupyterlab.browser_check
+
+      - name: Extract the --jp-* manifest and verify adapter completeness
+        # PRD AC5: every --jp-* variable JupyterLab consumes must have a mapping
+        # entry with a rationale. The manifest is version-specific, so it is
+        # regenerated here against the JupyterLab this job actually installed
+        # rather than trusting a committed copy.
+        continue-on-error: true # TODO P0-03 — flip to a hard gate once green
+        run: |
+          set -eux
+          jupyter lab --no-browser --port=8890 --ServerApp.token='' &
+          npx playwright install --with-deps chromium
+          timeout 120 bash -c 'until curl -sf http://localhost:8890/lab >/dev/null; do sleep 2; done'
+          jlpm test:extract-vars
+          jlpm build:tokens
+
+      - name: Package the extension
+        run: |
+          set -eux
+
+          pip install build
+          python -m build
+          pip uninstall -y "jupyterlab-d4n" jupyterlab
+
+      - name: upload python build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist
+          retention-days: 5
+
+      - name: upload typescript build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: lib
+          path: packages/*/lib
+          retention-days: 5
+
+      - name: Upload extension packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: extension-artifacts
+          path: dist/jupyterlab_d4n*
+          if-no-files-found: error
+          retention-days: 5
+
+  test-isolated:
+    name: Test isolated
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          architecture: 'x64'
+      - uses: actions/download-artifact@v4
+        with:
+          name: extension-artifacts
+      - name: Install and Test
+        run: |
+          set -eux
+          # Remove NodeJS, twice to take care of system and locally installed node versions.
+          sudo rm -rf $(which node)
+          sudo rm -rf $(which node)
+
+          pip install "jupyterlab>=4.5.0,<5" jupyterlab_d4n*.whl
+
+          jupyter server extension list
+          jupyter server extension list 2>&1 | sed 's/\x1b\[[0-9;]*m//g' | grep -ie "jupyterlab_d4n.*OK"
+
+          jupyter labextension list
+          for ext in theme-light theme-dark ui-overrides icons editor-theme \
+                     settings-forms shell-chrome compat-shim; do
+            jupyter labextension list 2>&1 \
+              | sed 's/\x1b\[[0-9;]*m//g' \
+              | grep -ie "@d4n/${ext}.*ok" \
+              || { echo "::error::@d4n/${ext} missing from the wheel"; exit 1; }
+          done
+          python -m jupyterlab.browser_check --no-chrome-test
+
+  # ---------------------------------------------------------------------------
+  # PRD G5 / R1: survive JupyterLab minor upgrades. Break budget <= 2 selectors
+  # per minor. Runs nightly against `latest` so an upstream markup change shows
+  # up as a failing job rather than as a bug report.
+  # ---------------------------------------------------------------------------
+  nightly-latest:
+    name: Nightly against JupyterLab latest
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Base Setup
+        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
+      - name: Install latest JupyterLab
+        run: python -m pip install -U --pre jupyterlab
+      - name: Build and install
+        run: |
+          set -eux
+          jlpm
+          python -m pip install .
+      - name: Selector integrity (PRD §10.3)
+        run: |
+          set -eux
+          jupyter lab --no-browser --port=8890 --ServerApp.token='' &
+          npx playwright install --with-deps chromium
+          timeout 120 bash -c 'until curl -sf http://localhost:8890/lab >/dev/null; do sleep 2; done'
+          jlpm test:selectors

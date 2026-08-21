@@ -1,0 +1,55 @@
+{
+  "name": "@data4now/jupyterlab-theme",
+  "version": "1.0.0",
+  "description": "Data4Now brand theme for JupyterLab — navy / teal / magenta with Montserrat + Roboto + JetBrains Mono.",
+  "keywords": [
+    "jupyter",
+    "jupyterlab",
+    "jupyterlab-extension",
+    "theme",
+    "data4now"
+  ],
+  "homepage": "https://github.com/data4now/jupyterlab-theme",
+  "license": "BSD-3-Clause",
+  "author": {
+    "name": "Data4Now",
+    "email": "platform@data4now.org"
+  },
+  "files": [
+    "style/**/*.{css,svg,png,woff,woff2,ttf,eot}",
+    "style/index.js"
+  ],
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "style": "style/index.css",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/data4now/jupyterlab-theme.git"
+  },
+  "scripts": {
+    "build": "tsc",
+    "build:prod": "tsc",
+    "clean": "rimraf lib",
+    "watch": "tsc -w"
+  },
+  "dependencies": {
+    "@jupyterlab/application": "^4.0.0",
+    "@jupyterlab/apputils": "^4.0.0"
+  },
+  "devDependencies": {
+    "rimraf": "^5.0.0",
+    "typescript": "~5.0.0"
+  },
+  "sideEffects": [
+    "style/*.css",
+    "style/index.js"
+  ],
+  "styleModule": "style/index.js",
+  "publishConfig": {
+    "access": "public"
+  },
+  "jupyterlab": {
+    "extension": true,
+    "themePath": "style/index.css"
+  }
+}

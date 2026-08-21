@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Status · Data4Now JupyterHub</title>
+<link rel="stylesheet" href="preview-assets/colors_and_type.css">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    font-family: var(--font-body);
+    background: var(--d4n-ink);
+    color: var(--d4n-mist);
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  /* dot texture */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.05) 1px, transparent 0);
+    background-size: 22px 22px;
+    pointer-events: none;
+  }
+
+  /* ===== top bar (state switcher — preview affordance) ===== */
+  .sw-bar {
+    position: fixed;
+    top: 16px; left: 50%;
+    transform: translateX(-50%);
+    z-index: 50;
+    display: flex;
+    gap: 3px;
+    background: rgba(18, 42, 71, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 999px;
+    padding: 4px;
+  }
+  .sw-bar button {
+    border: none;
+    background: transparent;
+    color: rgba(255,255,255,0.62);
+    font-family: var(--font-display);
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 0.04em;
+    padding: 6px 14px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all 160ms cubic-bezier(0.2,0,0.1,1);
+  }
+  .sw-bar button:hover { color: #fff; }
+  .sw-bar button.is-on { background: var(--d4n-teal); color: var(--d4n-ink); }
+
+  /* ===== shared header ===== */
+  .st-header {
+    position: relative;
+    z-index: 2;
+    height: 64px;
+    padding: 0 32px;
+    display: flex; align-items: center; gap: 14px;
+  }
+  .st-logo {
+    height: 22px; width: auto;
+    filter: brightness(0) saturate(100%) invert(99%) sepia(2%) saturate(330%) hue-rotate(190deg) brightness(101%) contrast(91%);
+  }
+  .st-pillar { width: 1px; height: 22px; background: rgba(255,255,255,0.20); }
+  .st-product {
+    font-family: var(--font-display);
+    font-size: 13px; font-weight: 500;
+    color: rgba(255,255,255,0.72);
+  }
+
+  /* ===== centered stage ===== */
+  .st-stage {
+    flex: 1;
+    position: relative; z-index: 2;
+    display: flex;
+    align-items: center; justify-content: center;
+    padding: 24px 24px 80px;
+  }
+  .st-panel {
+    width: 520px;
+    max-width: 100%;
+    text-align: center;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+  }
+  .st-panel.is-active { display: flex; animation: st-in 320ms cubic-bezier(0.16,1,0.3,1); }
+  @keyframes st-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* big glyph */
+  .st-glyph {
+    width: 88px; height: 88px;
+    border-radius: 22px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 28px;
+    position: relative;
+    background: linear-gradient(135deg, #122A47 0%, #050F1D 100%);
+    box-shadow: 0 16px 40px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06);
+  }
+  .st-glyph .code {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 30px;
+    letter-spacing: -0.02em;
+  }
+  .st-glyph.g-404 .code { color: var(--d4n-teal-bright, #4FD1D1); }
+  .st-glyph.g-signout { color: var(--d4n-teal-bright, #4FD1D1); }
+  .st-glyph.g-expired { color: #E0A04A; }
+  .st-glyph.g-expired { background: linear-gradient(135deg, #3A2C12 0%, #1A1305 100%); }
+  /* magenta accent dot — logo wedge echo */
+  .st-glyph::after {
+    content: '';
+    position: absolute;
+    bottom: 12px; right: 14px;
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: var(--d4n-magenta);
+    box-shadow: 0 0 0 3px #0B1F38;
+  }
+  .st-glyph.g-expired::after { background: #E0A04A; }
+
+  .st-eyebrow {
+    font-family: var(--font-display);
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--d4n-teal-bright, #4FD1D1);
+    margin-bottom: 14px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .st-eyebrow.warn { color: #E0A04A; }
+  .st-eyebrow::before, .st-eyebrow::after {
+    content: ''; width: 18px; height: 1px;
+    background: currentColor; opacity: 0.4;
+  }
+  .st-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 34px;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: #fff;
+    margin: 0 0 14px;
+    text-wrap: balance;
+  }
+  .st-lead {
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--d4n-mist);
+    margin: 0 0 32px;
+    max-width: 42ch;
+    text-wrap: pretty;
+  }
+  .st-lead strong { color: #fff; font-weight: 500; }
+  .st-lead code {
+    font-family: var(--font-mono); font-size: 0.9em;
+    background: rgba(255,255,255,0.08);
+    color: var(--d4n-teal-bright, #4FD1D1);
+    padding: 1px 6px; border-radius: 3px;
+  }
+
+  .st-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .st-btn {
+    height: 44px;
+    padding: 0 22px;
+    border-radius: 9px;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    border: 1px solid transparent;
+    display: inline-flex; align-items: center; gap: 8px;
+    transition: all 200ms cubic-bezier(0.2,0,0.1,1);
+    text-decoration: none;
+  }
+  .st-btn-primary {
+    background: var(--d4n-teal);
+    color: var(--d4n-ink);
+    border-color: var(--d4n-teal-deep);
+  }
+  .st-btn-primary:hover { background: var(--d4n-teal-bright, #4FD1D1); transform: translateY(-1px); }
+  .st-btn-secondary {
+    background: rgba(255,255,255,0.06);
+    color: #fff;
+    border-color: rgba(255,255,255,0.16);
+  }
+  .st-btn-secondary:hover { background: rgba(255,255,255,0.12); }
+
+  /* search box for 404 */
+  .st-search {
+    display: flex; align-items: center; gap: 10px;
+    width: 100%;
+    max-width: 380px;
+    margin: 0 auto 24px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.14);
+    border-radius: 10px;
+    padding: 0 14px;
+    height: 46px;
+  }
+  .st-search:focus-within { border-color: var(--d4n-teal); box-shadow: 0 0 0 3px rgba(31,160,160,0.25); }
+  .st-search svg { color: rgba(255,255,255,0.5); flex-shrink: 0; }
+  .st-search input {
+    flex: 1; border: none; outline: none; background: transparent;
+    font-family: var(--font-body); font-size: 14px; color: #fff;
+    min-width: 0;
+  }
+  .st-search input::placeholder { color: rgba(255,255,255,0.4); }
+  .st-search .key {
+    font-family: var(--font-mono); font-size: 10px;
+    color: rgba(255,255,255,0.5);
+    border: 1px solid rgba(255,255,255,0.16);
+    padding: 2px 6px; border-radius: 3px;
+  }
+
+  /* quick links for 404 */
+  .st-links {
+    display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;
+    margin-top: 24px;
+  }
+  .st-link {
+    font-family: var(--font-display);
+    font-size: 12px; font-weight: 500;
+    color: var(--d4n-mist);
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 999px;
+    padding: 6px 14px;
+    text-decoration: none;
+    transition: all 160ms;
+  }
+  .st-link:hover { background: rgba(255,255,255,0.10); color: #fff; }
+  .st-link .ic { color: var(--d4n-teal-bright, #4FD1D1); margin-right: 5px; }
+
+  /* expired countdown ring */
+  .st-countdown {
+    display: inline-flex; align-items: center; gap: 10px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: #E0A04A;
+    background: rgba(224,160,74,0.10);
+    border: 1px solid rgba(224,160,74,0.25);
+    border-radius: 999px;
+    padding: 7px 16px;
+    margin-bottom: 28px;
+  }
+  .st-countdown .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: #E0A04A;
+    animation: st-blink 1s steps(2,end) infinite;
+  }
+  @keyframes st-blink { 50% { opacity: 0.3; } }
+
+  /* signed-out session summary */
+  .st-summary {
+    display: flex; gap: 0;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 28px;
+  }
+  .st-summary-item {
+    flex: 1;
+    padding: 12px 18px;
+    border-right: 1px solid rgba(255,255,255,0.08);
+  }
+  .st-summary-item:last-child { border-right: none; }
+  .st-summary-item .k {
+    font-family: var(--font-display);
+    font-size: 9.5px; font-weight: 700;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: rgba(255,255,255,0.45);
+    margin-bottom: 4px;
+  }
+  .st-summary-item .v {
+    font-family: var(--font-mono);
+    font-size: 13px; color: #fff; font-weight: 500;
+  }
+  .st-summary-item .v .ok {
+    display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+    background: #6FCF97; margin-right: 5px; vertical-align: middle;
+  }
+
+  /* footer */
+  .st-footer {
+    position: relative; z-index: 2;
+    padding: 18px 32px;
+    display: flex; justify-content: space-between;
+    font-family: var(--font-display);
+    font-size: 11px;
+    color: rgba(255,255,255,0.40);
+  }
+  .st-footer a { color: rgba(255,255,255,0.55); text-decoration: none; margin-left: 16px; }
+  .st-footer a:hover { color: var(--d4n-teal-bright, #4FD1D1); }
+  .st-footer .ev { font-family: var(--font-mono); }
+
+  @media (max-width: 560px) {
+    .st-title { font-size: 26px; }
+    .st-summary { flex-direction: column; }
+    .st-summary-item { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.08); }
+  }
+</style>
+</head>
+<body>
+
+  <!-- preview state switcher -->
+  <div class="sw-bar">
+    <button data-state="404" class="is-on">404</button>
+    <button data-state="signout">Sign out</button>
+    <button data-state="expired">Session expired</button>
+  </div>
+
+  <header class="st-header">
+    <img class="st-logo" src="preview-assets/logo.png" alt="Data4Now">
+    <span class="st-pillar"></span>
+    <span class="st-product">JupyterHub</span>
+  </header>
+
+  <main class="st-stage">
+
+    <!-- ===== 404 ===== -->
+    <section class="st-panel is-active" data-panel="404">
+      <div class="st-glyph g-404"><span class="code">404</span></div>
+      <div class="st-eyebrow">Page not found</div>
+      <h1 class="st-title">We couldn't find that.</h1>
+      <p class="st-lead">The path <code>/user/kofi.osei/tree/archive</code> doesn't exist, or your tenant <strong>ACME-EU-2</strong> doesn't have access to it. It may have been moved, culled, or renamed.</p>
+
+      <div class="st-search">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7" cy="7" r="4"/><path d="m10 10 3 3"/></svg>
+        <input placeholder="Search notebooks, files, or commands…">
+        <span class="key">⌘K</span>
+      </div>
+
+      <div class="st-actions">
+        <a href="Hub Control Panel.html" class="st-btn st-btn-primary">
+          Back to control panel
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 7h8M8 4l3 3-3 3"/></svg>
+        </a>
+        <a href="JupyterLab Theme.html" class="st-btn st-btn-secondary">Open my server</a>
+      </div>
+
+      <div class="st-links">
+        <a href="#" class="st-link"><span class="ic">◆</span>Recent notebooks</a>
+        <a href="#" class="st-link"><span class="ic">⊞</span>Launcher</a>
+        <a href="#" class="st-link"><span class="ic">▤</span>File browser</a>
+        <a href="#" class="st-link"><span class="ic">?</span>Docs</a>
+      </div>
+    </section>
+
+    <!-- ===== SIGN OUT ===== -->
+    <section class="st-panel" data-panel="signout">
+      <div class="st-glyph g-signout">
+        <svg width="34" height="34" viewBox="0 0 34 34" fill="none" stroke="currentColor" stroke-width="2.2">
+          <path d="M13 17h13M22 12l5 5-5 5"/>
+          <path d="M13 8H9a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h4"/>
+        </svg>
+      </div>
+      <div class="st-eyebrow">Signed out</div>
+      <h1 class="st-title">You've been signed out.</h1>
+      <p class="st-lead">Your session in <strong>ACME-EU-2</strong> ended cleanly. Your running server keeps going for the configured grace period — sign back in to pick up <code>analysis.ipynb</code> exactly where you left it.</p>
+
+      <div class="st-summary">
+        <div class="st-summary-item">
+          <div class="k">Session length</div>
+          <div class="v">2h 18m</div>
+        </div>
+        <div class="st-summary-item">
+          <div class="k">Server</div>
+          <div class="v"><span class="ok"></span>Still running</div>
+        </div>
+        <div class="st-summary-item">
+          <div class="k">Auto-cull in</div>
+          <div class="v">57 min</div>
+        </div>
+      </div>
+
+      <div class="st-actions">
+        <a href="JupyterHub Login.html" class="st-btn st-btn-primary">
+          Sign back in
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 7h8M8 4l3 3-3 3"/></svg>
+        </a>
+        <a href="#" class="st-btn st-btn-secondary">Stop my server</a>
+      </div>
+    </section>
+
+    <!-- ===== SESSION EXPIRED ===== -->
+    <section class="st-panel" data-panel="expired">
+      <div class="st-glyph g-expired">
+        <svg width="34" height="34" viewBox="0 0 34 34" fill="none" stroke="currentColor" stroke-width="2.2">
+          <circle cx="17" cy="18" r="11"/>
+          <path d="M17 12v6l4 2.5"/>
+          <path d="M13 4h8"/>
+        </svg>
+      </div>
+      <div class="st-eyebrow warn">Session expired</div>
+      <h1 class="st-title">Your session timed out.</h1>
+      <p class="st-lead">For security, sessions in <strong>ACME-EU-2</strong> expire after <strong>12 hours</strong>. You'll need to sign in again — your work was autosaved <strong>2 minutes</strong> before the timeout.</p>
+
+      <div class="st-countdown">
+        <span class="dot"></span>
+        Redirecting to sign-in in 0:08
+      </div>
+
+      <div class="st-actions">
+        <a href="JupyterHub Login.html" class="st-btn st-btn-primary">
+          Sign in now
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 7h8M8 4l3 3-3 3"/></svg>
+        </a>
+        <a href="#" class="st-btn st-btn-secondary">Why did this happen?</a>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="st-footer">
+    <span>© 2026 Data4Now · ACME-EU-2 tenant cloud</span>
+    <span>
+      <a href="#">Status</a>
+      <a href="#">Docs</a>
+      <a href="#">Support</a>
+    </span>
+    <span class="ev">hub v4.0.2 · eu-west</span>
+  </footer>
+
+  <script>
+    const panels = document.querySelectorAll('.st-panel');
+    const btns = document.querySelectorAll('.sw-bar button');
+    btns.forEach(b => b.addEventListener('click', () => {
+      const s = b.dataset.state;
+      btns.forEach(o => o.classList.toggle('is-on', o === b));
+      panels.forEach(p => p.classList.toggle('is-active', p.dataset.panel === s));
+    }));
+  </script>
+</body>
+</html>

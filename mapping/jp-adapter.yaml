@@ -1,0 +1,763 @@
+# =============================================================================
+# TIER 4 — the --jp-* adapter. THE CONTRACT.
+# =============================================================================
+#
+# This file is the one place `--jp-*` names are allowed to appear (PRD §5.2
+# rule 1). packages/tokens/build.mjs turns it into
+# packages/tokens/style/generated/jp-adapter.css; nobody hand-edits that output.
+#
+# WHY THIS FILE IS THE HIGHEST-LEVERAGE ARTIFACT IN THE PROJECT (PRD §1.1):
+# JupyterLab's variables are POSITIONAL — `--jp-layout-color0..4` is a lightness
+# ramp, `--jp-border-color0..3` is a contrast ramp. A design system speaks in
+# `surface.canvas`, `border.subtle`. Mapping one onto the other by intuition
+# produces a UI that looks right on one screen and wrong on the next, because
+# the same `--jp-layout-color2` means "sunken input background" in one core
+# component and "hovered menu item" in another. Every row below is a reviewed
+# decision, and `rationale` is REQUIRED — build.mjs fails on a row without one.
+#
+# REVIEW RULES
+#   * Ordered by JupyterLab's own variables.css so a diff against an upstream
+#     bump reads cleanly.
+#   * `token:` must name a Tier 1 structural, Tier 2 semantic, or Tier 3
+#     component token. build.mjs rejects unknown paths.
+#   * `literal: true` means `token:` is a raw CSS value. Use it only where
+#     JupyterLab wants a bare number/keyword that is not a design decision.
+#   * Never map a `--jp-private-*` variable (build.mjs rejects it) and never map
+#     a variable owned by a third-party extension — those live in compat-shim.
+#
+# STATUS: drafted against JupyterLab 4.5 from upstream's
+# packages/theme-light-extension/style/variables.css. Completeness is NOT yet
+# machine-verified — mapping/jp-variables.manifest.json does not exist until the
+# P0-03 audit boots the target build and enumerates the real set. Until then
+# build.mjs warns rather than failing (PRD AC5).
+
+excluded:
+  # PRD Appendix A — "Excluded from the mapping — do not touch".
+  # Private, not public API; changes without notice between patch releases.
+  # (build.mjs also refuses any --jp-private-* row outright.)
+  - --jp-shadow-base-lightness
+  - --jp-shadow-umbra-color
+  - --jp-shadow-penumbra-color
+  - --jp-shadow-ambient-color
+  # Owned by ipywidgets, not by JupyterLab core. Handled in compat-shim so the
+  # adapter stays a contract with ONE upstream (PRD §7.9, §10.4).
+  - --jp-widgets-color
+  - --jp-widgets-label-color
+  - --jp-widgets-readout-color
+  - --jp-widgets-slider-background
+  - --jp-widgets-slider-active-handle-color
+  - --jp-widgets-slider-handle-background-color
+  - --jp-widgets-slider-handle-border-color
+  - --jp-widgets-menu-item-height
+  - --jp-widgets-container-padding
+  - --jp-widgets-input-padding
+  - --jp-widgets-input-background-color
+  - --jp-widgets-input-border-color
+  - --jp-widgets-input-focus-border-color
+  - --jp-widgets-input-color
+  # Deliberately left at core's value: a pure timing knob with no visual
+  # consequence, and overriding it would be us guessing at a performance
+  # trade-off that is not a design decision.
+  - --jp-notebook-render-timeout
+
+mappings:
+  # ===========================================================================
+  # ELEVATION
+  # ===========================================================================
+  # PRD §9: in DARK mode elevation must be a surface LIGHTNESS increase, not
+  # shadow opacity — shadows are near-invisible on dark surfaces and a
+  # shadow-only system produces a flat, unreadable dark UI (R10). The Tier 2
+  # `elevation.*` group carries mode-specific values, so this ramp resolves to
+  # soft cool shadows in light and to restrained ones in dark, where the real
+  # lift comes from surface.canvas < raised < overlay.
+  - jp: --jp-elevation-z0
+    token: elevation.0
+    rationale: "Flat. No shadow in either mode."
+  - jp: --jp-elevation-z1
+    token: elevation.1
+    rationale: "Hairline lift — launcher card hover, toolbar separation."
+  - jp: --jp-elevation-z2
+    token: elevation.2
+    rationale: "Resting elevation for raised panels."
+  - jp: --jp-elevation-z4
+    token: elevation.3
+    rationale: "Menus, popovers, the document-search overlay. PRD §8.4.3 specifies elevation.3 for the menu dropdown, and z4 is the level core uses for .lm-Menu."
+  - jp: --jp-elevation-z6
+    token: elevation.4
+    rationale: "Dialogs. PRD §8.3 specifies elevation.3 for the dialog surface, but core drives dialogs off z6; mapping z6 to our 4 keeps a dialog visibly above a menu, which is the ordering users expect."
+  - jp: --jp-elevation-z8
+    token: elevation.4
+    rationale: "Collapsed onto 4. Core's z8/z12/z16/z20/z24 exist for a Material ramp we do not use; five distinct shadow levels is already more than this interface needs, and eight would be noise."
+  - jp: --jp-elevation-z12
+    token: elevation.5
+    rationale: "Top of the ramp — drag images and the drag-drop overlay."
+  - jp: --jp-elevation-z16
+    token: elevation.5
+    rationale: "Collapsed onto 5, per the z8 rationale."
+  - jp: --jp-elevation-z20
+    token: elevation.5
+    rationale: "Collapsed onto 5, per the z8 rationale."
+  - jp: --jp-elevation-z24
+    token: elevation.5
+    rationale: "Collapsed onto 5, per the z8 rationale."
+
+  # ===========================================================================
+  # BORDERS
+  # ===========================================================================
+  # Core's border ramp runs 0 (strongest) → 3 (faintest). Ours runs
+  # strong → default → subtle → faint, which is the same direction, so this is
+  # one of the few groups that maps positionally without distortion.
+  - jp: --jp-border-width
+    token: border.width.thin
+    rationale: "1px. The design system has no sub-pixel border; thick (2px) is reserved for indicators and focus rings."
+  - jp: --jp-border-color0
+    token: color.border.strong
+    rationale: "Strongest separator — dock split handles, the active tab edge."
+  - jp: --jp-border-color1
+    token: color.border.default
+    rationale: "The default border. Inputs, secondary buttons, card outlines."
+  - jp: --jp-border-color2
+    token: color.border.subtle
+    rationale: "Panel and toolbar separators. The most-used border in the chrome."
+  - jp: --jp-border-color3
+    token: color.border.faint
+    rationale: "Menu separators, status-bar item dividers, TOC indent guides."
+  - jp: --jp-inverse-border-color
+    token: color.surface.inverse3
+    rationale: "Borders drawn on inverted surfaces (tooltips). Taken from the inverse surface ramp rather than the border ramp because on an inverted background a 'border' is a lightness step, not a line colour."
+  - jp: --jp-border-radius
+    token: radius.md
+    rationale: "6px. The design system's default; radius.sm (4px) is used only for toolbar buttons and chips, radius.lg (10px) only for dialogs."
+
+  # ===========================================================================
+  # UI TYPOGRAPHY
+  # ===========================================================================
+  - jp: --jp-ui-font-scale-factor
+    token: "1.2"
+    literal: true
+    rationale: "Core multiplies this to derive sizes it does not name. We set every named size explicitly below, so this only affects unnamed derivations; 1.2 keeps them close to our ramp."
+  - jp: --jp-ui-font-size0
+    token: font.size.ui.xs
+    rationale: "11px. Status bar, menu shortcuts, TOC levels 4-6, type badges."
+  - jp: --jp-ui-font-size1
+    token: font.size.ui.sm
+    rationale: "13px. THE chrome size — menus, toolbars, tabs, panel rows. PRD §4.1 requires readable code at 13px for the daily driver, and the UI size should not exceed it."
+  - jp: --jp-ui-font-size2
+    token: font.size.ui.md
+    rationale: "14px. Dialog body text and settings-editor field labels."
+  - jp: --jp-ui-font-size3
+    token: font.size.ui.lg
+    rationale: "16px. Dialog titles and launcher section headers."
+  - jp: --jp-ui-font-family
+    token: font.family.ui
+    rationale: "Montserrat. The design system's display face, used for all chrome. Bundled locally — PRD §4.2 forbids CDN fonts, the interface must render fully offline."
+  - jp: --jp-ui-font-color0
+    token: color.text.strong
+    rationale: "Highest-emphasis chrome text — active tab labels, dialog titles."
+  - jp: --jp-ui-font-color1
+    token: color.text.primary
+    rationale: "Default chrome text. The single most-consumed text token."
+  - jp: --jp-ui-font-color2
+    token: color.text.secondary
+    rationale: "De-emphasised chrome — inactive tabs, menu-bar items at rest."
+  - jp: --jp-ui-font-color3
+    token: color.text.muted
+    rationale: "Lowest-emphasis chrome — placeholders, timestamps, shortcut hints. Deliberately NOT the design system's steel: this token carries placeholder text, which is text and must clear 4.5:1 (PRD A1, §8.8.1)."
+  - jp: --jp-ui-inverse-font-color0
+    token: color.text.inverse0
+    rationale: "Text on inverted surfaces — tooltips, the drag image."
+  - jp: --jp-ui-inverse-font-color1
+    token: color.text.inverse1
+    rationale: "Secondary text on inverted surfaces."
+  - jp: --jp-ui-inverse-font-color2
+    token: color.text.inverse2
+    rationale: "Tertiary text on inverted surfaces."
+  - jp: --jp-ui-inverse-font-color3
+    token: color.text.inverse3
+    rationale: "Lowest-emphasis text on inverted surfaces."
+
+  # ===========================================================================
+  # CONTENT TYPOGRAPHY (rendered markdown)
+  # ===========================================================================
+  - jp: --jp-content-line-height
+    token: font.lineHeight.relaxed
+    rationale: "1.6. Rendered markdown is read, not scanned, so it takes the relaxed leading rather than the chrome's 1.5."
+  - jp: --jp-content-font-scale-factor
+    token: "1.2"
+    literal: true
+    rationale: "As with the UI scale factor — every named size is set explicitly below."
+  - jp: --jp-content-font-size0
+    token: font.size.content.0
+    rationale: "13px. Captions and figure labels inside rendered output."
+  - jp: --jp-content-font-size1
+    token: font.size.content.1
+    rationale: "14px. Markdown body. The base of the content ramp."
+  - jp: --jp-content-font-size2
+    token: font.size.content.2
+    rationale: "16px — h4/h5 in rendered markdown."
+  - jp: --jp-content-font-size3
+    token: font.size.content.3
+    rationale: "18px — h3."
+  - jp: --jp-content-font-size4
+    token: font.size.content.4
+    rationale: "20px — h2."
+  - jp: --jp-content-font-size5
+    token: font.size.content.5
+    rationale: "24px — h1. Capped well below the design system's web h1 (48px): a notebook heading shares a scroll container with 13px code, and the web ramp reads as shouting there."
+  - jp: --jp-content-heading-line-height
+    token: font.lineHeight.tight
+    rationale: "1.12. Headings are short; relaxed leading makes a two-line heading look like two paragraphs."
+  - jp: --jp-content-heading-margin-top
+    token: "1.2em"
+    literal: true
+    rationale: "Relative to the heading's own size, so the rhythm holds across the whole ramp. Not expressible as a fixed space token."
+  - jp: --jp-content-heading-margin-bottom
+    token: "0.5em"
+    literal: true
+    rationale: "Asymmetric with the top margin on purpose — a heading belongs to the text below it."
+  - jp: --jp-content-heading-font-weight
+    token: font.weight.semibold
+    rationale: "600. The design system's heading weight."
+  - jp: --jp-content-font-color0
+    token: color.text.strong
+    rationale: "Content ramp, same semantics as the UI ramp."
+  - jp: --jp-content-font-color1
+    token: color.text.primary
+    rationale: "Markdown body text."
+  - jp: --jp-content-font-color2
+    token: color.text.secondary
+    rationale: "Blockquotes and de-emphasised content."
+  - jp: --jp-content-font-color3
+    token: color.text.muted
+    rationale: "Captions and content-level hints."
+  - jp: --jp-content-link-color
+    token: color.text.link
+    rationale: "Teal. Distinct from the navy brand so a link never reads as a heading."
+  - jp: --jp-content-font-family
+    token: font.family.content
+    rationale: "Roboto. The design system's body face — separate from the chrome face so long-form markdown reads as document, not as UI."
+
+  # ===========================================================================
+  # CODE TYPOGRAPHY
+  # ===========================================================================
+  - jp: --jp-code-font-size
+    token: font.size.code
+    rationale: "13px. PRD §4.1: the daily driver needs readable code at 13px."
+  - jp: --jp-code-line-height
+    token: font.lineHeight.code
+    rationale: "1.5. Tighter than content leading; code is scanned in columns."
+  - jp: --jp-code-padding
+    token: space.1
+    rationale: "4px. Core defaults to 5px, which is off the 4px grid and shifts every cell height by a pixel."
+  - jp: --jp-code-font-family-default
+    token: font.family.mono
+    rationale: "Core reads this as the fallback when the user has not set a code font. Same stack as --jp-code-font-family so an unset preference is not a different font."
+  - jp: --jp-code-font-family
+    token: font.family.mono
+    rationale: "JetBrains Mono, bundled. MUST have a true fixed advance: xterm.js measures one glyph and grids the rest, so a variable-advance fallback shears the entire terminal screen (PRD §8.7.3, R16)."
+  - jp: --jp-code-presentation-font-size
+    token: font.size.content.2
+    rationale: "16px. Presentation mode is projected — the code size steps up two notches, not one."
+  - jp: --jp-code-cursor-width0
+    token: "1.4px"
+    literal: true
+    rationale: "Cursor widths are derived from the mono font's advance at each size; they are metrics, not design tokens. Core's values are correct for a 13px mono grid."
+  - jp: --jp-code-cursor-width1
+    token: "2px"
+    literal: true
+    rationale: "As above."
+  - jp: --jp-code-cursor-width2
+    token: "4px"
+    literal: true
+    rationale: "As above."
+
+  # ===========================================================================
+  # LAYOUT SURFACES — the mapping PRD §1.1 singles out as the hard one
+  # ===========================================================================
+  # Core's layout ramp is a LIGHTNESS ramp (0 darkest → 4 lightest in dark mode,
+  # inverted in light). Our ramp is SEMANTIC. The rows below are the reviewed
+  # translation, and they are the reason surfaces are consistent between
+  # components that use the same core variable for different jobs.
+  - jp: --jp-layout-color0
+    token: color.surface.canvas
+    rationale: "Deepest surface — notebook scroll area and editor background. PRD Appendix A."
+  - jp: --jp-layout-color1
+    token: color.surface.raised
+    rationale: "Panels, toolbars, cards — one step above canvas. In DARK this is genuinely lighter than canvas, which is how elevation is expressed (PRD §9); in LIGHT both are white and separation is carried by borders."
+  - jp: --jp-layout-color2
+    token: color.surface.sunken
+    rationale: "Inset surfaces — inputs, search fields, chips. Core also uses this for some hover states; §7.4's structural CSS re-points those to surface.hover explicitly rather than letting one variable carry two meanings."
+  - jp: --jp-layout-color3
+    token: color.surface.hover
+    rationale: "Hover on rows, list items and menu entries."
+  - jp: --jp-layout-color4
+    token: color.surface.active
+    rationale: "Pressed and selected chrome."
+  - jp: --jp-inverse-layout-color0
+    token: color.surface.inverse0
+    rationale: "Tooltip and drag-image backgrounds."
+  - jp: --jp-inverse-layout-color1
+    token: color.surface.inverse1
+    rationale: "Inverted surface, one step in."
+  - jp: --jp-inverse-layout-color2
+    token: color.surface.inverse2
+    rationale: "Inverted surface, two steps in."
+  - jp: --jp-inverse-layout-color3
+    token: color.surface.inverse3
+    rationale: "Inverted surface, three steps in."
+  - jp: --jp-inverse-layout-color4
+    token: color.surface.inverse4
+    rationale: "Lightest inverted surface."
+
+  # ===========================================================================
+  # INTENT COLORS
+  # ===========================================================================
+  # Core's intent ramps run 0 (strongest) → 3/4 (faintest).
+  #
+  # brand vs accent is the one place we deliberately split what the design
+  # system treats as one family: `brand` is navy (identity — logo, primary
+  # buttons) and `accent` is teal (interaction — focus rings, active borders,
+  # links). A navy focus ring on a navy top panel is invisible, and the design
+  # system already nominates teal as --border-focus.
+  - jp: --jp-brand-color0
+    token: color.brand.strong
+    rationale: "Deepest navy — pressed primary buttons."
+  - jp: --jp-brand-color1
+    token: color.brand.default
+    rationale: "THE brand navy. Primary buttons, the logo lockup, brand icon fills."
+  - jp: --jp-brand-color2
+    token: color.brand.subtle
+    rationale: "Softened navy for secondary brand surfaces."
+  - jp: --jp-brand-color3
+    token: color.brand.faint
+    rationale: "Faintest navy — brand-tinted backgrounds."
+  - jp: --jp-brand-color4
+    token: color.brand.faint
+    rationale: "Collapsed onto faint. Core's five-step brand ramp has one more step than the design system defines, and inventing a fifth navy to fill it would put an unreviewed colour in the palette."
+  - jp: --jp-accent-color0
+    token: color.action.strong
+    rationale: "Deepest teal — pressed interactive states."
+  - jp: --jp-accent-color1
+    token: color.action.default
+    rationale: "THE interaction teal. Focus rings, active cell border, links, the active-tab indicator."
+  - jp: --jp-accent-color2
+    token: color.action.subtle
+    rationale: "Softened teal for secondary interactive affordances."
+  - jp: --jp-accent-color3
+    token: color.action.faint
+    rationale: "Faintest teal — selection tints and hover washes."
+  - jp: --jp-accent-color4
+    token: color.action.faint
+    rationale: "Collapsed onto faint, per the brand-color4 rationale."
+  - jp: --jp-warn-color0
+    token: color.warning.strong
+    rationale: "Warning ramp — deepest."
+  - jp: --jp-warn-color1
+    token: color.warning.default
+    rationale: "THE warning amber. Untrusted-notebook shield, kernel-disconnected state, the log-console WARNING badge."
+  - jp: --jp-warn-color2
+    token: color.warning.subtle
+    rationale: "Softened warning."
+  - jp: --jp-warn-color3
+    token: color.warning.faint
+    rationale: "Warning-tinted background. Shares its value with the search-match and debugger execution-line highlight — PRD S3 and D4 impose the identical 4.5:1-against-every-syntax-token gate, and the palette supports exactly one such tint."
+  - jp: --jp-warn-color4
+    token: color.warning.faint
+    rationale: "Collapsed onto faint, per the brand-color4 rationale."
+  - jp: --jp-error-color0
+    token: color.danger.strong
+    rationale: "Danger ramp — deepest."
+  - jp: --jp-error-color1
+    token: color.danger.default
+    rationale: "THE danger magenta — the logo's pie-wedge colour. Error output, dead kernel, destructive buttons, set breakpoints."
+  - jp: --jp-error-color2
+    token: color.danger.subtle
+    rationale: "Softened danger."
+  - jp: --jp-error-color3
+    token: color.danger.faint
+    rationale: "Danger-tinted background — the error-output block."
+  - jp: --jp-error-color4
+    token: color.danger.faint
+    rationale: "Collapsed onto faint, per the brand-color4 rationale."
+  - jp: --jp-success-color0
+    token: color.success.strong
+    rationale: "Success ramp — deepest."
+  - jp: --jp-success-color1
+    token: color.success.default
+    rationale: "THE success green. Passing tests, completed executions, diff additions."
+  - jp: --jp-success-color2
+    token: color.success.subtle
+    rationale: "Softened success."
+  - jp: --jp-success-color3
+    token: color.success.faint
+    rationale: "Success-tinted background."
+  - jp: --jp-success-color4
+    token: color.success.faint
+    rationale: "Collapsed onto faint, per the brand-color4 rationale."
+  - jp: --jp-info-color0
+    token: color.info.strong
+    rationale: "Info ramp — deepest."
+  - jp: --jp-info-color1
+    token: color.info.default
+    rationale: "THE info teal. Deliberately the same hue family as `action`: an informational badge and an interactive affordance are both 'the system is talking to you', and a fifth hue would dilute the palette."
+  - jp: --jp-info-color2
+    token: color.info.subtle
+    rationale: "Softened info."
+  - jp: --jp-info-color3
+    token: color.info.faint
+    rationale: "Info-tinted background."
+  - jp: --jp-info-color4
+    token: color.info.faint
+    rationale: "Collapsed onto faint, per the brand-color4 rationale."
+
+  # ===========================================================================
+  # NOTEBOOK CELLS
+  # ===========================================================================
+  - jp: --jp-cell-padding
+    token: space.2
+    rationale: "8px. On the 4px grid; core's 5px is not."
+  - jp: --jp-cell-collapser-width
+    token: notebook.collapserVisualWidth
+    rationale: "The VISUAL width. PRD §8.2 gives the collapser a 24px hit area over a 4px visual; the hit area is widened in ui-overrides, since core exposes no variable for it."
+  - jp: --jp-cell-collapser-min-height
+    token: space.5
+    rationale: "20px. Below this a collapsed one-line cell has a collapser too short to aim at."
+  - jp: --jp-cell-collapser-not-active-hover-opacity
+    token: "0.6"
+    literal: true
+    rationale: "An opacity step, not a colour. PRD §8.2 wants the collapser to reveal to 100% on hover; 0.6 is the resting reveal."
+  - jp: --jp-cell-editor-background
+    token: color.surface.code
+    rationale: "The code-editing surface. Its own token rather than surface.canvas, so the editor can be separated from the notebook background in dark mode without moving every panel with it."
+  - jp: --jp-cell-editor-border-color
+    token: color.border.subtle
+    rationale: "Resting editor outline."
+  - jp: --jp-cell-editor-box-shadow
+    token: elevation.0
+    rationale: "No shadow on a cell editor. Core draws an inset box-shadow to fake a border; we use a real border, so this must be cleared or the two stack into a doubled edge."
+  - jp: --jp-cell-editor-active-background
+    token: color.surface.codeActive
+    rationale: "Focused editor background — a lightness step, so focus is visible even before the border resolves."
+  - jp: --jp-cell-editor-active-border-color
+    token: color.action.default
+    rationale: "Teal. The focused cell is the single most important 'where am I' signal in the notebook."
+  - jp: --jp-cell-prompt-width
+    token: notebook.promptWidth
+    rationale: "64px. Wide enough for In [999]: without reflowing when the counter rolls over a digit."
+  - jp: --jp-cell-prompt-font-family
+    token: font.family.mono
+    rationale: "Prompts are numeric and must align in a column across cells."
+  - jp: --jp-cell-prompt-letter-spacing
+    token: font.letterSpacing.normal
+    rationale: "0. Any tracking on tabular figures defeats the column alignment the mono face provides."
+  - jp: --jp-cell-prompt-opacity
+    token: "1"
+    literal: true
+    rationale: "Full opacity for the active prompt. Emphasis is carried by colour tokens, not by opacity — an opacity ramp composites against an unknown backdrop and cannot be contrast-audited."
+  - jp: --jp-cell-prompt-not-active-opacity
+    token: "1"
+    literal: true
+    rationale: "Also 1, for the same reason. Core dims inactive prompts to 0.5, which is untestable; we express the same de-emphasis with --jp-cell-prompt-not-active-font-color instead, which the audit CAN check."
+  - jp: --jp-cell-prompt-not-active-font-color
+    token: color.text.muted
+    rationale: "The real inactive-prompt de-emphasis — a token, not an opacity."
+  - jp: --jp-cell-inprompt-font-color
+    token: color.text.secondary
+    rationale: "Input prompt. Neutral rather than brand-coloured: a column of navy In[] markers down the left edge competes with the code."
+  - jp: --jp-cell-outprompt-font-color
+    token: color.text.muted
+    rationale: "Output prompt, one step quieter than the input prompt."
+
+  # ===========================================================================
+  # NOTEBOOK
+  # ===========================================================================
+  - jp: --jp-notebook-padding
+    token: space.3
+    rationale: "12px around the cell stack."
+  - jp: --jp-notebook-select-background
+    token: color.surface.selected
+    rationale: "Selected (non-active) cell background."
+  - jp: --jp-notebook-multiselected-color
+    token: color.selection.inactive
+    rationale: "Multi-select wash. A solid token, not an alpha tint: cells sit over both canvas and output backgrounds, and an alpha composite reads differently over each."
+  - jp: --jp-notebook-scroll-padding
+    token: "calc(100% - var(--jp-code-font-size) * var(--jp-code-line-height) - var(--jp-code-padding) * 2 - var(--jp-cell-padding) - 1px)"
+    literal: true
+    rationale: "A computed expression over other --jp-* values, not a design decision — it keeps one line of the last cell visible when scrolled to the bottom. Copied from core verbatim so it tracks our type tokens automatically."
+
+  # ===========================================================================
+  # RENDERMIME
+  # ===========================================================================
+  - jp: --jp-rendermime-error-background
+    token: color.danger.faint
+    rationale: "The error-output block. PRD §8.2 also gives it a 2px danger left border, which is structural CSS in ui-overrides."
+  - jp: --jp-rendermime-table-row-background
+    token: color.surface.raised
+    rationale: "Rendered-table striping."
+  - jp: --jp-rendermime-table-row-hover-background
+    token: color.surface.hover
+    rationale: "Rendered-table row hover."
+
+  # ===========================================================================
+  # DIALOGS, CONSOLE, SIDEBAR
+  # ===========================================================================
+  - jp: --jp-dialog-background
+    token: color.overlay.scrim
+    rationale: "The modal backdrop. PRD §8.3 also specifies a 2px backdrop-filter blur, disabled under prefers-reduced-transparency — that is a property, not a colour, so it lives in ui-overrides."
+  - jp: --jp-console-padding
+    token: space.3
+    rationale: "12px, matching the notebook so a console and a notebook side by side share a left edge."
+  - jp: --jp-sidebar-min-width
+    token: "200px"
+    literal: true
+    rationale: "A layout constraint, not a design token. 200px is what PRD §8.10.1 sizes the TOC depth ramp against — changing it invalidates TC1."
+
+  # ===========================================================================
+  # TOOLBAR
+  # ===========================================================================
+  - jp: --jp-toolbar-border-color
+    token: color.border.subtle
+    rationale: "Toolbar bottom edge."
+  - jp: --jp-toolbar-micro-height
+    token: space.2
+    rationale: "8px. The micro toolbar variant used by output areas."
+  - jp: --jp-toolbar-background
+    token: color.surface.raised
+    rationale: "Toolbars sit on the raised surface, one step above the canvas they float over."
+  - jp: --jp-toolbar-box-shadow
+    token: elevation.0
+    rationale: "No shadow. Core shadows the toolbar to separate it from the notebook; we separate with a border instead, and keeping both produces a smeared double edge — most visible in dark mode."
+  - jp: --jp-toolbar-header-margin
+    token: "4px 4px 0 4px"
+    literal: true
+    rationale: "A four-value shorthand; not expressible as one space token. All four values are on the 4px grid."
+  - jp: --jp-toolbar-active-background
+    token: color.surface.active
+    rationale: "Pressed/active toolbar button. PRD §8.1 makes the toolbar button a 24px ghost variant whose active state uses this."
+
+  # ===========================================================================
+  # STATUS BAR
+  # ===========================================================================
+  - jp: --jp-statusbar-height
+    token: statusBar.height
+    rationale: "24px. Set here as well as in our T3 replacement, because third-party items registered through IStatusBar may still read the variable directly."
+
+  # ===========================================================================
+  # INPUTS
+  # ===========================================================================
+  - jp: --jp-input-box-shadow
+    token: elevation.0
+    rationale: "None. Core fakes an inset border with a shadow; we draw a real 1px border, and both together read as a doubled edge."
+  - jp: --jp-input-active-background
+    token: input.bgActive
+    rationale: "Focused input background."
+  - jp: --jp-input-hover-background
+    token: input.bgHover
+    rationale: "Hovered input background."
+  - jp: --jp-input-background
+    token: input.bg
+    rationale: "Resting input background — the sunken surface, so a field reads as inset."
+  - jp: --jp-input-border-color
+    token: input.border
+    rationale: "Resting input border."
+  - jp: --jp-input-active-border-color
+    token: input.borderActive
+    rationale: "Focused input border — teal, matching the focus ring."
+  - jp: --jp-input-active-box-shadow-color
+    token: color.action.focus
+    rationale: "Core composites this into a focus glow. Pointed at the same focus token as the ring so an input's focus treatment matches every other control's (PRD §5.1 — one focus spec, applied everywhere)."
+
+  # ===========================================================================
+  # EDITOR
+  # ===========================================================================
+  - jp: --jp-editor-selected-background
+    token: color.selection.inactive
+    rationale: "Text selection in an unfocused editor."
+  - jp: --jp-editor-selected-focused-background
+    token: color.selection.active
+    rationale: "Text selection in the focused editor. The two differ so a user can tell which of several open editors owns the selection."
+  - jp: --jp-editor-cursor-color
+    token: color.action.default
+    rationale: "Teal caret — the same colour as the focused-cell border, so 'this is where typing goes' is one signal, not two."
+
+  # ===========================================================================
+  # LEGACY CodeMirror 5 VARIABLES
+  # ===========================================================================
+  # JupyterLab 4 moved to CodeMirror 6, and syntax highlighting now runs through
+  # a real HighlightStyle registered on IEditorThemeRegistry (PRD §7.5, our
+  # editor-theme package). These variables survive for compatibility and are
+  # still read by a few third-party extensions and by rendered-markdown code
+  # blocks. They are mapped to the SAME Tier 2 syntax tokens the HighlightStyle
+  # uses, so a code span in markdown matches the editor beside it.
+  - jp: --jp-mirror-editor-keyword-color
+    token: color.syntax.keyword
+    rationale: "Shared with the CM6 HighlightStyle tag `keyword`."
+  - jp: --jp-mirror-editor-atom-color
+    token: color.syntax.number
+    rationale: "CM5 'atom' covers True/False/None, which our ramp treats as numeric literals."
+  - jp: --jp-mirror-editor-number-color
+    token: color.syntax.number
+    rationale: "Numeric literals."
+  - jp: --jp-mirror-editor-def-color
+    token: color.syntax.function
+    rationale: "CM5 'def' is a function/class definition name."
+  - jp: --jp-mirror-editor-variable-color
+    token: color.syntax.name
+    rationale: "Plain identifiers."
+  - jp: --jp-mirror-editor-variable-2-color
+    token: color.syntax.property
+    rationale: "CM5 'variable-2' is an attribute/property access."
+  - jp: --jp-mirror-editor-variable-3-color
+    token: color.syntax.type
+    rationale: "CM5 'variable-3' is a type annotation."
+  - jp: --jp-mirror-editor-punctuation-color
+    token: color.syntax.name
+    rationale: "Punctuation takes the plain-identifier colour, not a dimmer one — dimmed brackets make nested calls harder to parse, not easier."
+  - jp: --jp-mirror-editor-property-color
+    token: color.syntax.property
+    rationale: "Object properties."
+  - jp: --jp-mirror-editor-operator-color
+    token: color.syntax.operator
+    rationale: "Operators."
+  - jp: --jp-mirror-editor-comment-color
+    token: color.syntax.comment
+    rationale: "Comments. The token most often left failing A4 in dark themes, because it is deliberately de-emphasised — audited explicitly."
+  - jp: --jp-mirror-editor-string-color
+    token: color.syntax.string
+    rationale: "String literals."
+  - jp: --jp-mirror-editor-string-2-color
+    token: color.syntax.regexp
+    rationale: "CM5 'string-2' is regex and template-literal content."
+  - jp: --jp-mirror-editor-meta-color
+    token: color.syntax.meta
+    rationale: "Decorators, pragmas, shebangs."
+  - jp: --jp-mirror-editor-qualifier-color
+    token: color.syntax.name
+    rationale: "Qualifiers take the plain-identifier colour."
+  - jp: --jp-mirror-editor-builtin-color
+    token: color.syntax.keyword
+    rationale: "Builtins read as keywords in Python, which is the dominant kernel here."
+  - jp: --jp-mirror-editor-bracket-color
+    token: color.syntax.name
+    rationale: "Brackets take the plain-identifier colour; matched-bracket emphasis is a CM6 decoration, not a token colour."
+  - jp: --jp-mirror-editor-tag-color
+    token: color.syntax.keyword
+    rationale: "HTML/XML tags."
+  - jp: --jp-mirror-editor-attribute-color
+    token: color.syntax.property
+    rationale: "HTML/XML attributes."
+  - jp: --jp-mirror-editor-header-color
+    token: color.syntax.heading
+    rationale: "Markdown headings inside a code editor."
+  - jp: --jp-mirror-editor-quote-color
+    token: color.syntax.comment
+    rationale: "Markdown blockquotes — same de-emphasis as comments."
+  - jp: --jp-mirror-editor-link-color
+    token: color.syntax.link
+    rationale: "Markdown links."
+  - jp: --jp-mirror-editor-error-color
+    token: color.syntax.invalid
+    rationale: "Syntax errors."
+  - jp: --jp-mirror-editor-hr-color
+    token: color.border.strong
+    rationale: "Markdown horizontal rules are a border, not a syntax token."
+
+  # ===========================================================================
+  # SEARCH
+  # ===========================================================================
+  - jp: --jp-search-toggle-off-opacity
+    token: "1"
+    literal: true
+    rationale: "Core distinguishes a search filter toggle's on/off state by OPACITY ALONE, which fails PRD A7 and S2. Pinning all three opacities to 1 disables that mechanism so ui-overrides can express the state with a background and a border instead — something a user with low vision, or a screen reader, can actually perceive."
+  - jp: --jp-search-toggle-hover-opacity
+    token: "1"
+    literal: true
+    rationale: "As above."
+  - jp: --jp-search-toggle-on-opacity
+    token: "1"
+    literal: true
+    rationale: "As above."
+  - jp: --jp-search-selected-match-background-color
+    token: color.search.selectedMatchBg
+    rationale: "The current match. Overrides its own foreground too, so it carries no contrast-against-syntax gate."
+  - jp: --jp-search-selected-match-color
+    token: color.search.selectedMatchFg
+    rationale: "Foreground on the current match — text.onWarning."
+  - jp: --jp-search-unselected-match-background-color
+    token: color.search.unselectedMatchBg
+    rationale: "Other matches KEEP their syntax colour, so this background is gated at 4.5:1 against every syntax token in both modes (PRD S3). That is why it is a pale amber in light and a deep amber in dark, rather than one tint at low alpha."
+  - jp: --jp-search-unselected-match-color
+    token: color.search.unselectedMatchFg
+    rationale: "Set for the non-code surfaces core applies this to; inside the editor the syntax colour wins."
+
+  # ===========================================================================
+  # ICONS
+  # ===========================================================================
+  - jp: --jp-icon-contrast-color0
+    token: color.icon.contrast0
+    rationale: "LabIcon accent slot 0. Every shipped SVG fills with one of these five or with currentColor — never a literal hex, which would be invisible in one of the two modes (PRD §7.8.4, I2)."
+  - jp: --jp-icon-contrast-color1
+    token: color.icon.contrast1
+    rationale: "LabIcon accent slot 1."
+  - jp: --jp-icon-contrast-color2
+    token: color.icon.contrast2
+    rationale: "LabIcon accent slot 2."
+  - jp: --jp-icon-contrast-color3
+    token: color.icon.contrast3
+    rationale: "LabIcon accent slot 3."
+  - jp: --jp-icon-contrast-color4
+    token: color.icon.contrast4
+    rationale: "LabIcon accent slot 4."
+  - jp: --jp-jupyter-icon-color
+    token: color.brand.default
+    rationale: "The Jupyter mark in the top panel and About dialog. Brand-coloured because our own logo replaces it (PRD §8.9)."
+  - jp: --jp-notebook-icon-color
+    token: color.brand.default
+    rationale: "The notebook file-type icon."
+  - jp: --jp-json-icon-color
+    token: color.action.default
+    rationale: "The JSON file-type icon."
+  - jp: --jp-console-icon-background-color
+    token: color.brand.default
+    rationale: "Console icon plate."
+  - jp: --jp-console-icon-color
+    token: color.text.onBrand
+    rationale: "Console icon glyph, on the plate above."
+  - jp: --jp-terminal-icon-background-color
+    token: color.surface.inverse0
+    rationale: "Terminal icon plate — inverted, matching what a terminal looks like."
+  - jp: --jp-terminal-icon-color
+    token: color.text.inverse0
+    rationale: "Terminal icon glyph, on the plate above."
+  - jp: --jp-text-editor-icon-color
+    token: color.text.secondary
+    rationale: "Plain-text file icon — neutral, so it does not compete with the typed file icons beside it."
+  - jp: --jp-inspector-icon-color
+    token: color.text.secondary
+    rationale: "Property-inspector icon."
+
+  # ===========================================================================
+  # SCROLLBARS
+  # ===========================================================================
+  - jp: --jp-scrollbar-background-color
+    token: color.scrollbar.track
+    rationale: "Transparent track — the scrollbar reads as an overlay on the surface, not as a gutter."
+  - jp: --jp-scrollbar-thumb-color
+    token: color.scrollbar.thumbRgb
+    rationale: "CAREFUL: core composes this into rgba(), so it must be an UNBRACKETED `R, G, B` triplet, not a colour. Emitting a hex here silently disables every scrollbar rule in the application — the failure is invisible in review and obvious only at runtime. That is why it has its own Tier 2 token."
+  - jp: --jp-scrollbar-endpad
+    token: scrollbar.endpad
+    rationale: "3px of dead space at each end of the track."
+  - jp: --jp-scrollbar-thumb-margin
+    token: scrollbar.margin
+    rationale: "3.5px inset, which is what makes the thumb read as a pill rather than filling the gutter."
+  - jp: --jp-scrollbar-thumb-radius
+    token: scrollbar.radius
+    rationale: "9px — fully rounded at the 10px thumb thickness."
+
+  # ===========================================================================
+  # MISC
+  # ===========================================================================
+  - jp: --jp-vega-background
+    token: color.surface.canvas
+    rationale: "The plate behind a Vega chart. Notebook output CONTENT is an explicit non-goal (PRD §3.2), but the plate the chart is drawn on is chrome, and leaving it stock white puts a white rectangle in the middle of a dark notebook."

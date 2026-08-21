@@ -1,0 +1,39 @@
+{
+    "name": "@d4n/tokens",
+    "version": "0.1.0",
+    "private": true,
+    "description": "Data4Now design tokens — the four-tier source of truth for the JupyterLab distribution",
+    "license": "BSD-3-Clause",
+    "author": {
+        "name": "Data4Now",
+        "email": "platform@data4now.org"
+    },
+    "main": "lib/index.js",
+    "types": "lib/index.d.ts",
+    "style": "style/index.css",
+    "sideEffects": [
+        "style/**/*.css"
+    ],
+    "files": [
+        "lib/**/*.{d.ts,js,js.map}",
+        "src/**/*.ts",
+        "style/**/*.css",
+        "dist/**/*.json"
+    ],
+    "scripts": {
+        "build": "node build.mjs && jlpm build:lib",
+        "build:lib": "tsc --sourceMap",
+        "build:lib:prod": "tsc",
+        "clean:lib": "rimraf lib tsconfig.tsbuildinfo",
+        "watch": "node build.mjs --watch"
+    },
+    "devDependencies": {
+        "rimraf": "^5.0.1",
+        "typescript": "~5.5.4",
+        "yaml": "^2.5.0"
+    },
+    "//": "Deliberately NOT a labextension — note the absent `jupyterlab` key. This package is a build-time library: it generates the CSS the theme packages ship and the typed values the T4 bridges read. It has no plugin and registers nothing, which is why scripts/run-workspaces.mjs skips it for build:labextension.",
+    "publishConfig": {
+        "access": "public"
+    }
+}

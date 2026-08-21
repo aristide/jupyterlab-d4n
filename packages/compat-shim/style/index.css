@@ -1,0 +1,33 @@
+/* `@d4n/compat-shim` — third-party extension compatibility (PRD §10.4).
+ *
+ * One file per extension under `vendor/`, each naming the package, the version
+ * range its selectors came from, and what specifically that extension hardcodes
+ * — because the only question worth asking about a compat file is "is it still
+ * needed", and it cannot be answered without knowing what it was working
+ * around.
+ *
+ * Scope of the package: extensions that hardcode colour and therefore break in
+ * dark mode, plus the `--jp-*` variables that third-party extensions define for
+ * themselves. Appendix A excludes the latter from the generated Tier-4 adapter
+ * on purpose — the adapter's contract is JupyterLab's variables, and an
+ * extension's are not JupyterLab's to hand out. `--jp-widgets-*` is the big one
+ * and it is mapped in `vendor/ipywidgets.css`.
+ *
+ * Every rule below the imports is gated on
+ * `body[data-jp-theme-name^='Data4Now']`. An extension that renders correctly
+ * on stock JupyterLab must keep rendering that way when a user picks a stock
+ * theme (AC10) — and the gate is also how these rules outweigh the vendor's own
+ * without `!important`, which matters because federated bundle order relative
+ * to a third-party extension is not something we control.
+ *
+ * Coverage is P0 and P1. P2 and P3 rows are deliberately unshimmed; the plugin
+ * in `src/index.ts` names any installed extension that falls through, and
+ * `docs/compat-matrix.md` records what ships today against what does not.
+ */
+
+@import url('./vendor/ipywidgets.css');
+@import url('./vendor/jupyterlab-git.css');
+@import url('./vendor/jupyterlab-lsp.css');
+@import url('./vendor/jupyterlab-execute-time.css');
+@import url('./vendor/jupyterlab-variableinspector.css');
+@import url('./vendor/jupytext.css');

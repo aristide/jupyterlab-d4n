@@ -1,0 +1,83 @@
+/* SURFACE: scrollbars (PRD §6.1)
+ *
+ * Upstream selectors verified against:
+ *   @jupyterlab/application  4.6.3  style/scrollbar.css
+ *   (declared range: ^4.5.0)
+ *
+ * Every selector is mirrored in ../selectors.json (PRD §7.4(5)).
+ *
+ * Two engines, two mechanisms, one design:
+ *
+ *   Firefox gets `scrollbar-color` / `scrollbar-width`, which inherit — so one
+ *   declaration on <body> reaches every scroller in the application. Core sets
+ *   the same property on `[data-jp-theme-scrollbars='true']`; the rule below
+ *   beats it on specificity, which matters because the two themes are
+ *   registered with `themeScrollbars: true` and both rules will be live.
+ *
+ *   WebKit/Blink get `::-webkit-scrollbar`, which does NOT inherit and has to
+ *   be matched against the scrolling element itself — hence the descendant
+ *   universal.
+ *
+ * `--d4n-scrollbar-track` resolves to `transparent`, so the track reads as
+ * whatever surface it sits on and the thumb is the only painted part. The thumb
+ * gets its inset from a transparent border plus `background-clip: padding-box`
+ * rather than from a margin, because a scrollbar part cannot take a margin.
+ */
+
+body[data-jp-theme-name^='Data4Now'] {
+  scrollbar-color: var(--d4n-scrollbar-thumb) var(--d4n-scrollbar-track);
+  scrollbar-width: thin;
+}
+
+/* `.jp-scrollbar-tiny` is core's deliberate 4px variant for dense panel
+ * chrome. It is excluded rather than restyled: at 4px there is no room for the
+ * inset thumb this spec describes, and overriding it would make the file
+ * browser's filter row grow a full-size scrollbar. */
+body[data-jp-theme-name^='Data4Now']
+  :not(.jp-scrollbar-tiny)::-webkit-scrollbar {
+  width: var(--d4n-scrollbar-thickness);
+  height: var(--d4n-scrollbar-thickness);
+}
+
+body[data-jp-theme-name^='Data4Now']
+  :not(.jp-scrollbar-tiny)::-webkit-scrollbar-track {
+  background: var(--d4n-scrollbar-track);
+}
+
+body[data-jp-theme-name^='Data4Now']
+  :not(.jp-scrollbar-tiny)::-webkit-scrollbar-corner {
+  background: var(--d4n-scrollbar-track);
+}
+
+body[data-jp-theme-name^='Data4Now']
+  :not(.jp-scrollbar-tiny)::-webkit-scrollbar-thumb {
+  background: var(--d4n-scrollbar-thumb);
+  background-clip: padding-box;
+  border: var(--d4n-scrollbar-margin) solid transparent;
+  border-radius: var(--d4n-scrollbar-radius);
+}
+
+body[data-jp-theme-name^='Data4Now']
+  :not(.jp-scrollbar-tiny)::-webkit-scrollbar-thumb:hover {
+  background: var(--d4n-color-text-muted);
+  background-clip: padding-box;
+}
+
+/* The end caps are the small dead zones at the ends of the track. Core exposes
+ * their size as `--jp-scrollbar-endpad`; the same number lives in
+ * `--d4n-scrollbar-endpad` so the two agree. */
+body[data-jp-theme-name^='Data4Now']
+  :not(.jp-scrollbar-tiny)::-webkit-scrollbar-track-piece:start {
+  margin-top: var(--d4n-scrollbar-endpad);
+  margin-left: var(--d4n-scrollbar-endpad);
+}
+
+body[data-jp-theme-name^='Data4Now']
+  :not(.jp-scrollbar-tiny)::-webkit-scrollbar-track-piece:end {
+  margin-right: var(--d4n-scrollbar-endpad);
+  margin-bottom: var(--d4n-scrollbar-endpad);
+}
+
+/* `.lm-ScrollBar` is the DataGrid's own DOM scrollbar, not a native one. It is
+ * driven from JS by the shared DataGrid bridge and is not reachable from these
+ * properties (TODO.md P3-11). */
