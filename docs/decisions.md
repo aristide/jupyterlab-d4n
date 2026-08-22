@@ -430,6 +430,120 @@ session); plate `#F4F6FA` on a `#122A47` card in dark. Selecting _JupyterLab
 Light_ returns the launcher to `display: flex`, 102px cards and core greys —
 AC10 holds.
 
+## D-017 — The menu bar's overflow is ours, because Lumino's does not work
+
+**Decided.** `@d4n/shell-chrome:menu-bar-overflow` implements the collapse
+described in §8.4.2 over `MenuBar`'s public API. Lumino 2.9 ships the same
+feature and it stays asleep. Two stylesheet declarations in
+`surfaces/top-panel.css` make the bar's width mean "the room the bar has", and
+they are gated on an attribute the plugin sets, so the CSS half can never arrive
+without the JavaScript half.
+
+Preferring our own implementation over an upstream one is the wrong default and
+is only justified by measurement. Here is the measurement.
+
+### Lumino's overflow never runs, and says nothing about it
+
+`MenuBar` records every item's width once — `if (this._menuItemSizes.length == 0)`
+— and no method in the class ever empties that array again, `clearMenus()`
+included. In JupyterLab the one measurement lands while the widget is detached.
+An `offsetWidth` spy installed before boot, reading every access against a
+menu-bar node:
+
+```
+t=7783ms   node.offsetWidth -> 0
+           item.offsetWidth -> 0 0 0 0 0 0 0 0     <- cached, forever
+t=9890ms   node.offsetWidth -> 396                  (attached, fallback font)
+t=10800ms  node.offsetWidth -> 401                  (Montserrat resolved)
+```
+
+Eight zeros can never sum past the bar's width, so the overflow index stays -1
+for the life of the page. The trigger does not appear at **any** width, in our
+theme or in stock JupyterLab, and nothing is logged. Confirmed independently by
+forcing the bar to 200px with all eight menus still rendered and clipped.
+
+### Waking it up is worse than leaving it asleep
+
+Emptying the cache does start the collapse. Then, in the order they were found:
+
+| Symptom                                                              | Cause                                                                               |
+| -------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| Runaway collapse to a 29px bar showing only the trigger, no recovery | The bar hugged its content, so each collapse shrank the width that decided the next |
+| `RangeError: Invalid array length`, thrown before every render       | A zero-width measurement records index 0; `new Array(index - 1)` then throws        |
+| The trigger drawn twice, side by side                                | The "is the trigger already rendered" test compares a label to `undefined`          |
+| The trigger opens the **Help** menu instead of itself                | Rendered items and the widget's menu list drift out of step                         |
+| `Settings` and `Tabs` come back transposed, permanently              | Restore re-inserts at an index counted from the rendered set                        |
+
+The first two we could contain from outside. The last three are the widget's own
+bookkeeping, and reaching them means reaching into it. Two private fields were
+needed to get that far — `_menuItemSizes` and `_overflowMenuOptions` — and the
+result still put a menu order in front of users that was wrong in a way they
+would have to reload to fix.
+
+### What ships instead
+
+`MenuBarOverflow` in `packages/shell-chrome/src/menuBarOverflow.ts`, using only
+`menus`, `addMenu`, `clearMenus`, `contentNode` and `overflowMenu`:
+
+- keeps the canonical menu order and derives the bar's composition from it every
+  time, so the order cannot drift;
+- measures item widths from the DOM, and **only while nothing is collapsed** —
+  the mistake that makes Lumino's cache wrong is measuring a bar that is showing
+  a trigger in place of what it swallowed;
+- re-measures on theme change, on density change and once the webfont resolves,
+  none of which emits a resize;
+- stands down the moment `bar.overflowMenu` is non-null, which is Lumino's own
+  trigger and can only exist if its cache ever starts working. If upstream fixes
+  this, we stop.
+
+It also stands down when `#jp-menu-panel` is not growing. That guard is not
+defensive noise: our rules are gated on the theme name (D-003), so selecting a
+stock theme takes `flex-grow` away and the bar goes back to hugging its content.
+Measured before the guard existed — switching to _JupyterLab Light_ in a 420px
+window ran the bar down to a single 31px `⋯` that never came back, at any width,
+because a hugging panel can never be wider than what is left in it. Reading the
+computed `flex-grow` rather than the theme name keeps the test on the thing that
+actually has to be true.
+
+### Two corrections to §8.4.2
+
+**"Items collapse below 900px" is off by about half.** The collapse is driven by
+available width, not viewport width: the bar shares the top panel with the logo
+lockup and `#jp-top-bar`, and the first menu collapses near a **460px** window.
+This is the same correction D-016 records for the launcher grid and it points the
+same way — a viewport media query cannot see either neighbour, and would collapse
+a bar with room to spare. `menu.bar.overflowBreakpoint` has been **removed** from
+the token source rather than left in every page asserting a number nothing reads.
+
+**"Item typography … weight 450" does not match the design system.** Bundled
+Montserrat is variable (100–900), so 450 is renderable — but the imported design
+uses 400/500/600/700/800 and never 450 anywhere, and the primitive ramp mirrors
+it. `font.weight.medium` (500) is the step it lands on. The table's 450 is a
+one-off in the prose with nothing behind it.
+
+### And a note on M3, which is satisfied vacuously
+
+`.lm-MenuBar-itemMnemonic` matches **nothing** on stock 4.6.3. Lumino emits the
+span only for a title carrying a mnemonic index, and JupyterLab's main menus set
+none — checked, all eight. So M3 ("mnemonic underlines … never suppressed by the
+redesign") holds because there is nothing to suppress, and the rule in
+`menu-bar.css` is a guard for a deployment that recomposes the menus through
+`overrides.json` and does set them. Whether the product should HAVE mnemonics is
+a design question — it needs a letter per menu, collision rules and a story for
+translation — and it is not a restyle. Raised here rather than decided.
+
+The trigger deliberately carries no mnemonic. Lumino stamps one on its own,
+which draws an underline under the first character of the label; M3 is about
+mnemonics that mean something, not about underlining an ellipsis.
+
+**Verified in a browser, both modes.** Eight menus at 1600px; `Help` collapses
+first at 460px and `Settings` next at 420px; widening restores both, in order;
+the trigger opens a `.lm-Menu` on the menu tokens (`#15324F` / 1px `#142E50` /
+6px / 200px min-width in dark) holding exactly the collapsed menus as submenus;
+`ArrowDown` then `ArrowRight` walks into one (M2, M8); the trigger takes the
+inset focus ring (2px `#4FD1D1`, offset -2px). Under _JupyterLab Light_ the bar
+is white, system-ui, `flex-grow: 0`, and never collapses — AC10 holds.
+
 ## Still open
 
 Tracked in `TODO.md`; listed here so the set is visible in one place.

@@ -32,35 +32,42 @@ without — PRD §7.4, AC4, AC10):
 
 ## Status
 
-| Phase | Scope                    | State                                      |
-| ----- | ------------------------ | ------------------------------------------ |
-| P0    | Audit & contract         | machine-verified; open items need a human  |
-| P1    | Token pipeline & themes  | **done**                                   |
-| P2    | Chrome & navigation      | surfaces styled; the three T3 swaps remain |
-| P3    | Notebook & editor        | scaffolded                                 |
-| P4    | Forms, settings, dialogs | scaffolded                                 |
-| P5    | Icons, motion, density   | scaffolded                                 |
-| P6    | Hardening & release      | not started                                |
+| Phase | Scope                    | State                                        |
+| ----- | ------------------------ | -------------------------------------------- |
+| P0    | Audit & contract         | machine-verified; open items need a human    |
+| P1    | Token pipeline & themes  | **done**                                     |
+| P2    | Chrome & navigation      | most surfaces styled; P2-15 is the last swap |
+| P3    | Notebook & editor        | scaffolded                                   |
+| P4    | Forms, settings, dialogs | scaffolded                                   |
+| P5    | Icons, motion, density   | scaffolded                                   |
+| P6    | Hardening & release      | not started                                  |
 
 Verified in a running JupyterLab 4.6.3, both modes:
 
-- `jlpm test:selectors` — **67 matched, 0 broken**, 165 skipped (states the
+- `jlpm test:selectors` — **90 matched, 0 broken**, 165 skipped (states the
   harness cannot yet drive; skipped is reported, never passed).
-- `jlpm test:contrast` — 476 pairings, 0 failing.
+- `jlpm test:contrast` — 478 pairings, 0 failing.
 - `jlpm lint:design` — five gates green. `jlpm lint:check` green. `pytest` 5 passed.
 
-Everything P2 left open is a **T3 plugin swap** (status bar, launcher, splash),
-not styling — each has to land in the same change that disables the core plugin
-it replaces, or the application loses that surface entirely.
+P2 has one **T3 plugin swap** left — P2-15, the launcher's behaviour — and it has
+to land in the same change that disables the core plugin it replaces, or the
+application loses that surface entirely. The splash (P2-09) is the only swap that
+has shipped. The status bar and the launcher's presentation both landed as T2
+after their §8.5.1/§8.11 "impossible in CSS" claims were audited against a
+running build (D-015, D-016).
+
+Not every plugin in this project is a swap: `@d4n/shell-chrome:menu-bar-overflow`
+(P2-02) provides no token and replaces nothing — it exists because the widget
+JupyterLab already ships has a feature that does not work (D-017).
 
 What already exists and works:
 
-- The four-tier token pipeline, both modes, 133 primitives / 158 semantic ×2 /
-  239 component tokens (`packages/tokens/`).
+- The four-tier token pipeline, both modes, 133 primitives / 159 semantic ×2 /
+  256 component tokens (`packages/tokens/`).
 - `mapping/jp-adapter.yaml` — 233 mapped `--jp-*` variables, every one with a
   rationale, and completeness now machine-verified against the 385 non-private
   variables a running JupyterLab 4.6.3 actually defines or references.
-- The contrast audit: **476 pairings, 0 failures, both modes**
+- The contrast audit: **478 pairings, 0 failures, both modes**
   (`jlpm test:contrast`).
 - The docker-compose dev environment (`docker compose up -d` →
   <http://localhost:8890/lab>).
@@ -197,8 +204,32 @@ Exit: all §6.1–6.2 surfaces at spec in both modes, Galata green.
       pillar, right-side cluster. Hang the pillar off the logo — **not** at a
       hard-coded `left: 230px`, which the imported draft does and which breaks
       the moment the logo width changes.
-- [ ] **P2-02** Menu bar (`.lm-MenuBar`) on the dark frame. Mnemonic underlines
-      must survive (PRD M3). Overflow below 900px.
+- [x] **P2-02** Menu bar (`.lm-MenuBar`) on the dark frame, mnemonics, overflow.
+      The frame and the states were already in `menu-bar.css`; the overflow was
+      the task, and it turned out to need a plugin — Lumino 2.9 ships one and it
+      does not work. It measures its item widths once, while the widget is still
+      detached, caches eight zeros and never invalidates them, so the trigger
+      appears at no width at all, in our theme or in stock, with nothing logged.
+      Waking that cache up is worse than leaving it asleep (a runaway collapse to
+      a 29px bar, a `RangeError` on every render, two triggers, a trigger that
+      opens the Help menu, and a permanently transposed menu order — all
+      measured). So `@d4n/shell-chrome:menu-bar-overflow` does the collapse over
+      the public API and Lumino's stays asleep. Reasoning in
+      `docs/decisions.md` D-017.
+      _Two PRD corrections there:_ §8.4.2's "below 900px" is off by about half
+      (the collapse is driven by available width, so the first menu goes near
+      460px; `menu.bar.overflowBreakpoint` was removed rather than left asserting
+      900px), and its "weight 450" has no support in the design system, which
+      uses 400/500/600/700/800 and never 450.
+      _Also measured:_ `.lm-MenuBar-itemMnemonic` matches **nothing** on stock
+      4.6.3 — JupyterLab's main menus declare no mnemonics — so **M3 holds
+      vacuously**. Whether the product should have them is a design question,
+      raised in D-017 and not decided here.
+      _Verified in both modes:_ `Help` collapses at 460px and `Settings` at
+      420px, widening restores both in order, the trigger opens a `.lm-Menu` on
+      the menu tokens holding exactly the collapsed menus as submenus, arrow keys
+      walk into them (M2, M8), and the trigger takes the inset focus ring.
+      Selecting a stock theme stands the collapse down entirely (AC10).
 - [ ] **P2-03** Menu dropdowns (`.lm-Menu`) — PRD §8.4.3 in full. The
       four-column grid is **fixed-width, not content-derived**, or alignment
       breaks across items with and without icons/shortcuts (M4). Verify M1–M8.

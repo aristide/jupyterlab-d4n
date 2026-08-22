@@ -117,8 +117,7 @@
       },
       "itemPaddingX": { "$value": "{space.2}", "$type": "dimension" },
       "fontSize": { "$value": "{font.size.ui.sm}", "$type": "dimension" },
-      "fontWeight": { "$value": "{font.weight.medium}", "$type": "fontWeight" },
-      "overflowBreakpoint": { "$value": "900px", "$type": "dimension" }
+      "fontWeight": { "$value": "{font.weight.medium}", "$type": "fontWeight" }
     },
     "surface": { "$value": "{color.surface.overlay}", "$type": "color" },
     "border": { "$value": "{color.border.subtle}", "$type": "color" },

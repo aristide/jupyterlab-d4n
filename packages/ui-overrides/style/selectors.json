@@ -97,6 +97,11 @@
         {
           "selector": "#jp-MainLogo svg",
           "state": "boot"
+        },
+        {
+          "selector": "body[data-d4n-menubar-overflow] #jp-menu-panel",
+          "state": "boot",
+          "note": "Not an upstream selector — the attribute is ours, set by @d4n/shell-chrome:menu-bar-overflow when it starts running (D-017). Listed here on purpose: if that plugin stops activating, the menu bar silently loses its overflow and nothing else in the suite would notice, because the CSS half degrades to today's behaviour rather than breaking."
         }
       ]
     },

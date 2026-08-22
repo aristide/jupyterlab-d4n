@@ -39,6 +39,57 @@ body[data-jp-theme-name^='Data4Now'] #jp-menu-panel {
   background: var(--d4n-top-panel-bg);
 }
 
+/* THE MENU BAR'S OVERFLOW (§8.4.2) IS HALF A CSS RULE AND HALF A PLUGIN, AND
+ * THIS IS THE CSS HALF. See surfaces/menu-bar.css and docs/decisions.md D-017.
+ *
+ * The collapse decides what fits by comparing the summed item widths to the
+ * bar's `offsetWidth`. That comparison only means anything if the bar's width is
+ * THE SPACE AVAILABLE TO IT. On the stock top panel it is not: both declarations
+ * below exist to make it so, and both were arrived at by measuring a wrong one.
+ *
+ * `flex-grow: 1` on the menu panel is the load-bearing half, and the one easiest
+ * to mistake for cosmetics. `#jp-menu-panel` is a flex item with the default
+ * `flex: 0 1 auto`, so it HUGS ITS OWN CONTENT — and a bar that hugs its content
+ * reports a width that shrinks every time an item collapses out of it. Measured,
+ * with `min-width: 0` alone: 401px, collapse one, 367px, collapse again, 259px,
+ * and on down to a 29px bar showing nothing but the trigger, at a viewport where
+ * all eight menus had room. It does not recover on widening either, because the
+ * panel can never grow past the content it has left. Growing the panel decouples
+ * its width from its content and the runaway cannot start.
+ *
+ * `min-width: 0` is what lets it shrink at all: the flex default `min-width:
+ * auto` floors the panel at its own min-content, so without this the bar stays
+ * 401px wide at a 320px window and pushes `#jp-top-bar` off the end instead.
+ *
+ * GATED on `data-d4n-menubar-overflow`, which `@d4n/shell-chrome:menu-bar-
+ * overflow` sets when it starts running. A bar allowed to shrink with nothing
+ * catching the overflow would clip its trailing menus into unreachability — no
+ * trigger, no error — so the CSS half is never allowed to arrive alone. The
+ * plugin reads this rule back too: `flex-grow` is its test for whether the bar's
+ * width still means what its arithmetic assumes, which is how selecting a stock
+ * theme (where none of this applies) stands the collapse down instead of
+ * stranding it. */
+body[data-jp-theme-name^='Data4Now'][data-d4n-menubar-overflow] #jp-menu-panel {
+  flex-grow: 1;
+  min-width: 0;
+}
+
+/* The other half of "available to the bar". `#jp-top-bar` also carries
+ * `flex-grow: 1`, and two growing siblings split the slack between them — so the
+ * menu panel would be told it has half the free space rather than all of it, and
+ * would start collapsing at roughly twice the window width it should.
+ *
+ * Pinning the cluster to its content costs nothing visually: it sits at the
+ * right-hand edge either way, because the menu panel now absorbs the slack that
+ * used to sit inside the toolbar. It also makes the arithmetic legible — the
+ * menu bar's width is the window minus the lockup minus the cluster, and nothing
+ * else. */
+body[data-jp-theme-name^='Data4Now'][data-d4n-menubar-overflow]
+  #jp-top-panel
+  > .jp-Toolbar {
+  flex-grow: 0;
+}
+
 /* `#jp-top-panel` is a CSS flex row with the default `align-items: stretch`,
  * so the logo slot is already full-bar height; it centres its own mark rather
  * than the panel centring its children — changing the panel's alignment would

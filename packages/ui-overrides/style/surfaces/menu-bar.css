@@ -19,6 +19,21 @@
  *    underlines it. It is restated so that a future rule in this file which
  *    resets `text-decoration` on items has something to collide with in review
  *    rather than silently deleting the Alt affordance (M3).
+ *
+ *    Worth knowing before reading M3 as satisfied: on stock 4.6.3 this selector
+ *    matches NOTHING. Lumino emits the span only for a title with a mnemonic
+ *    index, and JupyterLab's main menus set none — measured, all eight. So M3
+ *    ("never suppressed by the redesign") holds because there is nothing to
+ *    suppress, and this rule is a guard for a deployment that recomposes the
+ *    menus through overrides.json and does set them. Whether the product SHOULD
+ *    have mnemonics is a design question, not a restyle — docs/decisions.md
+ *    D-017.
+ *
+ * The item weight is `font.weight.medium` (500) where §8.4.2 says 450. The
+ * bundled Montserrat is variable (100-900), so 450 is renderable — but the
+ * imported design system uses 400/500/600/700/800 and never 450 anywhere, and
+ * the primitive ramp mirrors it. The table's 450 is a one-off in the prose with
+ * no support in the design source; 500 is the ramp step it lands on.
  */
 
 body[data-jp-theme-name^='Data4Now'] .lm-MenuBar {
@@ -83,9 +98,30 @@ body[data-jp-theme-name^='Data4Now'] .lm-MenuBar-itemMnemonic {
   text-decoration: underline;
 }
 
-/* Overflow below `--d4n-menu-bar-overflow-breakpoint` (900px) collapses the
- * trailing items into an overflow trigger. That needs a `MenuBar` subclass to
- * emit the trigger item — it is not reachable from CSS, and the token exists
- * for that work rather than for this file (TODO.md P2-02). Until
- * then core's `overflow: hidden` / `:hover { overflow-x: auto }` still applies
- * and nothing is lost, only clipped. */
+/* --- Overflow ------------------------------------------------------------- */
+
+/* THE COLLAPSE TRIGGER IS NOT STYLED HERE, AND THAT IS THE POINT.
+ *
+ * Lumino renders the overflow trigger as one more `.lm-MenuBar-item` and the
+ * overflow menu as a normal `.lm-Menu`, so both are already covered — by the
+ * rules above and by menu.css. There is nothing trigger-specific to write, and
+ * nothing trigger-specific COULD be written: the only thing distinguishing it
+ * from `Help` is its label, and CSS does not select on text.
+ *
+ * What the collapse needs instead is two things neither of which is a rule in
+ * this file:
+ *
+ *   1. a top panel that gives the bar a width meaning "the room you have" rather
+ *      than "the width of what you are showing" — two declarations, in
+ *      top-panel.css, because they belong to `#jp-menu-panel`;
+ *   2. the collapse itself, in `@d4n/shell-chrome:menu-bar-overflow`. Lumino
+ *      ships one and it does not work — it caches item widths once, at a moment
+ *      when the widget is detached and every width reads 0, and waking it up
+ *      turns out to be worse than leaving it asleep. docs/decisions.md D-017.
+ *
+ * §8.4.2's "below 900px" is not what ships: Lumino collapses on the width left
+ * after the logo lockup and `#jp-top-bar` take theirs, which on the stock shell
+ * is nearer a 480px window. That is the better number and D-016 makes the same
+ * correction for the launcher grid — a viewport media query cannot see either
+ * neighbour. `menu.bar.overflowBreakpoint` was removed rather than left sitting
+ * in the token file asserting 900px. */

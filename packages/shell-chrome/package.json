@@ -31,7 +31,8 @@
         "@lumino/coreutils": "^2.0.0",
         "@lumino/datagrid": "^2.0.0",
         "@lumino/disposable": "^2.0.0",
-        "@lumino/signaling": "^2.0.0"
+        "@lumino/signaling": "^2.0.0",
+        "@lumino/widgets": "^2.0.0"
     },
     "devDependencies": {
         "@jupyterlab/builder": "^4.5.0",

@@ -378,8 +378,7 @@ export const d4n = {
         "itemBgOpen": "rgba(255, 255, 255, 0.14)",
         "itemPaddingX": "8px",
         "fontSize": "13px",
-        "fontWeight": "500",
-        "overflowBreakpoint": "900px"
+        "fontWeight": "500"
       },
       "surface": "#FFFFFF",
       "border": "#E4E9F0",
@@ -1091,8 +1090,7 @@ export const d4n = {
         "itemBgOpen": "rgba(255, 255, 255, 0.12)",
         "itemPaddingX": "8px",
         "fontSize": "13px",
-        "fontWeight": "500",
-        "overflowBreakpoint": "900px"
+        "fontWeight": "500"
       },
       "surface": "#15324F",
       "border": "#142E50",

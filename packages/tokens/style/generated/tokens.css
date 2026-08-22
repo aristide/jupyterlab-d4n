@@ -524,7 +524,6 @@ body[data-jp-theme-name^='Data4Now'] {
   --d4n-menu-bar-item-padding-x: var(--d4n-space-2);
   --d4n-menu-bar-font-size: var(--d4n-font-size-ui-sm);
   --d4n-menu-bar-font-weight: var(--d4n-font-weight-medium);
-  --d4n-menu-bar-overflow-breakpoint: 900px;
   --d4n-menu-surface: var(--d4n-color-surface-overlay);
   --d4n-menu-border: var(--d4n-color-border-subtle);
   --d4n-menu-radius: var(--d4n-radius-md);

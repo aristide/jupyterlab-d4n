@@ -108,7 +108,7 @@ terminal that is one shade off from the notebook.
 
 ```bash
 jlpm build:tokens      # regenerate CSS/TS/JSON from src/*.tokens.json + the mapping
-jlpm test:contrast     # the WCAG audit — currently 476 pairings, both modes
+jlpm test:contrast     # the WCAG audit — currently 478 pairings, both modes
 jlpm lint:design       # the five CI gates from PRD §7.4 / AC4 / I2 / M1
 jlpm build             # build all nine packages in dependency order
 ```

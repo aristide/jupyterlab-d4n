@@ -8,6 +8,7 @@ import { ITerminalTracker } from '@jupyterlab/terminal';
 
 import { activateAdaptiveTheme } from './adaptiveTheme';
 import { activateEditorThemeSync } from './editorThemeSync';
+import { menuBarOverflowPlugin } from './menuBarOverflow';
 import { splashPlugin } from './splash';
 import { activateTerminalBridge } from './terminalBridge';
 
@@ -22,12 +23,12 @@ import { activateTerminalBridge } from './terminalBridge';
  *
  * WHY AN ARRAY AND NOT ONE PLUGIN
  * -------------------------------
- * Three unrelated concerns with three different failure modes: a theme-following
- * listener, a settings write, and a canvas repaint. A single plugin makes them
- * one on/off switch, so a user hitting a problem with one has to disable all
- * three — and an activation error in any one of them takes the other two down
- * with it. Separate ids mean `jupyter labextension disable
- * @d4n/shell-chrome:terminal` is a real option.
+ * Unrelated concerns with unrelated failure modes: a theme-following listener, a
+ * settings write, a canvas repaint, a boot screen, a repair to an upstream
+ * widget. A single plugin makes them one on/off switch, so a user hitting a
+ * problem with one has to disable all of them — and an activation error in any
+ * one takes the rest down with it. Separate ids mean `jupyter labextension
+ * disable @d4n/shell-chrome:terminal` is a real option.
  *
  * The DataGrid bridge is intentionally *not* a plugin. `buildGridStyle` and
  * `buildTextRenderer` are exported for `@d4n/ui-overrides` and the debugger hook
@@ -92,7 +93,8 @@ const plugins: JupyterFrontEndPlugin<unknown>[] = [
   adaptiveTheme,
   editorThemeSync,
   terminalBridge,
-  splashPlugin
+  splashPlugin,
+  menuBarOverflowPlugin
 ];
 
 export default plugins;
@@ -110,6 +112,7 @@ export { buildGridStyle, buildTextRenderer } from './gridStyle';
 export { buildTerminalTheme } from './terminalBridge';
 
 export { SPLASH_PLUGIN_ID, buildSplashNode } from './splash';
+export { MENU_BAR_OVERFLOW_PLUGIN_ID } from './menuBarOverflow';
 
 // Deferred T3 plugin replacements. See each module for the reasoning and the
 // TODO id; neither registers anything yet.
