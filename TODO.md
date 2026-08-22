@@ -15,6 +15,13 @@ comments, so **do not renumber them** — mark a task `dropped` instead.
    marking anything done. Tasks that touch CSS also need `jlpm test:selectors`.
 5. If a task turns out to be wrong or impossible, **do not silently redefine
    it** — add a note under it and raise it in `docs/decisions.md`.
+6. **Write down what you verified**, not that you verified. "Checked in both
+   modes" ages into nothing; "112px cards, 6 columns at 1600px, plate `#F4F6FA`
+   on `#122A47`" is still checkable a year later.
+7. **A task with code on disk is not a task in progress.** Several below have a
+   stylesheet already written and nothing else; each says so under _On disk_, so
+   the next person extends it instead of starting again — and so nobody reads a
+   400-line file as evidence that the task is finished.
 
 **Ground rules that apply to every task** (they are the ones this project dies
 without — PRD §7.4, AC4, AC10):
@@ -233,10 +240,31 @@ Exit: all §6.1–6.2 surfaces at spec in both modes, Galata green.
 - [ ] **P2-03** Menu dropdowns (`.lm-Menu`) — PRD §8.4.3 in full. The
       four-column grid is **fixed-width, not content-derived**, or alignment
       breaks across items with and without icons/shortcuts (M4). Verify M1–M8.
+      _On disk:_ `surfaces/menu.css`, 248 lines, written against §8.4.1's three
+      structural facts — portalled into `body`, `.lm-mod-active` paired with
+      every `:hover`, and Lumino's `display: table-row` items re-declared as
+      grids of identical template so the columns line up without the table.
+      _What remains is the verification, and it is most of the task:_ M1 is
+      linted but M2–M8 are not. M4 needs items with icon-only, shortcut-only,
+      both, neither and a submenu, side by side; M6 a menu longer than the
+      viewport; M7 submenus at all four edges at 1280×720; M8 all of it from the
+      menu bar, a context menu and the overflow trigger, in both modes.
 - [ ] **P2-04** Sidebar rails + panel headers. Rails are dark in both modes
       (D-007); 20px icons authored at 20px, not scaled from 16 (PRD §7.8.4).
+      _On disk:_ `surfaces/sidebar.css`, 165 lines — rail plate on the chrome
+      ramp, rail width restated from `--d4n-sidebar-rail-width` because core's is
+      `--jp-private-*`, resting/active tab states, panel headers.
+      _What remains:_ browser verification in both modes, and the icon half —
+      authored-at-20px is P5-01's manifest work, not a CSS change, so decide
+      there whether this task waits on it or ships scaled and says so.
 - [ ] **P2-05** Dock tab bar. 2px teal top border on the current tab, dirty-state
       dot, close affordance, 8px split-handle hit area over a 1px visual.
+      _On disk:_ `surfaces/tab-bar.css`, 179 lines, scoped through
+      `.lm-DockPanel-tabBar` / `.lm-TabPanel-tabBar` so it cannot leak into the
+      sidebar rails.
+      _What remains:_ browser verification in both modes. Check the split handle
+      by pointer, not by reading the rule — an 8px hit area over a 1px visual is
+      the kind of thing that measures right and feels wrong.
 - [x] **P2-06** Command palette, file browser listing + toolbar, running panel,
       extension manager.
 - [x] **P2-07** Status bar — done as **T2**, not the T3 swap §8.5.1 specifies.
@@ -259,6 +287,14 @@ Exit: all §6.1–6.2 surfaces at spec in both modes, Galata green.
       Decide on its own merits, and note the options honestly: overriding a
       private field is fragile across minors; a real `⋯` trigger needs
       measurement and a popover, which is most of a plugin replacement anyway.
+      **P2-02 is now the precedent for the third option** — a plugin that
+      provides no token and replaces nothing, and just does the missing work over
+      the public API (`docs/decisions.md` D-017). `IStatusBar` exposes the items
+      it holds, so the same shape should apply; and D-015 already settled that
+      the swap itself is not happening, so `packages/shell-chrome/src/statusBar.ts`
+      is this task's stub, not a T3 replacement's.
+      Note the breakpoint will land the same way the menu bar's did: 1024px is a
+      viewport number for a bar whose room depends on what is registered in it.
       _Done when:_ items collapse at 1024px and the trigger opens a popover on
       the `.lm-Menu` surface tokens, or the task is dropped with a reason.
 - [x] **P2-08** Launcher — **presentation half, done as T2**. The audit landed
@@ -307,6 +343,14 @@ Exit: all §6.1–6.2 surfaces at spec in both modes, Galata green.
 - [ ] **P2-12** Declarative toolbar/menu restructuring via `overrides.json`
       (PRD §7.6). **Zero DOM manipulation, zero MutationObserver reordering.**
       Anything not expressible declaratively escalates to a T3 replacement.
+      _Not started._ `jupyter-config/lab-settings/overrides.json` holds only the
+      theme, CodeMirror and terminal settings — no `jupyter.lab.toolbars` and no
+      `jupyter.lab.menus` keys yet.
+      _Already waiting on it:_ `toolbar.css` styles a `jp-Toolbar-separator`
+      that **does not exist in 4.6.3** — the string appears nowhere in the
+      bundle. That rule is the receiving end of the item this task adds, and
+      `selectors.json` marks it optional so the integrity job does not report it
+      as broken markup in the meantime.
 - [x] **P2-13** `selectors.json` integrity job (PRD §10.3). Boot each supported
       JupyterLab and assert every selector matches ≥1 element.
       _Done when:_ `jlpm test:selectors` fails loudly on a deliberately broken
@@ -321,9 +365,21 @@ terminal + both DataGrids repaint on switch, A4 green including D4.
 
 - [ ] **P3-01** Cell container, active-cell indicator (full-height 2px bar +
       surface change, not core's left-bar-only), prompts, collapser 24px hit area.
+      _Partly on disk:_ `surfaces/notebook.css` (102 lines) covers the cell
+      container, `.jp-InputPrompt` / `.jp-OutputPrompt`, `.jp-Collapser` and
+      `.jp-mod-active` / `.jp-mod-dirty`. Its own comments defer two pieces back
+      here: the **24px collapser hit area** (still core's 4px) and the dirty
+      prompt treatment.
 - [ ] **P3-02** Output area, stream/error output, the 2px danger left border.
+      _Partly on disk:_ the same file styles `.jp-OutputArea-output`,
+      `.jp-OutputArea-promptOverlay` and `.jp-RenderedText`. The error output
+      treatment — `danger.subtle` plate, 2px `danger.default` left border — is
+      not there yet.
 - [ ] **P3-03** Rendered markdown (`.jp-RenderedHTMLCommon`) — the largest single
       CSS surface in scope. Full type ramp, tables, code, blockquote, lists, hr.
+      _Not started._ `.jp-RenderedHTMLCommon` appears in no stylesheet. Settle
+      **P0-08** first — the mockup wants 15px/1.65 and `--jp-content-font-size1`
+      is 14px, and the whole ramp hangs off whichever wins.
 - [ ] **P3-04** Wire the generated ANSI block into rendermime and verify PRD T2:
       `ls --color=always` renders identically in a terminal and a notebook cell,
       both modes.
@@ -381,6 +437,9 @@ terminal + both DataGrids repaint on switch, A4 green including D4.
 
 - [ ] **P4-01** RJSF global CSS pass against the stable class names. PRD §7.7
       estimates ~85% coverage. Scaffolded in `packages/settings-forms/`.
+      _State of that scaffold:_ `style/settings-forms.css` and an `index.ts`
+      exist; `src/renderers/` holds **a README and nothing else**, so P4-03..07
+      below are unstarted rather than partly built.
 - [ ] **P4-02** Settings editor shell + plugin list + JSON view.
 - [ ] **P4-03** `fieldRenderer`: keybinding capture.
 - [ ] **P4-04** `fieldRenderer`: theme picker.
@@ -391,8 +450,18 @@ terminal + both DataGrids repaint on switch, A4 green including D4.
       `.jp-HTMLSelect` is a native `<select>`, so its popup is OS-rendered —
       accept for low-traffic selects, replace the kernel picker and cell-type
       picker with a custom listbox (PRD R5).
+      _Partly on disk:_ `surfaces/inputs.css` covers `.jp-mod-styled` inputs,
+      `.jp-select-wrapper`, `.jp-InputGroup` and the six search mounts (S1).
+      **Checkbox, radio and switch are not styled at all**, and neither custom
+      listbox exists.
 - [ ] **P4-09** Dialogs, toasts (`.jp-Notification-*`), tooltips, progress.
       Focus trapped, `Escape` closes, focus restored to trigger.
+      _Partly on disk:_ `surfaces/dialog.css` (§8.3 — backdrop, surface, header,
+      body, footer buttons) and `surfaces/notifications.css` (the Toastify host).
+      **Tooltips and progress are not styled**, and the focus contract — trapped,
+      `Escape`, focus restored to the trigger — is behaviour that has not been
+      tested; core may already satisfy it, which is worth checking before writing
+      anything.
 - [ ] **P4-10** **Decision point:** does the settings editor reach spec through
       P4-01 + P4-03..07, or does it need a full T3 replacement of
       `settingeditor-extension:form-ui`? Scoped as a contingency, not baseline
@@ -412,6 +481,11 @@ terminal + both DataGrids repaint on switch, A4 green including D4.
 - [ ] **P5-03** Motion tokens applied, with a `prefers-reduced-motion` branch on
       every consumer. The imported mockup has **nine keyframe animations and no
       reduced-motion guard at all** — treat none of them as safe (A8).
+      _On disk:_ `surfaces/motion.css` (45 lines) is imported last so it can
+      override any surface rule's animation without `!important`. Individual
+      surfaces already carry their own guards (`launcher.css`, `splash.ts`), so
+      this task is the sweep that proves there are no unguarded consumers left —
+      a lint would serve it better than a stylesheet.
 - [ ] **P5-04** Compact density (D-009). Wire `density.compact.*` through the
       chrome, and make the terminal bridge re-fit on the change (trigger (c)).
       Stub: `packages/shell-chrome/src/density.ts`.
