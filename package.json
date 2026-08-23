@@ -64,7 +64,12 @@
         "test:selectors": "node tests/galata/selector-integrity.mjs",
         "test:extract-vars": "node tests/galata/extract-jp-variables.mjs",
         "test:galata": "playwright test --config tests/galata/playwright.config.js",
-        "test:galata:update": "playwright test --config tests/galata/playwright.config.js --update-snapshots"
+        "test:galata:update": "playwright test --config tests/galata/playwright.config.js --update-snapshots",
+        "tasks": "node scripts/run-tasks.mjs",
+        "tasks:run": "node scripts/run-tasks.mjs --yes",
+        "tasks:follow": "node scripts/run-tasks.mjs --follow",
+        "tasks:status": "node scripts/run-tasks.mjs --status",
+        "tasks:report": "node scripts/run-tasks.mjs --report"
     },
     "devDependencies": {
         "@jupyterlab/builder": "^4.5.0",

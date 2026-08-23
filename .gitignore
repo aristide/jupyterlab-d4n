@@ -158,3 +158,6 @@ CLAUDE.md
 # source of truth for this project — every "§7.4"-style reference in the code
 # and in TODO.md points into it, and README.md links to it directly. Ignoring it
 # left those as dead links for anyone who cloned.
+
+# Autonomous task runner state (scripts/run-tasks.mjs)
+.taskrunner/
