@@ -809,7 +809,14 @@ function reportTable(records) {
   const rows = [
     ['Task', 'Start', 'Duration', 'Status'],
     ['----', '-----', '--------', '------'],
-    ...records.map(r => [r.id, r.start.slice(11, 19), r.duration, r.status])
+    // A skipped row carries a placeholder, not a timestamp; slicing an ISO
+    // string out of it produced an empty cell.
+    ...records.map(r => [
+      r.id,
+      r.start.length > 19 ? r.start.slice(11, 19) : r.start,
+      r.duration,
+      r.status
+    ])
   ];
   const widths = [0, 1, 2, 3].map(i =>
     Math.max(...rows.map(r => String(r[i]).length))
