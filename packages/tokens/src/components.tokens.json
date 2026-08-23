@@ -386,7 +386,7 @@
     "railIconSize": {
       "$value": "20px",
       "$type": "dimension",
-      "$description": "Authored at 20px, NOT scaled up from a 16px glyph - a scaled 16 reads soft next to a native 20 (PRD 7.8.4). The highest-visibility icons in the product: always visible, never labelled."
+      "$description": "The size of the rail glyph, and the only thing that decides it - see D-018. LabIcon's `sideBar` preset emits a runtime typestyle class that also says 20px, so this token looked load-bearing while deciding nothing; `surfaces/sidebar.css` now sizes the SVG from it.\n\nThe shipped assets are NOT authored at 20px. All 120 are `viewBox=\"0 0 24 24\"` with `stroke-width=\"1.6\"`, so a rail glyph is a 24px drawing shown at 20 and its stroke renders 1.33px. PRD 7.8.4 asks for 20px-native rail icons; that is a design deliverable, not a CSS or manifest change, and D-018 records why it ships scaled. This description used to claim the opposite.\n\nThe highest-visibility icons in the product: always visible, never labelled."
     },
     "railBg": { "$value": "{color.chrome.railBg}", "$type": "color" },
     "railFg": { "$value": "{color.chrome.railFg}", "$type": "color" },

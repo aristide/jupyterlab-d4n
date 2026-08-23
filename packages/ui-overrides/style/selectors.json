@@ -349,9 +349,41 @@
           "state": "boot"
         },
         {
+          "selector": ".jp-LabShell[data-shell-mode='single-document'] #jp-menu-panel",
+          "state": "boot",
+          "optional": true,
+          "note": "The third consumer of the rail width. Core indents the menu bar by the PRIVATE --jp-private-sidebar-tab-width (32px), which no theme can move, so a 48px rail leaves it 16px short. Needs single-document mode, which no named state drives."
+        },
+        {
+          "selector": ".jp-SideBar .lm-TabBar-tab",
+          "state": "boot",
+          "note": "The resting-tab rule. Core paints each rail tab its own light plate, so without this a dark rail renders as light squares on navy."
+        },
+        {
+          "selector": ".jp-SideBar .lm-TabBar-tab :is(.jp-icon0, .jp-icon1, .jp-icon2, .jp-icon3, .jp-icon-selectable)[fill]",
+          "state": "boot",
+          "note": "Matches STOCK rail glyphs only — ours paint through stroke=currentColor and carry no jp-icon class. Measured at exactly 1 match on 4.6.3: the Property Inspector, which still renders ui-components:build (NEEDS AUTHORING in docs/icon-manifest.md). If this ever drops to 0 the rail is fully ours and the rule is dead code."
+        },
+        {
+          "selector": ".jp-SideBar .lm-TabBar-tab.lm-mod-current :is(.jp-icon0, .jp-icon1, .jp-icon2, .jp-icon3, .jp-icon-selectable)[fill]",
+          "state": "right-panel-open",
+          "optional": true,
+          "note": "The active pair to the rule above. Needs the one stock-glyph rail tab, the Property Inspector, to be the selected one."
+        },
+        {
           "selector": ".jp-SideBar .lm-TabBar-tabIcon",
           "state": "boot",
           "note": "jp-SideBar-tabIcon does not exist on 4.6.3; the rail glyph is a plain lm-TabBar-tabIcon."
+        },
+        {
+          "selector": ".jp-SideBar .lm-TabBar-tabIcon svg",
+          "state": "boot",
+          "note": "LabIcon mounts the glyph as an inline SVG inside the wrapper and sizes it from a typestyle class generated at runtime (.f19uqevd svg on 4.6.3 — the name is a content hash). Sizing the SVG here is what makes --d4n-sidebar-rail-icon-size decide anything; if this stops matching, the rail silently returns to whatever width upstream picked."
+        },
+        {
+          "selector": ".jp-SideBar.lm-TabBar[data-orientation='vertical'] .lm-TabBar-tab + .lm-TabBar-tab",
+          "state": "boot",
+          "note": "Core's separator between rail tabs. Zeroed here — it paints jp-layout-color2 on a navy rail."
         },
         {
           "selector": ".jp-SideBar .lm-TabBar-tab.lm-mod-current",
@@ -366,12 +398,33 @@
           "state": "right-panel-open"
         },
         {
+          "selector": ".jp-SideBar.lm-TabBar[data-orientation='vertical'] .lm-TabBar-tab.lm-mod-current:last-child",
+          "state": "boot",
+          "optional": true,
+          "note": "Core gives this one a bottom border in --jp-border-color0. Only reachable when the LAST rail panel is the selected one, which no named state drives; measured 0 matches at boot."
+        },
+        {
           "selector": ".jp-SidePanel",
           "state": "right-panel-open"
         },
         {
           "selector": ".jp-SidePanel-header",
           "state": "right-panel-open"
+        },
+        {
+          "selector": ".jp-SidePanel-header > h2",
+          "state": "boot",
+          "note": "Core's h2 rule ships UNSCOPED in @jupyterlab/debugger/style/sidebar.css and dresses every side-panel title. Measured 2 matches at boot."
+        },
+        {
+          "selector": "#jp-left-stack > .lm-Widget",
+          "state": "boot",
+          "note": "Carries the panel plate at id specificity, so it beats .jp-SidePanel. Measured 5 matches at boot."
+        },
+        {
+          "selector": "#jp-right-stack > .lm-Widget",
+          "state": "boot",
+          "note": "The right-hand pair to the rule above. Measured 2 matches at boot."
         },
         {
           "selector": ".lm-AccordionPanel .jp-AccordionPanel-title",
@@ -382,7 +435,10 @@
       "nonQueryable": [
         ".jp-SideBar .lm-TabBar-tab:hover:not(.lm-mod-current)",
         ".jp-SideBar.lm-TabBar.jp-mod-left .lm-TabBar-tab.lm-mod-current::before",
-        ".jp-SideBar.lm-TabBar.jp-mod-right .lm-TabBar-tab.lm-mod-current::before"
+        ".jp-SideBar.lm-TabBar.jp-mod-right .lm-TabBar-tab.lm-mod-current::before",
+        ".jp-SideBar .lm-TabBar-tab.lm-mod-current::after",
+        ".jp-SideBar.lm-TabBar.jp-mod-left::after",
+        ".jp-SideBar.lm-TabBar.jp-mod-right::after"
       ]
     },
     {

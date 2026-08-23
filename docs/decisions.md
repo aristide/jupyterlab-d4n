@@ -544,6 +544,82 @@ the trigger opens a `.lm-Menu` on the menu tokens (`#15324F` / 1px `#142E50` /
 inset focus ring (2px `#4FD1D1`, offset -2px). Under _JupyterLab Light_ the bar
 is white, system-ui, `flex-grow: 0`, and never collapses — AC10 holds.
 
+## D-018 — The rail glyphs are a 24px drawing shown at 20px
+
+**Decided.** `--d4n-sidebar-rail-icon-size` now sizes the SVG itself, in
+`surfaces/sidebar.css`. The assets stay on the 24px grid they were exported on,
+and P2-04 ships them scaled instead of waiting for a 20px-native export.
+
+Two things were wrong. Only one of them is fixable here.
+
+**The token decided nothing.** `LabIcon`'s `sideBar` preset
+(`@jupyterlab/ui-components/lib/style/icon.js`) emits a typestyle class whose
+rule is `.<hash> svg { width: 20px; height: auto }` — measured on 4.6.3 as
+`.f19uqevd svg`. Our rule set `min-width`, `min-height` and `background-size` on
+the wrapper `div`, none of which sizes an inline SVG. The rail was 20px because
+core said 20px. The two agreeing was luck: the class name is a content hash and
+the preset is core's to change. Sizing the SVG from the token is what makes the
+20 ours (0-3-2 beats the hash's 0-1-1, so no `!important`).
+
+**The grid is not ours to change.** All 120 shipped assets open
+`<svg width="24" height="24" viewBox="0 0 24 24" … stroke-width="1.6">`. PRD
+§7.8.4 asks for rail icons "authored at 20px, not scaled up from 16px". The set
+is neither. The failure the PRD names does not happen — nothing is upscaled, and
+a 24px drawing shown at 20 loses no detail. What does happen is a thinner
+stroke: 1.6 on a 24 viewBox renders 1.33px at 20, where §7.8.4's "1.5px at 16px"
+normalisation implies 1.875px. Rail strokes are about 29% thinner than the PRD
+asks for — consistently, across the whole set, which is why nothing looks odd
+next to anything else.
+
+Shipping scaled rather than blocking, because nothing in this repo can produce
+the alternative. `packages/icons/svg/` is generated from
+`design-reference/data4now/icons/`, and the importer refuses to touch `viewBox`,
+`stroke-width` or path data by design (`packages/icons/README.md`). A 20px-native
+rail set is an export from Design, so it is in **Still open** below.
+
+TODO.md asked whether P2-04 waits for P5-01. It does not. All ten rail names are
+already in `OVERRIDES`, so P5-01 changes nothing about the rail — with one
+exception: the Property Inspector still renders stock `ui-components:build`, the
+only stock glyph left on either rail and a NEEDS AUTHORING row in
+`docs/icon-manifest.md`. That is a P5-01 item, not a P2-04 blocker.
+
+`railIconSize`'s `$description` used to assert that the icons were authored at
+20px. They never were. It is corrected to say what is on disk.
+
+**Revisit when** Design ships a 20px-native rail export, or when P5-02's contact
+sheet finds the rail reading light against the 16px toolbar set — the same 1.6
+stroke renders 1.07px there, so the two surfaces are thin by different amounts.
+
+---
+
+## D-019 — Rail tooltips are not reachable from CSS, so §6.1's third rail item is not T2
+
+**Decided.** P2-04 delivers the rail at T2 without tooltip positioning, and
+records that the row cannot be finished at that tier.
+
+PRD §6.1 scopes "Left/right sidebar rails" as T2 with "icon-rail width, active
+indicator, tooltip positioning". The first two are CSS. The third is not.
+
+Lumino's default `TabBar` renderer sets `title = data.title.caption` on the tab —
+a **native browser tooltip**. Measured on the running instance: the left rail's
+first tab carries `title="File Browser (Ctrl+Shift+F)"`. `LabShell` builds those
+bars with no custom `renderer`, so there is no element to style and no position
+to set. The browser owns both, and no `.jp-Tooltip` equivalent is mounted for
+rail tabs.
+
+Delivering §6.1's tooltip means replacing the renderer or attaching a hover
+widget. That is a plugin, so T3 or T4. It is the same shape as D-017, where the
+missing behaviour was added over a public API rather than by restyling something
+that was never there.
+
+Not doing that inside P2-04. The task's condition is the dark rail and the 20px
+icons, and a tooltip is a surface of its own — placement, delay, dismissal and
+screen-reader behaviour all have to be decided before any of it is written.
+
+**Revisit when** the rail tooltip is scoped as its own task.
+
+---
+
 ## Still open
 
 Tracked in `TODO.md`; listed here so the set is visible in one place.
@@ -561,3 +637,5 @@ Tracked in `TODO.md`; listed here so the set is visible in one place.
 | Q12   | Logo as SVG with `currentColor`, or bitmaps?                   | Design        | P0-07 |
 | —     | D-002's narrowing of T4 — sign-off needed                      | Design + A11y | P0-09 |
 | —     | Rendered-markdown body size: mockup says 15px, tokens say 14px | Design        | P0-08 |
+| —     | 20px-native rail icon export — the set is 24px scaled (D-018)  | Design        | P2-04 |
+| —     | Rail tooltip: replace the renderer, or accept native (D-019)   | Design + Eng  | P2-04 |

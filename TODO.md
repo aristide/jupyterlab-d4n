@@ -273,13 +273,58 @@ Galata is green.
       longer than the viewport. M7 needs submenus at all four edges at 1280×720.
       M8 needs all of it from the menu bar, from a context menu, and from the
       overflow trigger, in both modes.
-- [ ] **P2-04** Sidebar rails and panel headers. The rails are dark in both modes
-      (D-007). The icons are 20px and authored at 20px, not scaled from 16px
-      (PRD §7.8.4).
-      _On disk:_ `surfaces/sidebar.css`, 165 lines. It has the rail plate on the chrome ramp, the resting and active tab states, and the panel headers. It takes the rail width from `--d4n-sidebar-rail-width`, because the core variable is `--jp-private-*`.
-      _What remains:_ browser measurement in both modes, and the icons.
-      Authored-at-20px is the manifest work in P5-01, not a CSS change. Decide
-      there whether this task waits for P5-01, or ships scaled icons and says so.
+- [x] **P2-04** Sidebar rails and panel headers, dark in both modes (D-007).
+      The rail was already styled. The work was finding what the styling did not
+      reach.
+      **Three upstream rules draw the rail from the canvas ramp.** Each is
+      invisible in stock JupyterLab, where the rail is nearly the same colour as
+      them. On a navy rail all three are high contrast: a white rectangle around
+      the current icon (`::after` at `--jp-layout-color1`), hairlines between
+      tabs in two different greys, and a grey seam at the rail's outer edge. The
+      mockup draws none of them. All three are now removed, and the separators
+      are ZEROED rather than made transparent, because the border is in the box
+      model — transparency left the first tab 52px and the rest 53px.
+      **The hover wash came back the moment the pointer arrived.** The resting
+      rule set `background: transparent` at (0,3,1), which loses to core's hover
+      rule at (0,4,0). Restated on the hover rule at (0,5,1).
+      **The icon-size token decided nothing.** It sized the wrapper, not the
+      glyph. `LabIcon` sizes the SVG from a typestyle class it generates at
+      runtime, whose name is a content hash. Its 20px agreed with our token by
+      coincidence. `sidebar.css` now sizes the SVG, so the token is load-bearing.
+      **The rail width had a third consumer, and it is not on the rail.** In
+      single-document mode core indents `#jp-menu-panel` by the PRIVATE
+      `--jp-private-sidebar-tab-width`, which stays at 32px however wide we make
+      the rail — so a 48px rail left the menu bar indented 33px against a 49px
+      rail. Restated here beside the other two.
+      _Two PRD corrections, both recorded:_ §7.8.4 asks for rail icons authored
+      at 20px. **They are not.** All 120 assets are `viewBox="0 0 24 24"` with
+      `stroke-width="1.6"`, so a rail glyph is a 24px drawing shown at 20 and its
+      stroke renders at 1.33px. It ships scaled and says so (**D-018**); authoring
+      at 20px is a design deliverable, not a CSS or manifest change. And §6.1
+      scopes rail "tooltip positioning" as T2, which it cannot be: Lumino's
+      renderer sets a native `title` attribute on the tab, so there is no element
+      to style. That is **P2-16** below (**D-019**).
+      _Measured in both modes:_ rail 49px (48 + 1), plate `#0B1F38` light and
+      `#050F1D` dark, all four tabs 52px, current glyph teal on a 4% white wash,
+      SVG 20×20 from the token, and every one of the three canvas decorations
+      gone. Panel header 32px with a 12px inset, and its `h2` now starts at 12px
+      — core's un-scoped debugger rule had been adding `padding: 4px 10px` and
+      putting the label at 22px. Selecting _JupyterLab Light_ brings all of it
+      back: a 33px grey rail, tabs at 52 **and** 53px again, the white rectangle
+      and the grey seam returned (AC10).
+- [ ] **P2-16** Rail tooltips (split out of P2-04, **D-019**). PRD §6.1 lists
+      "tooltip positioning" as the third T2 item for the rails. It is not
+      reachable at that tier. Lumino's default `TabBar` renderer sets
+      `title = data.title.caption` on the tab — a native browser tooltip, which
+      owns its own placement and delay. Measured: the first left-rail tab carries
+      `title="File Browser (Ctrl+Shift+F)"`, and `LabShell` builds those bars
+      with no custom renderer.
+      Reaching it means a custom renderer or a hover widget, so a plugin. The
+      same shape as D-017: add the missing behaviour over a public API rather
+      than restyle something that was never there.
+      _Done when:_ rail tooltips use the `.lm-Menu` surface tokens with a decided
+      placement, delay, dismissal and screen-reader behaviour — or the task is
+      dropped with a reason.
 - [ ] **P2-05** Dock tab bar. A 2px teal top border on the current tab, a dirty-state dot, and a close affordance. The split handle gets an 8px hit area over a 1px visual.
       _On disk:_ `surfaces/tab-bar.css`, 179 lines. It is scoped through
       `.lm-DockPanel-tabBar` and `.lm-TabPanel-tabBar`, so it cannot leak into

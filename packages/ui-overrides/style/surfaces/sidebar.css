@@ -8,11 +8,17 @@
  *
  * Every selector is mirrored in ../selectors.json (PRD §7.4(5)).
  *
+ * PRD §6.1 gives the rails three T2 items: icon-rail width, active indicator,
+ * tooltip positioning. The first two are below. The third is not here and
+ * cannot be: the rail tooltip is a native `title` attribute Lumino's renderer
+ * puts on the tab, so no CSS reaches it. See docs/decisions.md D-019.
+ *
  * The rails are `.lm-TabBar`s wearing `.jp-SideBar`. Everything here is written
  * through `.jp-SideBar` so it cannot reach the dock tab bar, which tab-bar.css
  * owns. Core sizes the rail from `--jp-private-sidebar-tab-width`; that name is
  * private and off limits (PRD §7.4(3)), so the width is restated from
- * `--d4n-sidebar-rail-width` on the two rules that actually bound it.
+ * `--d4n-sidebar-rail-width` on the three rules that consume it — the rail's
+ * own min and max width, and the menu panel's indent in single-document mode.
  */
 
 /* The rail is brand chrome, not application surface: `--d4n-color-chrome-rail-*`
@@ -28,6 +34,25 @@ body[data-jp-theme-name^='Data4Now']
   .jp-SideBar.lm-TabBar[data-orientation='vertical'] {
   min-width: calc(var(--d4n-sidebar-rail-width) + var(--d4n-border-width-thin));
   max-width: calc(var(--d4n-sidebar-rail-width) + var(--d4n-border-width-thin));
+}
+
+/* THE RAIL WIDTH HAS A THIRD CONSUMER, AND IT IS NOT ON THE RAIL.
+ *
+ * In single-document mode `application/style/core.css` indents the menu panel
+ * by `calc(var(--jp-private-sidebar-tab-width) + var(--jp-border-width))` so
+ * that the menu bar clears the rail. That variable is private and stays at
+ * core's 32px whatever we do to the rail, so a 48px rail leaves the menu bar
+ * indented 33px against a 49px rail — the first 16px of it sits under the rail.
+ *
+ * It is restated here, beside the other two, rather than in top-panel.css with
+ * the rest of `#jp-menu-panel`: the three are one fact about the rail's width,
+ * and keeping the third somewhere else is what let it go unnoticed. */
+body[data-jp-theme-name^='Data4Now']
+  .jp-LabShell[data-shell-mode='single-document']
+  #jp-menu-panel {
+  padding-left: calc(
+    var(--d4n-sidebar-rail-width) + var(--d4n-border-width-thin)
+  );
 }
 
 body[data-jp-theme-name^='Data4Now']
@@ -81,6 +106,24 @@ body[data-jp-theme-name^='Data4Now']
   background-size: var(--d4n-sidebar-rail-icon-size);
 }
 
+/* D-018. The rule above sizes the WRAPPER, not the glyph, so on its own the
+ * token decided nothing. `LabIcon` mounts the SVG inside that wrapper and sizes
+ * it
+ * from a typestyle class it generates at runtime — measured as
+ * `.f19uqevd svg { width: 20px; height: auto }` on 4.6.3. The 20px agreed with
+ * `--d4n-sidebar-rail-icon-size` by coincidence, and the class name is a
+ * content hash that changes whenever upstream's icon styles change. Sizing the
+ * SVG here is what makes the token load-bearing (0-3-2 beats the hash's 0-1-1,
+ * so no `!important`).
+ *
+ * Height is stated rather than left at `auto` because the token means "a 20px
+ * icon", not "20px wide, whatever tall". Every rail glyph is on a square
+ * viewBox, so the two agree. */
+body[data-jp-theme-name^='Data4Now'] .jp-SideBar .lm-TabBar-tabIcon svg {
+  width: var(--d4n-sidebar-rail-icon-size);
+  height: var(--d4n-sidebar-rail-icon-size);
+}
+
 /* Three distinct rail states with only two backgrounds available: hover moves
  * the foreground and leaves the plate alone, current takes the 4% wash AND the
  * accent foreground AND the indicator below. Giving hover the same wash as
@@ -90,6 +133,14 @@ body[data-jp-theme-name^='Data4Now']
   .jp-SideBar
   .lm-TabBar-tab:hover:not(.lm-mod-current) {
   color: var(--d4n-sidebar-rail-fg-hover);
+
+  /* Beats `.jp-SideBar .lm-TabBar-tab:hover:not(.lm-mod-current)` in
+   * application/sidepanel.css, which paints `--jp-layout-color1` — the CANVAS
+   * plate, measured at rgb(255,255,255) on the rgb(11,31,56) rail. The resting
+   * rule further up already set `background: transparent`, but at 0-3-1 it
+   * loses to that hover rule's 0-4-0, so the wash came back the moment the
+   * pointer arrived. Restating it here at 0-5-1 is what actually holds. */
+  background: transparent;
 }
 
 body[data-jp-theme-name^='Data4Now'] .jp-SideBar .lm-TabBar-tab.lm-mod-current {
@@ -126,6 +177,71 @@ body[data-jp-theme-name^='Data4Now']
   background: var(--d4n-sidebar-rail-indicator);
 }
 
+/* CORE'S OWN RAIL DECORATION IS DRAWN FROM THE CANVAS RAMP.
+ *
+ * Three separate upstream rules put light values on the rail. Each is invisible
+ * in stock JupyterLab, where the rail is `--jp-layout-color2` and every one of
+ * these is a near-neighbour of it. On a navy rail they are all high contrast,
+ * which is why the mockup (`design-reference/data4now/JupyterLab Theme.html`,
+ * `.jp-rail*`) draws none of them: a solid plate, gapped icon boxes, no
+ * separators, no outline on the active icon, no seam at the outer edge.
+ *
+ * The decision the rail states is the 2px accent bar above plus the 4% wash.
+ * These three add a second, contradictory one in canvas colours. */
+
+/* 1. The current tab's inset outline —
+ * `.jp-SideBar .lm-TabBar-tab.lm-mod-current::after` sets
+ * `border: 1px solid var(--jp-layout-color1)`, measured rgb(255,255,255): a
+ * white rectangle round the selected icon. The pseudo-element is kept, because
+ * the left and right rails shift it by -1px to close their own seam; only its
+ * paint is removed. */
+body[data-jp-theme-name^='Data4Now']
+  .jp-SideBar
+  .lm-TabBar-tab.lm-mod-current::after {
+  border-color: transparent;
+}
+
+/* 2. The separators between rail tabs — `.lm-TabBar-tab + .lm-TabBar-tab` takes
+ * `border-top: 1px solid var(--jp-layout-color2)` (measured rgb(244,246,250))
+ * and the tab after the current one takes `--jp-border-color0`
+ * (rgb(138,153,174)). Two hairlines, two different colours, both light.
+ *
+ * Zeroed rather than made transparent: the border is in the box model, so
+ * transparency would leave the first tab 52px and every other tab 53px. The
+ * rail is a stack of identical icon boxes and it must measure like one. */
+body[data-jp-theme-name^='Data4Now']
+  .jp-SideBar.lm-TabBar[data-orientation='vertical']
+  .lm-TabBar-tab
+  + .lm-TabBar-tab {
+  border-top-width: 0;
+}
+
+/* The same hairline, on the one edge the sibling selector cannot reach:
+ * `.lm-TabBar-tab.lm-mod-current:last-child` takes a `--jp-border-color0`
+ * BOTTOM border. It only appears when the last rail panel is the selected one,
+ * which is why a boot-state measurement misses it — at boot the file browser is
+ * current and it is first. */
+body[data-jp-theme-name^='Data4Now']
+  .jp-SideBar.lm-TabBar[data-orientation='vertical']
+  .lm-TabBar-tab.lm-mod-current:last-child {
+  border-bottom-width: 0;
+}
+
+/* 3. The rail's outer seam — `.jp-mod-left::after` / `.jp-mod-right::after`
+ * carry a 1px `--jp-border-color0` edge, measured rgb(138,153,174) between the
+ * navy rail and the white canvas. Navy against canvas is already the strongest
+ * edge in the frame, and a grey line across it reads as a third surface. The
+ * 1px stays in the box model — it is the `+ var(--jp-border-width)` inside the
+ * rail's own min/max width — so removing the colour, not the border, is what
+ * keeps the rail 49px. */
+body[data-jp-theme-name^='Data4Now'] .jp-SideBar.lm-TabBar.jp-mod-left::after {
+  border-right-color: transparent;
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-SideBar.lm-TabBar.jp-mod-right::after {
+  border-left-color: transparent;
+}
+
 /* Panel headers. `.jp-SidePanel-header` is a flex row upstream but has no
  * height and only 2px of padding, so the label sits hard against the frame. */
 body[data-jp-theme-name^='Data4Now'] .jp-SidePanel-header {
@@ -140,11 +256,43 @@ body[data-jp-theme-name^='Data4Now'] .jp-SidePanel-header {
     var(--d4n-color-border-subtle);
 }
 
+/* Core's h2 rule ships in `@jupyterlab/debugger/style/sidebar.css` and carries
+ * NO `.jp-Debugger*` scope, so it dresses the title of every side panel. Its
+ * `padding: 4px 10px` lands inside the header's own `space.3`, which put the
+ * label at a 22px indent while the rule above says 12px. The `margin` stays:
+ * `0 auto 0 0` is what pushes anything after the title to the right edge, and
+ * it is the only reason the header has an action-button slot at all.
+ *
+ * The weight is restated rather than left to core's identical literal, so the
+ * header and the accordion title below take the same token and cannot drift. */
+body[data-jp-theme-name^='Data4Now'] .jp-SidePanel-header > h2 {
+  padding: 0;
+  font-weight: var(--d4n-font-weight-semibold);
+}
+
 body[data-jp-theme-name^='Data4Now'] .jp-SidePanel {
   background: var(--d4n-color-surface-canvas);
   color: var(--d4n-color-text-primary);
   font-family: var(--d4n-font-family-ui);
   font-size: var(--d4n-font-size-ui-sm);
+}
+
+/* THE RULE ABOVE DOES NOT WIN THE PLATE, AND IN LIGHT MODE NOTHING SHOWS IT.
+ *
+ * `#jp-left-stack > .lm-Widget, #jp-right-stack > .lm-Widget` in
+ * application/sidepanel.css sets `background-color: var(--jp-layout-color1)` on
+ * the same element `.jp-SidePanel` matches — `SidePanel` puts that class on its
+ * own root and the shell inserts that root straight into the stack. An id beats
+ * an attribute plus a class, so core takes the background and the rule above
+ * only ever decided the text.
+ *
+ * `--jp-layout-color1` is `surface.raised`. In light mode raised and canvas are
+ * both neutral-0, so the two are indistinguishable and the bug is invisible. In
+ * dark they are deep-navy-500 and deep-navy-700, and the panel reads a step too
+ * light against the dock. Restated here at 1-1-1. */
+body[data-jp-theme-name^='Data4Now'] #jp-left-stack > .lm-Widget,
+body[data-jp-theme-name^='Data4Now'] #jp-right-stack > .lm-Widget {
+  background-color: var(--d4n-color-surface-canvas);
 }
 
 /* Accordion section titles are the second kind of panel header in the sidebar
