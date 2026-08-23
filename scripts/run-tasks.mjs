@@ -898,9 +898,23 @@ async function main() {
     return;
   }
   if (args.status) {
-    console.log(
-      existsSync(STATUS) ? readFileSync(STATUS, 'utf8') : '{"phase":"idle"}'
-    );
+    // Cross-check the recorded phase against the pipe before printing it.
+    //
+    // A SIGKILL cannot be caught, so no exit handler can correct the file. A run
+    // killed that way leaves `phase: "task"` behind for ever, and a watcher —
+    // person or agent — reads it as a live run. This happened: a run was killed
+    // by its launcher at 45 minutes and status.json kept claiming the task was
+    // in flight. The pipe is the only thing that knows the truth.
+    const state = existsSync(STATUS)
+      ? JSON.parse(readFileSync(STATUS, 'utf8'))
+      : { phase: 'idle' };
+    const claimsLive = ['running', 'task'].includes(state.phase);
+    if (claimsLive && !(await isRunLive())) {
+      state.stale = true;
+      state.note =
+        'No run holds the lock, so this state is left over from a run that was killed. Any files changed by it are still in the working tree and were never checked by the gates.';
+    }
+    console.log(JSON.stringify(state, null, 2));
     return;
   }
   if (args.follow) {
