@@ -4,17 +4,6 @@
   "tasks": [
     {
       "order": 1,
-      "id": "P0-02",
-      "title": "Recover the missing tail of JupyterLab Theme.html",
-      "runnable": false,
-      "risk": "low",
-      "dependsOn": [],
-      "blockerKind": "external_asset",
-      "reason": "Both machine read routes are closed (DesignSync get_file truncates at 256 KiB with no range parameter, WebFetch returns 403 with no first-party session), so a person must export or split the file in the design project.",
-      "riskReason": "Only restores a reference document; the task text records that every CSS specification already survived, so no shipped code changes."
-    },
-    {
-      "order": 2,
       "id": "P0-06",
       "title": "Decide the icon coverage for menus (all, none, or high-frequency only)",
       "runnable": false,
@@ -25,7 +14,7 @@
       "riskReason": "The deliverable is a decision record plus a manifest annotation; the CSS consequences land later in P5-01."
     },
     {
-      "order": 3,
+      "order": 2,
       "id": "P0-07",
       "title": "Decide how to deliver the logo (single currentColor SVG vs two imported PNGs)",
       "runnable": false,
@@ -36,7 +25,7 @@
       "riskReason": "Records a decision and drops one asset file into an empty directory."
     },
     {
-      "order": 4,
+      "order": 3,
       "id": "P0-08",
       "title": "Resolve the size conflict in rendered markdown (mockup 15px/1.65 vs --jp-content-font-size1 14px)",
       "runnable": false,
@@ -47,7 +36,7 @@
       "riskReason": "Changes the token surface: font.size.content.1 is the base of the whole content type ramp, and P3-03's entire rendered-markdown surface derives from the winner."
     },
     {
-      "order": 5,
+      "order": 4,
       "id": "P0-09",
       "title": "Get Design and Accessibility sign-off on D-002 (ANSI palette narrowing of PRD T4)",
       "runnable": false,
@@ -58,7 +47,7 @@
       "riskReason": "No code changes — the arithmetic and the audit implementation already ship; this only ratifies them."
     },
     {
-      "order": 6,
+      "order": 5,
       "id": "P0-10",
       "title": "Sign off mapping/jp-adapter.yaml with Design and Engineering (the P0 exit gate)",
       "runnable": false,
@@ -67,6 +56,17 @@
       "blockerKind": "human_signoff",
       "reason": "The Done-when is explicitly a person reviewing 233 rows one by one and approving them on a PR.",
       "riskReason": "Approval only; the mapping file itself is unchanged by the act of signing it off."
+    },
+    {
+      "order": 6,
+      "id": "P0-11",
+      "title": "Re-derive the anchors in design-reference/data4now/COMPONENT-INDEX.md",
+      "runnable": true,
+      "risk": "low",
+      "dependsOn": [],
+      "blockerKind": "none",
+      "reason": "P0-02 recovered the design file and proved the index is stale: CSS banners after L610 are 76 lines low, body anchors are 103 lines low, and the JS column cites banner comments that are not in the file. Every anchor is verifiable with grep, so an agent can do this unattended.",
+      "riskReason": "Edits one reference document. No shipped CSS, no TypeScript, no test changes."
     },
     {
       "order": 7,

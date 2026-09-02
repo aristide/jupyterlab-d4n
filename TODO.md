@@ -109,29 +109,38 @@ off the mapping table and no `--jp-*` variable is unmapped.
 - [x] **P0-01** Import the design system from Claude Design into
       `design-reference/data4now/`.
       _Done when:_ the token source, both logos and the icon set are on disk.
-      **Open caveat:** `JupyterLab Theme.html` stops at exactly 262 144 bytes.
-      This is the 256 KiB limit of DesignSync `get_file`. The tail is missing:
-      the rest of `NotifHost`, all of `TooltipHost`, and all of `OverlayHost`.
-      `OverlayHost` holds the connection-lost markup and the splash markup. The
-      CSS for those surfaces _is_ present. Read P0-02.
-- [ ] **P0-02** Recover the missing tail of `JupyterLab Theme.html`.
-      **This changed from blocking to useful.** Both read routes are closed.
-      `DesignSync get_file` stops at 256 KiB and has no range parameter. Our copy
-      is exactly 262 144 bytes, or 6962 lines. WebFetch on the design URL returns
-      403, because it has no first-party session. A person must export the file,
-      or split it in the design project so that each part is under the limit.
-      Two screenshots also failed: `screenshots/01-launcher.png` and
-      `01-menu.png`.
-      _Done when:_ the file on disk ends with `</html>`.
-      _What is lost, measured and not assumed:_ only the React demo scaffolding.
-      The tail of `NotifHost`, all of `OverlayHost` and all of `TooltipHost` sit
-      after the cut. Their `// ===== … =====` banners have zero matches.
-      _What survived:_ every CSS specification, which is the part we port.
-      `.jp-Tooltip` gives 17 rules from L2728. `.jp-ConnLost` gives 14 from
-      L2850, with dark overrides. `.jp-Splash` gives 16 from L2952, with
-      `-lockup`, `-mark` and `-wordmark`. `.jp-Notification` gives 40 from L3520.
-      P2-09 was built from exactly this. The tail adds only the DOM and the text
-      strings for surfaces whose markup we write ourselves. If you can, recover it. Do not block on it.
+      **Caveat closed on 2026-09-02.** The first import stopped at exactly
+      262 144 bytes, the 256 KiB limit of DesignSync `get_file`. P0-02 replaced
+      the file with a complete copy.
+- [x] **P0-02** Recover the missing tail of `JupyterLab Theme.html`.
+      _Done on 2026-09-02._ Aristide exported the design page as a standalone
+      HTML file. The file on disk now ends with `</body></html>`.
+      _Why the export needed work._ A standalone export is a bundle, not a
+      document. The page sits inside a `<script type="__bundler/template">`
+      block as one JSON string. Three of its lines are larger than 300 KB, so
+      `grep` and line numbers do not work on it. The bundler also inlines the
+      linked foundation stylesheet, and it replaces every external reference
+      with an opaque asset id.
+      _The rebuild._ `scripts/decode-standalone-export.mjs` undoes all three
+      rewrites. The export stays in the tree beside the document, as
+      `JupyterLab Theme (standalone export).html`. Run this when a new export
+      arrives:
+      `node scripts/decode-standalone-export.mjs "design-reference/data4now/JupyterLab Theme (standalone export).html" "design-reference/data4now/JupyterLab Theme.html"`
+      _What was measured, not assumed._ The rebuilt file has 7158 lines and
+      270 426 bytes. Against the old truncated copy, lines 1 to 6962 differ in
+      40 places. Every difference is a same-line substitution. The bundler
+      expanded self-closing SVG tags, escaped `>` as `&gt;`, and wrote
+      `selected=""`. No CSS line changed. Line numbering matches the old copy
+      exactly, so every `L####` reference written before today still points at
+      the same rule.
+      _What the tail added._ `NotifHost` at L6928 is complete. `OverlayHost` at
+      L6988 and `TooltipHost` at L7077 are present for the first time. They
+      hold the connection-lost markup, the splash markup and the tooltip
+      markup. No CSS came back, because none was lost.
+      _Still missing._ Two screenshots never imported:
+      `screenshots/01-launcher.png` and `01-menu.png`. Neither one blocks a
+      task.
+      _Turned up by this task:_ `COMPONENT-INDEX.md` is stale. Read P0-11.
 - [x] **P0-03** Generate `mapping/jp-variables.manifest.json`. Boot the target
       JupyterLab and list every `--jp-*` custom property that it reads. Write
       `tests/galata/extract-jp-variables.mjs` to do this.
@@ -174,6 +183,26 @@ off the mapping table and no `--jp-*` variable is unmapped.
 - [ ] **P0-10** Sign off `mapping/jp-adapter.yaml` with Design and Engineering.
       This is **the** P0 exit gate (PRD §11).
       _Done when:_ a person reviews it row by row and approves it on a PR.
+- [ ] **P0-11** Re-derive the anchors in
+      `design-reference/data4now/COMPONENT-INDEX.md`. The per-row line numbers
+      are stale. P0-02 proved it. The header now matches the file. The table
+      does not.
+      _Measured on 2026-09-02._ Rows up to `IPYWIDGETS` (L610) are correct.
+      Every CSS banner after that point is 76 lines low. The index says
+      `TOOLTIP` L2652 and the file says L2728. `SETTINGS EDITOR`, `TERMINAL`,
+      `SPLASH`, `NOTIFICATIONS`, `DIALOG`, `LAUNCHER`, `COMMAND PALETTE`,
+      `CONTEXT MENU`, `DEBUGGER`, `GIT` and `TABLE OF CONTENTS` all carry the
+      same 76-line error. Body anchors are 103 lines low. The index says
+      `#tooltip-root` L5456 and the file says L5559.
+      _The JS column is worse._ It cites banners such as
+      `// ===== NOTIFICATIONS =====` at L6550. That string is not in the file.
+      The React section names its components with `function NotifHost()` and
+      similar. Use those names, or the `ReactDOM.createRoot` calls.
+      _Cause._ The index was written against an older revision of the design
+      page. The drift does not come from the P0-02 rebuild, which preserved
+      every line number.
+      _Done when:_ every `L####` in the file matches a `grep` of the quoted
+      anchor beside it.
 
 ---
 
@@ -404,6 +433,8 @@ Galata is green.
       The splash is the one surface where the light/dark logo question does not
       occur. D-007 makes the frame dark in both modes. Stub:
       `packages/shell-chrome/src/splash.ts`.
+      _2026-09-02._ P0-02 recovered the file. `OverlayHost` at L6988 holds the
+      reference markup for this surface. Compare it with what we shipped.
 - [x] **P2-10** Bottom dock area (`'down'`). This is new work, because core ships
       it unstyled. Never render an empty bottom bar (PRD §8.5.3).
 - [x] **P2-11** Log console level badges. They use the `color.log.*` tokens,

@@ -13,7 +13,8 @@ without needing access to the design project.
 
 | Path | What it is |
 | --- | --- |
-| `data4now/JupyterLab Theme.html` | The primary mockup — the full JupyterLab interface as designed. **Truncated, see below.** |
+| `data4now/JupyterLab Theme.html` | The primary mockup — the full JupyterLab interface as designed. Complete, 7158 lines. |
+| `data4now/JupyterLab Theme (standalone export).html` | The bundle the file above was rebuilt from. Do not read it. See below. |
 | `data4now/Form Controls.html` | Form control specimens |
 | `data4now/Icon Set.html` | Icon specimen sheet |
 | `data4now/Status Pages.html` | JupyterHub status pages (out of scope here) |
@@ -27,20 +28,40 @@ without needing access to the design project.
 
 ## Two things to know before you use this
 
-### 1. The main mockup is truncated
+### 1. The main mockup was truncated, and is now complete
 
-`JupyterLab Theme.html` is exactly **262 144 bytes** — the 256 KiB cap on the
-design API's file read. It ends mid-JSX. Missing from the end:
+The first import stopped at exactly **262 144 bytes** — the 256 KiB cap on
+`DesignSync get_file`. It ended mid-JSX, without the tail of `NotifHost` and
+without `TooltipHost` or `OverlayHost`.
 
-- the rest of `NotifHost`,
-- all of `TooltipHost`,
-- all of `OverlayHost`, which contains the actual connection-lost banner and
-  splash screen markup.
+On 2026-09-02 the page was exported again, as a **standalone HTML file**, and
+the document was rebuilt from it. `JupyterLab Theme.html` is now 7158 lines and
+ends with `</body></html>`.
 
-The **CSS** for those surfaces is present (around L2728–3103), so they are
-partially recoverable, but the markup and copy are not. Tracked as `TODO.md`
-**P0-02**; two screenshots (`01-launcher.png`, `01-menu.png`) also failed to
-import.
+**The export is a bundle, not a document.** The page sits inside a
+`<script type="__bundler/template">` block as one JSON string, three of its
+lines are larger than 300 KB, and every external reference is replaced by an
+opaque asset id. `grep` and line numbers do not work on it. Read
+`JupyterLab Theme.html` instead. To rebuild it after a new export:
+
+```
+node scripts/decode-standalone-export.mjs \
+  "design-reference/data4now/JupyterLab Theme (standalone export).html" \
+  "design-reference/data4now/JupyterLab Theme.html"
+```
+
+That script undoes the three bundler rewrites: it extracts the page, puts back
+the `<link>` to `preview-assets/colors_and_type.css` that the bundler inlined,
+and restores each external reference. It fails loudly on an asset id that it
+does not know.
+
+**The rebuilt file keeps the old line numbering.** Lines 1 to 6962 differ from
+the truncated copy in 40 places, and every one is a same-line substitution:
+expanded self-closing SVG tags, `&gt;` escaping, and `selected=""`. No CSS line
+moved. An `L####` reference written against the truncated copy still points at
+the same rule.
+
+Two screenshots still failed to import: `01-launcher.png` and `01-menu.png`.
 
 ### 2. `jupyterlab-data4now-theme/` is a draft, and we did not adopt it
 

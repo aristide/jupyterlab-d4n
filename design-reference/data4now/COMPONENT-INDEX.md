@@ -1,15 +1,25 @@
 # Component Source Index — exact anchors
 
 For every JupyterLab component: the **exact CSS banner**, the **exact HTML tag
-or JS render call**, and the **line number** in `JupyterLab Theme.html` (≈6750
+or JS render call**, and the **line number** in `JupyterLab Theme.html` (7158
 lines). To pull the literal code: open the file at the line, or `grep` the
-quoted anchor string. CSS lives in the `<style>` block (lines 9–4060); static
-markup in `<body>` (4060–5470); React-rendered components in `<script
-type="text/babel">` (5470–end).
+quoted anchor string. CSS lives in the `<style>` block (lines 9–4135); static
+markup in `<body>` (4137–5580); React-rendered components in `<script
+type="text/babel">` (5581–end).
 
 > Token base for all of it: `assets/colors_and_type.css` (`--d4n-*`, `--font-*`).
 > Light values on `:root` / `.jp-app` scope; dark values under `body.is-dark`
 > (search `body.is-dark .<class>` for any component's dark overrides).
+
+> **The line numbers in the tables below are stale. Do not trust them. Search
+> for the quoted anchor instead.** Measured on 2026-09-02, after P0-02 rebuilt
+> the file: rows up to `IPYWIDGETS` (L610) are correct, every CSS banner after
+> that point is 76 lines low, and every body anchor is 103 lines low. The JS
+> column cites banner comments such as `// ===== NOTIFICATIONS =====` that are
+> not in the file at all — the React section names its components with
+> `function NotifHost()` and similar. The drift comes from an older revision of
+> the design page, not from the rebuild, which preserved every line number.
+> Tracked as `TODO.md` **P0-11**.
 
 ## Tokens & shell
 
