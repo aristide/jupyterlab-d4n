@@ -65,6 +65,7 @@
         "test:extract-vars": "node tests/galata/extract-jp-variables.mjs",
         "test:galata": "playwright test --config tests/galata/playwright.config.js",
         "test:galata:update": "playwright test --config tests/galata/playwright.config.js --update-snapshots",
+        "test:menu-icons": "node tests/galata/menu-icon-census.mjs",
         "tasks": "node scripts/run-tasks.mjs",
         "tasks:run": "node scripts/run-tasks.mjs --yes",
         "tasks:follow": "node scripts/run-tasks.mjs --follow",

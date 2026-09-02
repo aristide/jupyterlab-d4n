@@ -620,6 +620,113 @@ screen-reader behaviour all have to be decided before any of it is written.
 
 ---
 
+## D-020 — Every command row in a menu carries an icon; value pickers carry none
+
+**Decided by Aristide, 2026-09-02.** This answers PRD **Q10** and closes P0-06.
+
+PRD §7.8.3 offers two positions and forbids a third. The choice is **all**, not
+"only where it aids recognition". Every row that runs a command carries an icon.
+The exemptions below are not a softening of that rule. They are the rows that
+have no icon slot to fill, or that would be filled with the same glyph over and
+over.
+
+### The rule, in the order it is applied
+
+Read a menu as the user sees it: a stack of sections, separated by rules.
+
+1. **A submenu parent carries no icon.** Lumino draws its caret into
+   `.lm-Menu-itemSubmenuIcon`, a different element from `.lm-Menu-itemIcon`.
+   There is no slot to fill. 14 rows.
+2. **A value-picker section carries no icon.** A section between two separators
+   in which every row runs the **same command** with a different argument is a
+   list of values, not a list of actions. An icon there repeats 141 times and
+   says nothing. 164 rows in 7 sections — see the table below.
+3. **Every other command row carries an icon.** 160 rows, 152 distinct commands.
+4. **A toggled row keeps its check mark.** See the constraint below. The icon is
+   still declared, and it shows whenever the option is off.
+
+### Why a toggled row cannot show both
+
+`MenuSvg.Renderer.renderIcon` in
+`@jupyterlab/ui-components/lib/icon/widgets/menusvg.js` reads:
+
+```js
+if (data.item.isToggled) {
+  // check mark icon takes precedence
+  return h.div({ className }, checkIcon, data.item.iconLabel);
+}
+return h.div({ className }, data.item.icon, data.item.iconLabel);
+```
+
+The check **replaces** the item icon in the same slot. Measured on the running
+instance at boot: 21 rows render an icon, and 15 of them are that check mark.
+Only 6 real command icons exist in the whole menu bar, all in File ▸ New.
+
+Two consequences that the authoring work must accept:
+
+- An icon on a toggleable command **disappears while the option is on**. Do not
+  pick a glyph whose absence reads as a fault.
+- Lumino marks only the rows that are toggled on. An unchecked toggle is
+  indistinguishable from a plain command in the DOM, so the census cannot count
+  toggleable rows. It counts the 10 that were on at boot.
+
+Changing this needs a replacement `Menu.IRenderer` that draws the check in its
+own leading column. That is a plugin, so T3 or T4, in the same shape as D-017.
+**Not in scope.** Revisit only if the vanishing icon proves to be a real
+complaint.
+
+### What the census measured
+
+`jlpm test:menu-icons` reproduces all of it in a real browser.
+
+| kind                            | rows    |
+| ------------------------------- | ------- |
+| Command rows that carry an icon | **160** |
+| Value-picker rows, exempt       | 164     |
+| Submenu parents, no slot        | 14      |
+| Rows that render with no label  | 2       |
+| **Actionable rows, all menus**  | **340** |
+
+Command rows per menu: File 37, Edit 25, View 41, Run 9, Kernel 10, Tabs 6,
+Settings 19, Help 13.
+
+The seven exempt sections:
+
+| section                                | rows | the one command              |
+| -------------------------------------- | ---- | ---------------------------- |
+| View ▸ Text Editor Syntax Highlighting | 141  | `fileeditor:change-language` |
+| Settings ▸ Theme (first section)       | 5    | `apputils:change-theme`      |
+| Settings ▸ Text Editor Indentation     | 5    | `fileeditor:change-tabs`     |
+| Settings ▸ Text Editor Theme           | 4    | `fileeditor:change-theme`    |
+| Help (documentation links)             | 4    | `help:open`                  |
+| Settings ▸ Terminal Theme              | 3    | `terminal:set-theme`         |
+| Settings ▸ Console Run Keystroke       | 2    | `console:interaction-mode`   |
+
+Note that Settings ▸ Theme is **not** exempt as a whole. Its first section is
+the five theme names. The eight rows after it are real commands — the font-size
+pairs, the scrollbar toggle — and they carry icons.
+
+### Two things this turned up
+
+- **`hub:control-panel` and `hub:logout` render as empty rows** at the foot of
+  the File menu. The commands exist and the labels are blank, because this image
+  is not behind a JupyterHub. Two blank rows below a separator read as a broken
+  menu. Fix belongs with the File menu work, not here.
+- The failure mode PRD §7.8.3 warns about — inheriting core's partial coverage —
+  **barely exists in the menu bar**, because core's coverage there is 6 rows out
+  of 340. It is the context menus that are partial. The file browser's context
+  menu already renders 17 distinct icons (P0-04).
+
+**Consequence.** I4 in PRD §7.8.5 now has a number: 160 rows, 152 commands.
+The authoring backlog is P5-01, and it is larger than the 65 `NEEDS AUTHORING`
+names in `docs/icon-manifest.md`, because most of these 152 commands have no
+registry entry to override at all.
+
+**Revisit when** a replacement menu renderer is on the table, or when a menu
+grows a section that this rule does not classify cleanly.
+
+---
+
 ## Still open
 
 Tracked in `TODO.md`; listed here so the set is visible in one place.
@@ -632,7 +739,6 @@ Tracked in `TODO.md`; listed here so the set is visible in one place.
 | Q5    | matplotlib/Vega opt-in helper in v1 or deferred?               | PM            | P3-14 |
 | Q7    | JupyterLite in scope for v1?                                   | PM            | P1-09 |
 | Q8    | Upstream the a11y contrast fixes to core?                      | Eng Lead      | P6-08 |
-| Q10   | Menu icon coverage — all-or-nothing, or high-frequency only?   | Design        | P0-06 |
 | Q11   | Favicon delivery route; busy-state swapping?                   | Platform      | P1-08 |
 | Q12   | Logo as SVG with `currentColor`, or bitmaps?                   | Design        | P0-07 |
 | —     | D-002's narrowing of T4 — sign-off needed                      | Design + A11y | P0-09 |

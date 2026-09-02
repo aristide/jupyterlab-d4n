@@ -161,11 +161,31 @@ off the mapping table and no `--jp-*` variable is unmapped.
       _Done when:_ the font is committed, `@font-face` is generated, and a
       terminal that runs `htop` shows no shear in the box-drawing characters
       (PRD T5).
-- [ ] **P0-06** Decide the icon coverage for menus: every icon in a menu or none
-      of them, or only the high-frequency ones (PRD §7.8.3, **Q10**). Either
-      answer is good. The partial coverage that core gives by default is not.
-      _Done when:_ the decision is in `docs/decisions.md` and in the icon
-      manifest.
+- [x] **P0-06** Decide the icon coverage for menus: every icon in a menu or none
+      of them, or only the high-frequency ones (PRD §7.8.3, **Q10**).
+      _Decided by Aristide on 2026-09-02:_ **all**. Every row that runs a command
+      carries an icon. Recorded as **D-020**, and in the census section of
+      `docs/icon-manifest.md`.
+      _Measured with `jlpm test:menu-icons`, which this task added._ The menu bar
+      has 340 actionable rows across 8 dropdowns and 14 submenus. 160 of them are
+      command rows and must carry an icon. They run 152 distinct commands. 164
+      rows sit in 7 value-picker sections and are exempt, because each section
+      runs one command with a different argument. 141 of those are the syntax
+      highlighting language list. 14 rows are submenu parents, which have no icon
+      slot. 2 rows render with no label at all.
+      _The constraint that shaped the rule._ `MenuSvg.Renderer.renderIcon` in
+      `@jupyterlab/ui-components` substitutes the check mark **into the icon
+      slot** on a toggled row. A toggleable command therefore loses its icon
+      while the option is on. Showing both needs a replacement `Menu.IRenderer`,
+      which is T3 or T4. D-020 records that as out of scope.
+      _Found while measuring._ Only 6 real command icons exist in the whole menu
+      bar today, all in File ▸ New. The other 15 glyphs are check marks.
+      `hub:control-panel` and `hub:logout` render as two blank rows at the foot
+      of the File menu, because this image is not behind a JupyterHub.
+      _Cost for P5-01._ This backlog is not the 65 `NEEDS AUTHORING` names. Most
+      of the 152 commands have no `LabIcon` to override, so the work is
+      declaring icons through `overrides.json` and the plugin, not swapping
+      registry entries.
 - [ ] **P0-07** Decide how to deliver the logo: one SVG with `currentColor`, or
       the two imported PNG files (**Q12**). D-007 already removes the light/dark
       swap. The frame is dark in both modes, so one asset can be enough.
@@ -586,6 +606,11 @@ green including D4.
       `packages/icons/src/manifest.ts` ships only the mappings that we measured.
       The rest are in a PENDING list. A wrong registry name does nothing
       and reports nothing, so a guess is worse than an omission.
+      _D-020 sets the menu half of this task._ 160 menu rows must carry an icon,
+      across 152 distinct commands. Most of those commands have no `LabIcon`, so
+      that part is not a registry override. It is a declaration through
+      `overrides.json` and the plugin, and it therefore waits on P2-12. Run
+      `jlpm test:menu-icons --json` for the classified rows.
       _Done when:_ I1 holds. No stock glyph is left on a surface that we own.
 - [ ] **P5-02** Review the icon contact sheet for consistent optical weight (I3).
       Review it as a sheet, not icon by icon.

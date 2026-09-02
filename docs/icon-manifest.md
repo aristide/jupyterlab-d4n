@@ -145,8 +145,8 @@ Each is more visible than a fully stock icon would be.
    row, 24px apart — this is the most concentrated visible inconsistency in the
    product.
 
-Deciding to leave a family stock is fine (PRD §7.8.3, and P0-06 is exactly that
-decision). Leaving _half_ a family stock is not.
+Deciding to leave a family stock is fine (PRD §7.8.3). Leaving _half_ a family
+stock is not. For menus specifically, that judgement is now made: **D-020**.
 
 ---
 
@@ -184,12 +184,13 @@ Reading it:
   controls — the icons a debugging user looks at continuously. This is the
   single biggest concentration of work and it blocks nothing until P3-09/P3-10.
 - **The cell toolbar is the worst ratio** (2/6) and the smallest fix.
-- The menu bar renders **no** icons at all, and top-level menus render only
-  `caret-right` (submenu indicator) and `check` (toggle state). JupyterLab's
-  menus are essentially icon-free; the icons live in **context** menus (17
-  distinct in the file browser's). That is a material input to **P0-06** — the
-  "inherit core's partial coverage" failure mode the task warns about barely
-  exists in the menu bar, because core's coverage there is _zero_.
+- The menu bar is **6 icons out of 340 actionable rows**, and all six are in
+  File ▸ New. The 15 other glyphs that render there are `check`, which is the
+  toggled state, plus `caret-right` on submenu parents. The icons live in
+  **context** menus (17 distinct in the file browser's). The
+  "inherit core's partial coverage" failure mode that PRD §7.8.3 warns about
+  barely exists in the menu bar, because core's coverage there is almost zero.
+  **D-020** settles what we put there. See the census further down.
 
 ---
 
@@ -331,6 +332,45 @@ Status legend: **OVERRIDDEN** (applied and verified) · **DEFERRED — I6**
 | 127 | `ui-components:view-breakpoint`       | NEEDS AUTHORING      | —                                        | —                                                                                   |
 | 128 | `ui-components:word`                  | NEEDS AUTHORING      | —                                        | —                                                                                   |
 | 129 | `ui-components:yaml`                  | OVERRIDDEN           | `svg/file-types/yaml-config.svg`         | —                                                                                   |
+
+---
+
+## Menu icon coverage — the D-020 census
+
+P0-06 is decided: **every command row in a menu carries an icon.** The rule and
+its exemptions are `docs/decisions.md` **D-020**. This section holds the numbers,
+because they change the size of the authoring backlog above.
+
+Reproduce it with `jlpm test:menu-icons`. It drives the same browser this file's
+other numbers came from, opens all 8 dropdowns and all 14 submenus, and
+classifies every row.
+
+| kind                           | rows    | owes an icon |
+| ------------------------------ | ------- | ------------ |
+| Command rows                   | **160** | yes          |
+| Value-picker rows, 7 sections  | 164     | no (D-020)   |
+| Submenu parents                | 14      | no slot      |
+| Rows that render with no label | 2       | defect       |
+| **Actionable rows, all menus** | **340** |              |
+
+Command rows per menu: File 37, Edit 25, View 41, Run 9, Kernel 10, Tabs 6,
+Settings 19, Help 13. They run **152 distinct commands**.
+
+**Six of the 160 carry an icon today** — Console, Notebook, Terminal, Text File,
+Markdown File and Python File, all in File ▸ New. Ten more rendered a check mark
+at boot, which is the toggled state, not an icon (D-020 quotes the upstream
+renderer that substitutes it).
+
+**This backlog is larger than the 65 above, and different in kind.** The 65 are
+registry names that exist and need a better glyph. Most of these 152 commands
+have **no `LabIcon` at all** — core never gave them one, so there is nothing to
+override. Giving them icons means declaring `icon` on the command or on the menu
+item, which is `overrides.json` and plugin work (P2-12, P5-01), not an entry in
+`OVERRIDES`.
+
+The 141-row syntax-highlighting list is the reason the value-picker exemption
+exists. Without it this number would be 324, and 141 of those would be language
+marks that we neither own nor can draw consistently at 16px.
 
 ---
 
