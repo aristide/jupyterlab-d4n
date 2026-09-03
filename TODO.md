@@ -230,11 +230,20 @@ off the mapping table and no `--jp-*` variable is unmapped.
       `font.lineHeight.relaxed`, and it sits between the mockup's two values.
       Making body type follow density would widen **D-009**, which rejects a
       scale multiplier. One size, both densities.
-- [ ] **P0-09** Get sign-off from Design and Accessibility on **D-002**. D-002
-      narrows PRD T4 ("all 16 ANSI colours pass 4.5:1"), which arithmetic cannot
-      satisfy as written.
-      _Done when:_ the decision is signed off, or the criterion in the PRD is
-      rewritten.
+- [x] **P0-09** Get sign-off from Design and Accessibility on **D-002**.
+      _Signed off by Aristide on 2026-09-03._ Both roles are held by one person
+      on this project, and D-002 now records that, so a later reader does not
+      assume three independent reviews.
+      _What was signed._ The measured version, not the argument.
+      `jlpm test:contrast` audits **102 T4 pairings**: 90 at the full 4.5:1
+      gate, 12 at the 1.5:1 floor. All 17 slots are covered, the 16 ANSI colours
+      plus the default foreground. The 12 relaxed pairings are the two slots
+      nearest the background in each mode, over three backgrounds each. Worst
+      relaxed value 1.60:1. Tightest value still at the full gate 4.52:1.
+      _Rejecting it was not available._ PRD T4 as written has no solution: no
+      colour has a relative luminance both ≤ 0.179 and ≥ 0.249.
+      _Carry forward._ The PRD text is now wrong rather than unmet. Nobody has
+      rewritten T4. Correct §8.7.2 and T4 at the next PRD revision.
 - [ ] **P0-10** Sign off `mapping/jp-adapter.yaml` with Design and Engineering.
       This is **the** P0 exit gate (PRD §11).
       _Done when:_ a person reviews it row by row and approves it on a PR.

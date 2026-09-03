@@ -54,8 +54,35 @@ slots plus the default foreground carry the full 4.5:1 gate; the two anchors at
 the far end from the background also carry it; the two nearest the background
 carry a 1.5:1 "not literally invisible" floor.
 
-**Open:** this narrows a written PRD acceptance criterion. It needs Design and
-Accessibility sign-off — see TODO `P0-09`.
+### Signed off, 2026-09-03, by Aristide (P0-09)
+
+**Design and Accessibility are held by one person on this project.** Record
+that here rather than let a later reader assume three independent reviews.
+
+What was signed is the measured version, not the argument. `jlpm test:contrast`
+audits **102 T4 pairings**:
+
+|                                              | pairings |
+| -------------------------------------------- | -------- |
+| At the full 4.5:1 gate                       | **90**   |
+| At the 1.5:1 "not literally invisible" floor | **12**   |
+
+All 17 slots are covered — the 16 ANSI colours plus the default foreground. The
+12 relaxed pairings are the two slots nearest the background in each mode, over
+three backgrounds each: `ansi.black` and `ansi.brightBlack` in dark,
+`ansi.white` and `ansi.brightWhite` in light. The two anchors at the far end
+from the background keep the full gate.
+
+Worst relaxed value: **1.60:1**, `ansi.black` on the dark terminal selection.
+Tightest value still meeting the full gate: 4.52:1.
+
+Rejecting the narrowing was not an available answer. PRD T4 as written has no
+solution, and the reason is stated above: no colour has a relative luminance
+both ≤ 0.179 and ≥ 0.249.
+
+**The PRD text is now wrong rather than unmet.** Nobody has rewritten T4. Treat
+this decision as the authority, and correct §8.7.2 and T4 at the next PRD
+revision.
 
 ---
 
@@ -921,15 +948,14 @@ document is on screen to read. If 14px proves too small there, the change is to
 
 Tracked in `TODO.md`; listed here so the set is visible in one place.
 
-| PRD Q | Question                                                      | Blocked on    | TODO  |
-| ----- | ------------------------------------------------------------- | ------------- | ----- |
-| Q1    | Monospace ramp — authored or supplied?                        | Design        | P0-05 |
-| Q3    | Does the launch-target readout ship in v1?                    | Design + PM   | P2-08 |
-| Q4    | How much of the icon set exists vs needs authoring?           | Design        | P0-04 |
-| Q5    | matplotlib/Vega opt-in helper in v1 or deferred?              | PM            | P3-14 |
-| Q7    | JupyterLite in scope for v1?                                  | PM            | P1-09 |
-| Q8    | Upstream the a11y contrast fixes to core?                     | Eng Lead      | P6-08 |
-| Q11   | Favicon delivery route; busy-state swapping?                  | Platform      | P1-08 |
-| —     | D-002's narrowing of T4 — sign-off needed                     | Design + A11y | P0-09 |
-| —     | 20px-native rail icon export — the set is 24px scaled (D-018) | Design        | P2-04 |
-| —     | Rail tooltip: replace the renderer, or accept native (D-019)  | Design + Eng  | P2-04 |
+| PRD Q | Question                                                      | Blocked on   | TODO  |
+| ----- | ------------------------------------------------------------- | ------------ | ----- |
+| Q1    | Monospace ramp — authored or supplied?                        | Design       | P0-05 |
+| Q3    | Does the launch-target readout ship in v1?                    | Design + PM  | P2-08 |
+| Q4    | How much of the icon set exists vs needs authoring?           | Design       | P0-04 |
+| Q5    | matplotlib/Vega opt-in helper in v1 or deferred?              | PM           | P3-14 |
+| Q7    | JupyterLite in scope for v1?                                  | PM           | P1-09 |
+| Q8    | Upstream the a11y contrast fixes to core?                     | Eng Lead     | P6-08 |
+| Q11   | Favicon delivery route; busy-state swapping?                  | Platform     | P1-08 |
+| —     | 20px-native rail icon export — the set is 24px scaled (D-018) | Design       | P2-04 |
+| —     | Rail tooltip: replace the renderer, or accept native (D-019)  | Design + Eng | P2-04 |
