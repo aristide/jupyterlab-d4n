@@ -499,10 +499,11 @@ Galata is green.
       pass.** The fix is recorded as **D-025**.
       _What M6 found, and it was not small._ Every submenu and every context
       menu was `overflow: hidden`. Three rules land on a menu node:
-      `.lm-Menu { overflow: hidden auto }` (0,1,0, Lumino),
-      `.jp-ThemedContainer { overflow: hidden }` (0,1,0, JupyterLab, inserted
-      later, so it wins) and `.lm-MenuBar-menu.jp-ThemedContainer { overflow:
-  auto }` (0,2,0) which rescues menu-bar dropdowns only. **116 of the 141
+      Lumino gives `.lm-Menu` a 0,1,0 rule with `overflow: hidden auto`.
+      JupyterLab gives `.jp-ThemedContainer` a 0,1,0 rule with
+      `overflow: hidden`, and its sheet is inserted later, so it wins.
+      JupyterLab then rescues menu-bar dropdowns only, with a 0,2,0 rule on
+      `.lm-MenuBar-menu.jp-ThemedContainer`. **116 of the 141
       rows** in View ▸ Text Editor Syntax Highlighting, including the last one,
       were unreachable by wheel, keyboard or mnemonic. This file's own comment
       asserted the opposite; it is corrected.
