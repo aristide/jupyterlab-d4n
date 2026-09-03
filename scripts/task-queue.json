@@ -4,17 +4,6 @@
   "tasks": [
     {
       "order": 1,
-      "id": "P0-07",
-      "title": "Decide how to deliver the logo (single currentColor SVG vs two imported PNGs)",
-      "runnable": false,
-      "risk": "low",
-      "dependsOn": [],
-      "blockerKind": "human_decision",
-      "reason": "PRD Q12 is open on Design, and the Done-when also requires the chosen asset to be supplied into packages/ui-overrides/style/images/, which is currently empty.",
-      "riskReason": "Records a decision and drops one asset file into an empty directory."
-    },
-    {
-      "order": 2,
       "id": "P0-08",
       "title": "Resolve the size conflict in rendered markdown (mockup 15px/1.65 vs --jp-content-font-size1 14px)",
       "runnable": false,
@@ -25,7 +14,7 @@
       "riskReason": "Changes the token surface: font.size.content.1 is the base of the whole content type ramp, and P3-03's entire rendered-markdown surface derives from the winner."
     },
     {
-      "order": 3,
+      "order": 2,
       "id": "P0-09",
       "title": "Get Design and Accessibility sign-off on D-002 (ANSI palette narrowing of PRD T4)",
       "runnable": false,
@@ -36,7 +25,7 @@
       "riskReason": "No code changes — the arithmetic and the audit implementation already ship; this only ratifies them."
     },
     {
-      "order": 4,
+      "order": 3,
       "id": "P0-10",
       "title": "Sign off mapping/jp-adapter.yaml with Design and Engineering (the P0 exit gate)",
       "runnable": false,
@@ -47,7 +36,7 @@
       "riskReason": "Approval only; the mapping file itself is unchanged by the act of signing it off."
     },
     {
-      "order": 5,
+      "order": 4,
       "id": "P0-11",
       "title": "Re-derive the anchors in design-reference/data4now/COMPONENT-INDEX.md",
       "runnable": true,
@@ -56,6 +45,17 @@
       "blockerKind": "none",
       "reason": "P0-02 recovered the design file and proved the index is stale: CSS banners after L610 are 76 lines low, body anchors are 103 lines low, and the JS column cites banner comments that are not in the file. Every anchor is verifiable with grep, so an agent can do this unattended.",
       "riskReason": "Edits one reference document. No shipped CSS, no TypeScript, no test changes."
+    },
+    {
+      "order": 5,
+      "id": "P0-12",
+      "title": "Put the D-021 mark on screen and close the B5 gap",
+      "runnable": true,
+      "risk": "medium",
+      "dependsOn": [],
+      "blockerKind": "none",
+      "reason": "D-021 decided the mark and P0-07 authored the asset, so the remaining work is mechanical: override ui-components:jupyter in packages/icons/src/manifest.ts, and replace the letter D in the splash tile with the same pie-chart O so PRD B5 holds. Both halves are verifiable in a browser.",
+      "riskReason": "Changes the brand mark on two visible surfaces at once, and an unknown LabIcon name fails silently — LabIcon.resolve registers a placeholder rather than throwing."
     },
     {
       "order": 6,

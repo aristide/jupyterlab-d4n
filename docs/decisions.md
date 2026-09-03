@@ -727,6 +727,98 @@ grows a section that this rule does not classify cleanly.
 
 ---
 
+## D-021 — The top panel gets a compact brand mark, not the lockup
+
+**Decided by Aristide, 2026-09-03.** This answers PRD **Q12** and closes P0-07.
+The asset is `packages/ui-overrides/style/images/logo-mark.svg`.
+
+### The question the task asked was already settled by the slot
+
+PRD §8.9.1 offers "one SVG with `currentColor`" against "two imported PNGs".
+The second option is not available. Measured live: `#jp-MainLogo` holds a
+`LabIcon`, `<svg data-icon="ui-components:jupyter">` at 17×22. `LabIcon` takes
+an SVG string. A raster needs a T3 replacement of
+`@jupyterlab/application-extension:logo`, and our shipped `top-panel.css`
+already styles `#jp-MainLogo svg`.
+
+The first option is also not available as written. The mark is three colours:
+navy letterforms, a teal pillar, a magenta pie wedge inside the "O".
+`currentColor` gives one colour, so it flattens the brand.
+
+### The real problem was size
+
+The design system ships one lockup, two PNG files, 960×675 RGBA. They are the
+whole inventory — **there is no SVG of the logo anywhere in the repo**. The
+lockup is a two-line stack, DATA over FOR|NOW, and the mockup renders it at
+`height: 22px`. `design-reference/data4now/screenshots/fixed-logo-dark.png`
+shows the result: an illegible block. The mockup's own splash avoids the
+problem. It draws a CSS tile instead of using the image.
+
+So the decision is a **compact mark for the bar**, and the lockup stays for
+surfaces that have room for it.
+
+### The mark
+
+The pie-chart "O" from the logo's own NOW. It is the brand's device, it is
+circular, and it survives 22px. Sector angles were measured off the source
+artwork rather than eyeballed — sampled around the disc at 0.6r and 0.85r,
+which agree:
+
+| sector      | angles       | span |
+| ----------- | ------------ | ---- |
+| letterforms | 45° to 135°  | 90°  |
+| open notch  | 136° to 180° | 45°  |
+| magenta     | 181° to 44°  | 225° |
+
+Disc centre in the source is (511, 459) with r 95. The SVG is a 24×24 viewBox,
+centre (12, 12), r 10.5, which leaves the 1.5px safe margin §7.8.4 asks for.
+
+Colours follow §8.9.1 exactly. The letterform sector is `currentColor`, so it
+inherits `--d4n-top-panel-fg` and needs no swap logic. The wedge is a literal
+`#E63558`, commented with `d4n-allow-literal-color` as criterion B6 requires.
+It is written literally, not as `var(--d4n-color-palette-magenta-400)`, because
+the mark must read the same on surfaces outside the theme scope — the splash
+and the About dialog.
+
+### Measured in the running instance, both modes
+
+|                  | Data4Now Light       | Data4Now Dark        |
+| ---------------- | -------------------- | -------------------- |
+| rendered size    | 22×22                | 22×22                |
+| `currentColor`   | `rgb(244, 246, 250)` | `rgb(244, 246, 250)` |
+| wedge fill       | `rgb(230, 53, 88)`   | `rgb(230, 53, 88)`   |
+| panel background | `rgb(15, 61, 110)`   | `rgb(5, 15, 29)`     |
+| left inset       | 12px (`space.3`)     | 12px (`space.3`)     |
+
+B1 holds by construction: one asset, no swap, no flash. B2 holds: it is vector.
+
+**The wedge measures 2.62:1 against the light-mode bar** and 4.59:1 against the
+dark-mode bar. That is recorded, not fixed. WCAG 1.4.11 exempts logotypes, and
+the wedge is a large solid area whose shape is carried by the 10.15:1
+letterform sector beside it. Do not read this row as a contrast failure, and do
+not "fix" it by moving the brand colour.
+
+### Three things this leaves open
+
+1. **The mark is authored but not wired.** The bar still shows
+   `ui-components:jupyter`. `packages/icons/src/manifest.ts` deliberately parks
+   that name, and the two other trademark names, for this decision. Wiring it is
+   its own task, because it changes what renders. See P0-12.
+2. **B5 is not satisfied.** "Splash screen and top panel logo use the same mark
+   and lockup." P2-09 shipped a 96px rounded tile with the letter D and a
+   magenta dot, per the mockup. The bar would carry the pie-chart O. The tile's
+   own code comment says its dot "echoes the pie-chart wedge inside the logo's
+   O", so the O is the source and the tile is the derivative. Unifying onto the
+   O is the smaller change. Tracked in P0-12.
+3. **§8.9.1 says 20px, we ship 22px.** `--d4n-top-panel-logo-height` is 22px,
+   which is what the mockup specifies and what P2-01 built. Left as it is. The
+   1:1 aspect of the mark means 22px costs 2px of width, not of legibility.
+
+**Revisit when** the About dialog is built, because that is the first surface
+with room for the full lockup, and it needs the lockup as a vector.
+
+---
+
 ## Still open
 
 Tracked in `TODO.md`; listed here so the set is visible in one place.
@@ -740,7 +832,6 @@ Tracked in `TODO.md`; listed here so the set is visible in one place.
 | Q7    | JupyterLite in scope for v1?                                   | PM            | P1-09 |
 | Q8    | Upstream the a11y contrast fixes to core?                      | Eng Lead      | P6-08 |
 | Q11   | Favicon delivery route; busy-state swapping?                   | Platform      | P1-08 |
-| Q12   | Logo as SVG with `currentColor`, or bitmaps?                   | Design        | P0-07 |
 | —     | D-002's narrowing of T4 — sign-off needed                      | Design + A11y | P0-09 |
 | —     | Rendered-markdown body size: mockup says 15px, tokens say 14px | Design        | P0-08 |
 | —     | 20px-native rail icon export — the set is 24px scaled (D-018)  | Design        | P2-04 |

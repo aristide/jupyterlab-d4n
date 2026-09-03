@@ -186,11 +186,32 @@ off the mapping table and no `--jp-*` variable is unmapped.
       of the 152 commands have no `LabIcon` to override, so the work is
       declaring icons through `overrides.json` and the plugin, not swapping
       registry entries.
-- [ ] **P0-07** Decide how to deliver the logo: one SVG with `currentColor`, or
-      the two imported PNG files (**Q12**). D-007 already removes the light/dark
-      swap. The frame is dark in both modes, so one asset can be enough.
-      _Done when:_ the decision is recorded, and the chosen asset is in
-      `packages/ui-overrides/style/images/`.
+- [x] **P0-07** Decide how to deliver the logo (**Q12**).
+      _Decided by Aristide on 2026-09-03:_ a **compact brand mark** for the bar,
+      not the lockup. Recorded as **D-021**. The asset is
+      `packages/ui-overrides/style/images/logo-mark.svg`.
+      _Both listed options were closed, and measuring showed why._ The PNG route
+      needs a T3 plugin: `#jp-MainLogo` holds a `LabIcon`, measured live as
+      `<svg data-icon="ui-components:jupyter">` at 17×22, and `LabIcon` takes an
+      SVG string. A single `currentColor` SVG cannot draw the mark either,
+      because the mark is three colours.
+      _The real problem was size._ The design system ships one lockup, as two
+      960×675 PNG files. **No SVG of the logo exists in the repo.** The lockup
+      is a two-line stack, and `screenshots/fixed-logo-dark.png` shows it
+      illegible at the 22px the bar gives it.
+      _The mark._ The pie-chart "O" from the logo's own NOW. Sector angles were
+      sampled off the source artwork at 0.6r and 0.85r, which agree:
+      letterforms 45°–135°, open notch 136°–180°, magenta 181°–44°. Drawn on a
+      24×24 viewBox, centre (12, 12), r 10.5.
+      _Verified in the running instance, in both modes._ It renders 22×22 with a
+      12px inset in Data4Now Light and in Data4Now Dark. `currentColor` resolves
+      to `rgb(244, 246, 250)` in both, and the wedge to `rgb(230, 53, 88)` in
+      both. `jlpm lint:icons` passes at 121 SVGs.
+      _Recorded, not fixed._ The wedge measures 2.62:1 against the light-mode
+      bar. WCAG 1.4.11 exempts logotypes, and the shape is carried by the
+      10.15:1 letterform sector. Do not move the brand colour for this.
+      _Not on screen yet._ The bar still shows `ui-components:jupyter`. Read
+      P0-12, which also carries the B5 gap that this decision opened.
 - [ ] **P0-08** Resolve the size conflict in rendered markdown. The mockup styles
       `.jp-md` at 15px with a line height of 1.65. `--jp-content-font-size1` is
       14px.
@@ -231,6 +252,26 @@ off the mapping table and no `--jp-*` variable is unmapped.
 Exit: both themes install and switch, the contrast audit is green, and the
 snapshot baseline exists.
 
+- [ ] **P0-12** Put the D-021 mark on screen, and close the B5 gap.
+      Two pieces of work that must land together, because either one alone
+      leaves the product showing two different brand marks.
+      _Piece one: wire the mark._ `packages/icons/src/manifest.ts` parks three
+      names for the logo decision — `ui-components:jupyter`,
+      `ui-components:jupyter-favicon` and `ui-components:jupyterlab-wordmark`.
+      Only the first renders anywhere: the top panel. Override it with
+      `logo-mark.svg`. The manifest imports from `../svg/`, and the asset sits
+      in `packages/ui-overrides/style/images/`, so decide whether the asset
+      moves or the import crosses packages. Do not guess the registry name:
+      `LabIcon.resolve` creates a placeholder for an unknown name and reports
+      nothing.
+      _Piece two: the splash._ PRD **B5** says the splash and the top panel use
+      the same mark. P2-09 shipped a 96px rounded tile with the letter D and a
+      magenta dot, per the mockup. The bar will carry the pie-chart O. The
+      tile's own comment in `packages/shell-chrome/src/splash.ts` says its dot
+      "echoes the pie-chart wedge inside the logo's O", so the O is the source.
+      Put the O in the tile.
+      _Done when:_ B1, B2 and B5 all hold, and the top panel and the splash are
+      photographed side by side in both modes.
 - [x] **P1-01** Four-tier token architecture, both modes, W3C DTCG source.
       _Done when:_ `jlpm build:tokens` writes CSS, TS and JSON. It must fail on
       an asymmetry between light and dark, on an unresolved reference, or on a
