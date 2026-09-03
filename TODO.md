@@ -492,19 +492,48 @@ Galata is green.
       the menu tokens holding exactly the collapsed menus as submenus, arrow keys
       walk into them (M2, M8), and the trigger takes the inset focus ring.
       Selecting a stock theme stands the collapse down entirely (AC10).
-- [ ] **P2-03** Menu dropdowns (`.lm-Menu`) — all of PRD §8.4.3. The four-column
-      grid is **fixed-width, not derived from content**. A grid derived from
-      content breaks the alignment across items with and without icons or
-      shortcuts (M4). Make sure that M1 to M8 hold.
-      _On disk:_ `surfaces/menu.css`, 248 lines, written against the three
-      structural facts in §8.4.1. Menus portal into `body`. Every `:hover` has
-      its `.lm-mod-active` pair. Lumino ships the item as a `display: table-row`. This file re-declares the rows as grids with one identical template. The columns then line up without the table.
-      _The verification is what remains, and it is most of the task._ A lint
-      covers M1. It does not cover M2 to M8. M4 needs items side by side with an
-      icon only, a shortcut only, both, neither, and a submenu. M6 needs a menu
-      longer than the viewport. M7 needs submenus at all four edges at 1280×720.
-      M8 needs all of it from the menu bar, from a context menu, and from the
-      overflow trigger, in both modes.
+- [x] **P2-03** Menu dropdowns (`.lm-Menu`) — all of PRD §8.4.3, M1 to M8.
+      _Done on 2026-09-03._ Verified by driving a real browser, one probe per
+      criterion, both modes, with the theme pinned through mocked settings so no
+      global state was written. **M6 failed and is fixed. M1 to M5, M7 and M8
+      pass.** The fix is recorded as **D-025**.
+      _What M6 found, and it was not small._ Every submenu and every context
+      menu was `overflow: hidden`. Three rules land on a menu node:
+      `.lm-Menu { overflow: hidden auto }` (0,1,0, Lumino),
+      `.jp-ThemedContainer { overflow: hidden }` (0,1,0, JupyterLab, inserted
+      later, so it wins) and `.lm-MenuBar-menu.jp-ThemedContainer { overflow:
+  auto }` (0,2,0) which rescues menu-bar dropdowns only. **116 of the 141
+      rows** in View ▸ Text Editor Syntax Highlighting, including the last one,
+      were unreachable by wheel, keyboard or mnemonic. This file's own comment
+      asserted the opposite; it is corrected.
+      _The PRD's height cap had never been implemented._ There was no
+      `menu.maxHeight` token. It now exists at 60vh and sits on
+      `.lm-Menu-content`, not on the menu node — Lumino writes an inline
+      `max-height` on the node, and `openRootMenu` uses `ch - y` under `forceY`,
+      so a node cap would need `!important` and would push a low context menu
+      off-screen. Capping the content lets the node shrink-wrap and the `min()`
+      falls out for free.
+      _Measured after the change, both modes, identical._ The 141-row submenu is
+      442px at 34–476 instead of 720px at 0–720, so the elevation edge has 34px
+      above and 244px below where it had none. The wheel takes the content from
+      0 to 3516 (= max) and "Z80" lands fully visible at 443–471. No regression:
+      root View 34–476, context menu low 508–686, context menu high 196–638, all
+      inside the viewport.
+      _Two things this turned up that are not menu bugs._ 1. **The scroll cue cannot be verified in this container.** Our
+      `::-webkit-scrollbar` rule matches and nothing hides it, yet no bar
+      paints at 4× during an active scroll. A control in a blank page shows a
+      plain `div` and a plain `ul` behaving identically, so this headless
+      Chromium paints overlay scrollbars. **`scrollbars.css` has therefore
+      never been visually verified here and cannot be.** Read D-025. 2. **Two upstream keyboard defects**, both reproducing in stock JupyterLab
+      Light: the Edit menu opens with no active item although one item is
+      enabled, and Escape at root drops focus to `<body>` so the menu bar
+      needs 13 Tabs to re-enter. Neither is caused by our CSS.
+      _Recorded, not fixed:_ the keyboard indicator is the hover wash and
+      measures 1.144:1 light and 1.104:1 dark against the menu surface, with
+      `outline: none`. WCAG 2.2 SC 1.4.11 asks 3:1 for a state indicator.
+      Raising it alone would break the M1 pairing that keeps `:hover` and
+      `.lm-mod-active` in one declaration block, so it is a token question for
+      Design rather than a local fix.
 - [x] **P2-04** Sidebar rails and panel headers, dark in both modes (D-007).
       The rail was already styled. The work was finding what the styling did not
       reach.

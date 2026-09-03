@@ -272,6 +272,11 @@
       "$value": "360px",
       "$type": "dimension"
     },
+    "maxHeight": {
+      "$value": "60vh",
+      "$type": "dimension",
+      "$description": "PRD 8.4.3: max-height min(60vh, available). Applied to .lm-Menu-content, NOT to the menu node. Lumino sets an inline max-height on the node when it opens (openSubmenu uses the full viewport height, openRootMenu uses ch - y under forceY), so a CSS cap on the node would need !important and would push a context menu opened low in the viewport off-screen. Capping the CONTENT lets the node shrink-wrap instead: the min() falls out of the two caps meeting, with no !important and no fight with Lumino positioning. It is also what gives the elevation edge room to draw - a submenu sized to exactly 100vh has nowhere to put its shadow (TODO P2-03, M6)."
+    },
     "paddingY": {
       "$value": "{space.1}",
       "$type": "dimension"

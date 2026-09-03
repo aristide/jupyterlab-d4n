@@ -1098,6 +1098,114 @@ provider question by experiment.
 
 ---
 
+## D-025 — Menus scroll because we say so, and the height cap sits on the content
+
+**Decided while doing P2-03, 2026-09-03.** Two upstream facts made the obvious
+implementation wrong. Both were measured, not reasoned about.
+
+### Every submenu and every context menu was `overflow: hidden`
+
+Three rules land on a menu node:
+
+| rule                                                     | specificity | from       |
+| -------------------------------------------------------- | ----------- | ---------- |
+| `.lm-Menu { overflow: hidden auto }`                     | 0,1,0       | Lumino     |
+| `.jp-ThemedContainer { overflow: hidden }`               | 0,1,0       | JupyterLab |
+| `.lm-MenuBar-menu.jp-ThemedContainer { overflow: auto }` | 0,2,0       | JupyterLab |
+
+The first two tie, and JupyterLab's sheet is inserted later, so `hidden` wins
+everywhere the third does not reach — which is **every menu that is not a
+menu-bar dropdown**.
+
+`menu.css` carried a comment asserting the opposite: "`.lm-Menu { overflow-y:
+auto }` upstream does the rest". It does not. The cost, measured: View ▸ Text
+Editor Syntax Highlighting is 141 rows and 3948px of content, and **116 of those
+rows, including the last one, were unreachable** by wheel, by keyboard and by
+mnemonic. Stock JupyterLab has the same defect, which is why nobody had noticed;
+our 28px comfortable row made it worse by reducing the reachable rows from 29 to 25.
+
+Our selector is already (0,2,1), so restating `overflow: hidden auto` in the
+rule that exists is the whole fix. No new selector, no `!important`.
+
+### The 60vh cap goes on `.lm-Menu-content`, not on the menu node
+
+PRD §8.4.3 asks for `max-height: min(60vh, available)`. It had never been
+implemented — there was no `menu.maxHeight` token.
+
+The obvious placement is wrong. Lumino writes an **inline** `max-height` on the
+menu node every time it opens, and the two open paths differ:
+
+```js
+openSubmenu:  let maxHeight = ch;                    // full viewport, always
+openRootMenu: let maxHeight = ch - (forceY ? y : 0); // context menus use forceY
+```
+
+So a CSS cap on the node needs `!important` to beat the inline style, and would
+then also override the `ch - y` case — pushing a context menu opened low in the
+viewport off the bottom of the screen. Measured refutation of that approach: a
+context menu right-clicked at y≈690 opens at 508–686. A `60vh !important` cap
+would have made it 432px tall starting at 508, i.e. 220px off-screen.
+
+Capping the **content** node instead lets the menu node shrink-wrap, and the
+`min()` falls out of the two caps meeting:
+
+- available > 60vh → the content cap wins, node is 442px
+- available < 60vh → Lumino's inline cap on the node wins, and the node's own
+  `overflow: hidden auto` scrolls
+
+Exactly one of the two scrolls in every case. `.lm-Menu-content` is already
+`display: block` in our sheet, so `max-height` behaves normally on it.
+
+It also fixes M6's second half. A submenu sized to exactly 100vh has nowhere to
+draw a shadow that reaches 8px up and 16px down. After the change the 141-row
+submenu is 442px at 34–476, leaving **34px above and 244px below**.
+
+### Measured after the change, both modes, identical numbers
+
+|                             | before                  | after                               |
+| --------------------------- | ----------------------- | ----------------------------------- |
+| submenu height              | 720px (= viewport)      | 442px                               |
+| room for the elevation edge | 0 above, 0 below        | 34 above, 244 below                 |
+| content scrollable          | no (`overflow: hidden`) | yes, 3948 → 432                     |
+| wheel over the menu         | `scrollTop` 0 → 0       | 0 → 3516 (= max)                    |
+| last row "Z80"              | unreachable             | reachable, fully visible at 443–471 |
+
+No regressions: root View menu 34–476 inside the viewport and scrolling, context
+menu low 508–686 inside the viewport, context menu high 196–638 inside and
+scrolling — all in both modes.
+
+### The scroll cue cannot be verified in this container, and that is not a menu problem
+
+Upstream hides the scrollbar on menu-bar dropdowns and draws a four-layer
+gradient instead. `background-image: none` in our sheet removes that gradient,
+because it is built from `--jp-layout-color0` rather than the overlay surface.
+PRD §8.4.3 asks for the §6.1 scrollbar rather than a fade, so the scrollbar is
+restated here and upstream's `::-webkit-scrollbar { display: none }` is
+overridden.
+
+Whether it **paints** could not be established. Enumerating every
+`::-webkit-scrollbar` rule in the live document shows ours matching and nothing
+hiding it, and `--d4n-scrollbar-thumb` resolves to `#6B7B91`. No bar renders, at
+4× magnification, during an active scroll.
+
+**A control settles the attribution.** In a blank page with the same rule, a
+plain `div` scroller and a plain `ul` scroller both scroll and **neither shows a
+scrollbar either** — gutter 2px, which is their borders. This headless Chromium
+paints overlay scrollbars: invisible at rest, no layout space.
+
+Two consequences worth carrying:
+
+1. Nothing about the menu scrollbar can be concluded from this environment.
+2. **`scrollbars.css` has never been visually verified here, and cannot be.**
+   Any probe or snapshot asserting scrollbar appearance in this container is
+   measuring the wrong thing. A11y review on a real browser is the only route.
+
+**Revisit when** a real browser is available to a reviewer, or if the fade turns
+out to be wanted after all — in which case it must be rebuilt from
+`--d4n-menu-surface`, not restored from upstream.
+
+---
+
 ## Still open
 
 Tracked in `TODO.md`; listed here so the set is visible in one place.

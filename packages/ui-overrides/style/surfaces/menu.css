@@ -35,15 +35,34 @@
  * surface, so it cannot be left in place; `background-image: none` removes it
  * and the token surface applies uniformly to every menu.
  *
- * No `max-height` is set: Lumino clamps the node to the available viewport
- * space when it opens, and `.lm-Menu { overflow-y: auto }` upstream does the
- * rest. Declaring our own would fight that calculation and is how the last item
- * of a long menu ends up clipped (M6). */
+ * `overflow-y` IS declared here, and the comment this replaces said the
+ * opposite — that "`.lm-Menu { overflow-y: auto }` upstream does the rest".
+ * Measured during P2-03 (M6): it does not, for any menu that is not a menu-bar
+ * dropdown. Three rules land on a menu node, and only the third saves it:
+ *
+ *   .lm-Menu                        { overflow: hidden auto }  0,1,0  Lumino
+ *   .jp-ThemedContainer             { overflow: hidden }       0,1,0  JupyterLab
+ *   .lm-MenuBar-menu.jp-ThemedContainer { overflow: auto }     0,2,0  JupyterLab
+ *
+ * The first two tie on specificity and JupyterLab's sheet is inserted later, so
+ * `hidden` wins everywhere the third does not reach — every submenu and every
+ * context menu. The cost was measured, not theorised: View ▸ Text Editor Syntax
+ * Highlighting is 141 rows and 3956px of content in a 720px viewport, and 116 of
+ * those rows, including the last one, were unreachable by wheel, keyboard or
+ * mnemonic. Our selector is (0,2,1), so restating it here is enough.
+ *
+ * `scrollbar-width` is restated for the same reason. Upstream hides the
+ * scrollbar on a menu-bar dropdown and draws a four-layer gradient instead;
+ * `background-image: none` above removes that gradient, which left a menu that
+ * scrolled with no cue at all. PRD §8.4.3 asks for the §6.1 scrollbar rather
+ * than a fade, so the scrollbar comes back. */
 body[data-jp-theme-name^='Data4Now'] .lm-Menu,
 body[data-jp-theme-name^='Data4Now'] .lm-MenuBar-menu.jp-ThemedContainer {
   min-width: var(--d4n-menu-min-width);
   max-width: var(--d4n-menu-max-width);
   padding: var(--d4n-menu-padding-y) 0;
+  overflow: hidden auto;
+  scrollbar-width: thin;
   background-color: var(--d4n-menu-surface);
   background-image: none;
   color: var(--d4n-menu-item-fg);
@@ -64,7 +83,39 @@ body[data-jp-theme-name^='Data4Now'] .lm-Menu:not(.lm-MenuBar-menu) {
   min-width: var(--d4n-menu-min-width-context);
 }
 
+/* The height cap PRD §8.4.3 asks for — `min(60vh, available)` — lives on the
+ * CONTENT node, not on the menu node, and that is what makes the `min()` fall
+ * out for free.
+ *
+ * Lumino writes an inline `max-height` on the menu node every time it opens:
+ * `openSubmenu` uses the full viewport height unconditionally, `openRootMenu`
+ * uses `ch - y` when `forceY` is set, which is how context menus open. A CSS cap
+ * on the node would therefore need `!important` to beat the inline style, and
+ * would then override the `ch - y` case and push a context menu opened low in
+ * the viewport off the bottom of the screen.
+ *
+ * Capping the content instead lets the node shrink-wrap. Available space smaller
+ * than 60vh still wins, because the node keeps Lumino's inline cap and its own
+ * `overflow-y: auto`; available space larger than 60vh loses to this. Exactly
+ * one of the two scrolls in every case.
+ *
+ * It also gives the elevation edge somewhere to draw. A submenu sized to exactly
+ * 100vh has no room above or below its border box for a shadow that reaches 8px
+ * up and 16px down, so M6's "without clipping the elevation edge" was failing on
+ * geometry alone. */
 body[data-jp-theme-name^='Data4Now'] .lm-Menu-content {
+  display: block;
+  max-height: var(--d4n-menu-max-height);
+  overflow-y: auto;
+}
+
+/* Upstream hides the scrollbar on a menu-bar dropdown with
+ * `.lm-MenuBar-menu.jp-ThemedContainer::-webkit-scrollbar { display: none }`
+ * (0,2,0). `scrollbars.css` restyles the bar but never restores its display, so
+ * WebKit kept hiding it while Firefox showed it — the same menu scrolling with a
+ * visible cue on one engine and none on the other. */
+body[data-jp-theme-name^='Data4Now']
+  .lm-MenuBar-menu.jp-ThemedContainer::-webkit-scrollbar {
   display: block;
 }
 

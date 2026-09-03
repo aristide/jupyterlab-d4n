@@ -531,6 +531,7 @@ body[data-jp-theme-name^='Data4Now'] {
   --d4n-menu-min-width: 200px;
   --d4n-menu-min-width-context: 180px;
   --d4n-menu-max-width: 360px;
+  --d4n-menu-max-height: 60vh;
   --d4n-menu-padding-y: var(--d4n-space-1);
   --d4n-menu-item-height: var(--d4n-density-comfortable-menu-item-height);
   --d4n-menu-item-height-compact: var(--d4n-density-compact-menu-item-height);
