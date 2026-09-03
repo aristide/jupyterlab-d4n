@@ -1,0 +1,12 @@
+{
+  "//": "Type coverage for the test sources only. It is NOT in the root solution config's `references`: `tsc -b` builds shipped packages, and nothing here is built or published. It exists so typed ESLint rules have a project that includes tests/**/*.ts — without it, eslint reports every test file as 'not included in the project' and refuses to lint it.",
+  "extends": "../tsconfigbase.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "rootDir": "..",
+    "types": ["node"],
+    "allowJs": true,
+    "esModuleInterop": true
+  },
+  "include": ["**/*.ts", "galata/base-url.js"]
+}

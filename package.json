@@ -122,9 +122,10 @@
         ],
         "parser": "@typescript-eslint/parser",
         "parserOptions": {
-            "//": "A GLOB over the workspace configs, not the root tsconfig.json. The root is solution-style — `files: []` plus `references` — so it includes no source at all, and typescript-eslint reports every file as 'not included in the project'. Each package's own tsconfig is what actually covers its src/.",
+            "//": "A GLOB over the workspace configs, not the root tsconfig.json. The root is solution-style — `files: []` plus `references` — so it includes no source at all, and typescript-eslint reports every file as 'not included in the project'. Each package's own tsconfig is what actually covers its src/. tests/tsconfig.json covers tests/**/*.ts, which no package config includes.",
             "project": [
-                "packages/*/tsconfig.json"
+                "packages/*/tsconfig.json",
+                "tests/tsconfig.json"
             ],
             "sourceType": "module"
         },

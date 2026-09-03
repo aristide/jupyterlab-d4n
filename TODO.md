@@ -65,10 +65,13 @@ them:
 
 Measured in a running JupyterLab 4.6.3, in both modes:
 
-- `jlpm test:selectors` — **90 matched, 0 broken**, 165 skipped. The harness
-  cannot drive those 165 states yet. A skipped selector is reported, never
+- `jlpm test:selectors` — **97 matched, 0 broken**, 168 skipped. The harness
+  cannot drive those 168 states yet. A skipped selector is reported, never
   passed.
 - `jlpm test:contrast` — 478 pairings, 0 failures.
+- `jlpm test:galata` — **14 tests green**, 12 committed baselines over 6
+  surfaces × {light, dark}. Run it from the container with
+  `JUPYTER_URL=http://localhost:8888`.
 - `jlpm lint:design` — six gates green. `jlpm lint:check` green. `pytest` 5
   passed.
 
@@ -347,11 +350,41 @@ snapshot baseline exists.
 - [x] **P1-06** Convert `.devcontainer/` to `docker-compose.yml` and `docker/`.
       _Done when:_ `docker compose up -d` serves JupyterLab on port 8890, with
       live reload in both directions and no image build.
-- [ ] **P1-07** Galata harness and snapshot baseline. `tests/galata/` has only
-      the configuration today. It needs the fixture wiring, the deterministic
-      font container, and the first baseline run.
-      _Done when:_ `jlpm test:galata` runs green and the baseline is committed.
-      _Blocked by:_ P2-01. There is little to snapshot before the chrome exists.
+- [x] **P1-07** Galata harness and snapshot baseline.
+      _Done on 2026-09-03._ `jlpm test:galata` runs green, twice in a row, and
+      **12 baselines are committed** — 6 surfaces × {light, dark}.
+      _The harness is plain Playwright, not `galata.test`, and that is the one
+      real decision here._ Galata's page helpers talk to `window.galata`, which
+      `@jupyterlab/galata-extension` injects. That extension is **not installed
+      in our image**, and installing it would put a test-only labextension
+      inside the application these snapshots photograph. The suite takes from
+      Galata only the two pieces that do not touch the running app:
+      `galata.Mock.mockSettings` and `galata.DEFAULT_SETTINGS`. Revisit when a
+      test needs to drive a notebook.
+      _The theme is pinned through mocked settings, never toggled._ Verified
+      against the running instance that `overrides.json` merges into the schema
+      **defaults**, not the user layer, so mocking clears leftover user state
+      without losing an override. `adaptive-theme` is forced off, because its
+      schema default is `true` and the OS colour-scheme would override the pin.
+      A non-visual test asserts `data-jp-theme-name` per project, so a broken
+      pin cannot produce a full set of plausible snapshots in the wrong mode.
+      _Six surfaces, not ninety._ PRD §10.1 sizes the finished matrix at ~180.
+      A baseline nobody has looked at is worse than none: it gets approved as a
+      block and the real diff hides inside it. Surfaces join `shell.spec.ts` as
+      their task lands.
+      _Two flakes found and fixed, not retried away._ `retries: 0` stands. 1. `galata.Mock.mockSettings` fetches the real settings from inside its
+      route handler. Once per test raced page teardown and threw
+      `apiResponse.json: Response has been disposed`. The seed is now fetched
+      once per worker, so the handler never fetches. 2. Playwright refuses to let a worker fixture depend on a test-scoped one,
+      which ruled out the builtin `baseURL`. `tests/galata/base-url.js` is
+      now the single definition, read by the config and the fixture.
+      _The 8890 trap, written down at last._ CI starts JupyterLab on **8890**;
+      the dev container serves **8888**. Run the suite from the container as
+      `JUPYTER_URL=http://localhost:8888 jlpm test:galata`. `test:selectors` has
+      the same default and the same trap. `base-url.js` says so.
+      _Also added:_ `tests/tsconfig.json`, so typed ESLint rules cover
+      `tests/**/*.ts`. Without it eslint refused the files as "not included in
+      the project". Proved it lints by injecting an unused variable.
 - [ ] **P1-08** Favicon delivery (**Q11**). The favicon is a server-side asset,
       and a labextension cannot reach it (PRD §8.9.2). The `jupyterlab_d4n`
       server extension is the hook, and it exists.

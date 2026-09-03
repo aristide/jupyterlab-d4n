@@ -16,7 +16,7 @@
  *    regression would show up as 90 failed snapshots instead of one failed
  *    switch test. The switch gets its own dedicated test (PRD G4/AC3).
  */
-const baseURL = process.env.JUPYTER_URL ?? 'http://localhost:8890';
+const baseURL = require('./base-url');
 
 module.exports = {
   testDir: __dirname,
