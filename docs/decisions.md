@@ -819,20 +819,76 @@ with room for the full lockup, and it needs the lockup as a vector.
 
 ---
 
+## D-022 — Rendered markdown is 14px at every density
+
+**Decided by Aristide, 2026-09-03.** This closes P0-08. `font.size.content.1`
+stays at **14px** and `--jp-content-line-height` stays at
+`font.lineHeight.relaxed`, 1.6.
+
+### There was no conflict to resolve
+
+P0-08 was written as "the mockup says 15px, the tokens say 14px". The mockup
+says both. `JupyterLab Theme.html` carries a comfortable value and a compact
+value:
+
+| state       | rule                                 | `.jp-md`    |
+| ----------- | ------------------------------------ | ----------- |
+| comfortable | `.jp-md` (L495)                      | 15px / 1.65 |
+| compact     | `body.density-compact .jp-md` (L966) | 14px / 1.55 |
+
+The mockup's own default state is **Compact** — `TWEAK_DEFAULTS.density` at
+L5585 of the rebuilt file. So 14px is the number its screenshots show, and the
+token already agreed with it. The 15px was the value of a state nobody was
+looking at.
+
+### Why 14px and not 15px
+
+Three reasons, in order of weight:
+
+1. **The ramp is anchored on it.** `mapping/jp-adapter.yaml` already argues from
+   14: "markdown body sits 1px above code at rest (14 vs 13)". That gap is what
+   keeps a projected notebook readable, because core swaps
+   `--jp-content-presentation-font-size1` (18px) in for the body while code goes
+   to 16px. Moving the body to 15 makes the rest-state gap 2px and leaves
+   `content.2` at 16px, one pixel above the body.
+2. **The mockup's default agrees.** See above.
+3. **Nothing on screen wanted 15.** Measured in the running instance on
+   `fixture.ipynb`, in both modes: `--jp-content-font-size1` 14px,
+   `.jp-RenderedHTMLCommon` 14px, its paragraph 14px with a 22.4px line box,
+   `h1` 24px, editor 13px. Both modes are identical, which is expected — this is
+   a size, not a colour.
+
+### Line height stays at 1.6, and does not follow density
+
+22.4px on 14px is a ratio of 1.6. That is `font.lineHeight.relaxed`, which
+serves the whole content ramp, and it sits between the mockup's two values.
+
+Making body type follow density would widen **D-009**, which states that
+compact density is a set of explicit control heights, not a scale multiplier.
+Adding a type size to that set is exactly the multiplier it rejects. The
+mockup's `body.density-compact` block is six hard-coded declarations with no
+token indirection, and D-009 already records that it has to be authored rather
+than adopted. This decision authors it as: one size, both densities.
+
+**Revisit when** P3-03 builds `.jp-RenderedHTMLCommon` and a real long-form
+document is on screen to read. If 14px proves too small there, the change is to
+`font.size.content.1` and it moves the whole ramp with it, deliberately.
+
+---
+
 ## Still open
 
 Tracked in `TODO.md`; listed here so the set is visible in one place.
 
-| PRD Q | Question                                                       | Blocked on    | TODO  |
-| ----- | -------------------------------------------------------------- | ------------- | ----- |
-| Q1    | Monospace ramp — authored or supplied?                         | Design        | P0-05 |
-| Q3    | Does the launch-target readout ship in v1?                     | Design + PM   | P2-08 |
-| Q4    | How much of the icon set exists vs needs authoring?            | Design        | P0-04 |
-| Q5    | matplotlib/Vega opt-in helper in v1 or deferred?               | PM            | P3-14 |
-| Q7    | JupyterLite in scope for v1?                                   | PM            | P1-09 |
-| Q8    | Upstream the a11y contrast fixes to core?                      | Eng Lead      | P6-08 |
-| Q11   | Favicon delivery route; busy-state swapping?                   | Platform      | P1-08 |
-| —     | D-002's narrowing of T4 — sign-off needed                      | Design + A11y | P0-09 |
-| —     | Rendered-markdown body size: mockup says 15px, tokens say 14px | Design        | P0-08 |
-| —     | 20px-native rail icon export — the set is 24px scaled (D-018)  | Design        | P2-04 |
-| —     | Rail tooltip: replace the renderer, or accept native (D-019)   | Design + Eng  | P2-04 |
+| PRD Q | Question                                                      | Blocked on    | TODO  |
+| ----- | ------------------------------------------------------------- | ------------- | ----- |
+| Q1    | Monospace ramp — authored or supplied?                        | Design        | P0-05 |
+| Q3    | Does the launch-target readout ship in v1?                    | Design + PM   | P2-08 |
+| Q4    | How much of the icon set exists vs needs authoring?           | Design        | P0-04 |
+| Q5    | matplotlib/Vega opt-in helper in v1 or deferred?              | PM            | P3-14 |
+| Q7    | JupyterLite in scope for v1?                                  | PM            | P1-09 |
+| Q8    | Upstream the a11y contrast fixes to core?                     | Eng Lead      | P6-08 |
+| Q11   | Favicon delivery route; busy-state swapping?                  | Platform      | P1-08 |
+| —     | D-002's narrowing of T4 — sign-off needed                     | Design + A11y | P0-09 |
+| —     | 20px-native rail icon export — the set is 24px scaled (D-018) | Design        | P2-04 |
+| —     | Rail tooltip: replace the renderer, or accept native (D-019)  | Design + Eng  | P2-04 |

@@ -4,122 +4,298 @@
     "palette": {
       "$description": "Brand DNA from the logo: navy (DATA / NOW letterforms), teal (the FOR pillar), magenta (the pie-chart wedge inside the O).",
       "neutral": {
-        "$description": "Cool grays with a slight navy tint. Light-mode surfaces and text.",
-        "0": { "$value": "#FFFFFF", "$type": "color" },
-        "50": { "$value": "#F4F6FA", "$type": "color" },
-        "100": { "$value": "#E4E9F0", "$type": "color" },
-        "200": { "$value": "#C8D1DD", "$type": "color" },
+        "0": {
+          "$value": "#FFFFFF",
+          "$type": "color"
+        },
+        "50": {
+          "$value": "#F4F6FA",
+          "$type": "color"
+        },
+        "100": {
+          "$value": "#E4E9F0",
+          "$type": "color"
+        },
+        "200": {
+          "$value": "#C8D1DD",
+          "$type": "color"
+        },
         "300": {
           "$value": "#A6B2C4",
           "$type": "color",
           "$description": "Added by the contrast audit. The design system's steel (400) is the natural dark-mode muted text, but it measures 4.10:1 on surface.hover — under A1. This is the lightest value that clears it."
         },
-        "400": { "$value": "#8A99AE", "$type": "color" },
-        "500": { "$value": "#6B7B91", "$type": "color" },
-        "600": { "$value": "#5A6B82", "$type": "color" },
+        "400": {
+          "$value": "#8A99AE",
+          "$type": "color"
+        },
+        "500": {
+          "$value": "#6B7B91",
+          "$type": "color"
+        },
+        "600": {
+          "$value": "#5A6B82",
+          "$type": "color"
+        },
         "700": {
           "$value": "#46566D",
           "$type": "color",
           "$description": "Added by the contrast audit. Light-mode secondary text sits between graphite (800) and slate (600); slate alone could not carry both the secondary and muted roles at 4.5:1 over the full surface ramp."
         },
-        "800": { "$value": "#2C3E55", "$type": "color" },
-        "900": { "$value": "#0B1F38", "$type": "color" },
-        "950": { "$value": "#050F1D", "$type": "color" }
+        "800": {
+          "$value": "#2C3E55",
+          "$type": "color"
+        },
+        "900": {
+          "$value": "#0B1F38",
+          "$type": "color"
+        },
+        "950": {
+          "$value": "#050F1D",
+          "$type": "color"
+        },
+        "$description": "Cool grays with a slight navy tint. Light-mode surfaces and text."
       },
       "navy": {
-        "$description": "Brand primary. 500 is the logo navy.",
-        "100": { "$value": "#B3C2D6", "$type": "color" },
+        "100": {
+          "$value": "#B3C2D6",
+          "$type": "color"
+        },
         "150": {
           "$value": "#8FA7C9",
           "$type": "color",
           "$description": "Added by the contrast audit. Dark-mode type annotations at navy 200 measured 3.65:1 on surface.codeActive — an A4 failure, and type annotations are code. Lifted one step; 100 would be indistinguishable from plain identifiers."
         },
-        "200": { "$value": "#6E89AD", "$type": "color" },
-        "300": { "$value": "#4F77A8", "$type": "color" },
-        "400": { "$value": "#3B5C87", "$type": "color" },
-        "500": { "$value": "#0F3D6E", "$type": "color" },
-        "600": { "$value": "#082B52", "$type": "color" }
+        "200": {
+          "$value": "#6E89AD",
+          "$type": "color"
+        },
+        "300": {
+          "$value": "#4F77A8",
+          "$type": "color"
+        },
+        "400": {
+          "$value": "#3B5C87",
+          "$type": "color"
+        },
+        "500": {
+          "$value": "#0F3D6E",
+          "$type": "color"
+        },
+        "600": {
+          "$value": "#082B52",
+          "$type": "color"
+        },
+        "$description": "Brand primary. 500 is the logo navy."
       },
       "deepNavy": {
-        "$description": "Dark-mode surface ramp. Deliberately a scale of its own rather than reusing `navy`: dark-mode elevation is expressed as a surface LIGHTNESS step, not shadow opacity (PRD 9), so the ramp needs evenly spaced steps that the brand navy scale does not provide.",
         "50": {
           "$value": "#325280",
           "$type": "color",
           "$description": "Added by the contrast audit for the dark ANSI black slot. At 100 it measured 1.41:1 against the terminal selection backdrop - i.e. selecting black text made it vanish."
         },
-        "100": { "$value": "#2C4A75", "$type": "color" },
-        "200": { "$value": "#1B385C", "$type": "color" },
-        "300": { "$value": "#15324F", "$type": "color" },
-        "400": { "$value": "#142E50", "$type": "color" },
-        "500": { "$value": "#122A47", "$type": "color" },
-        "600": { "$value": "#0F2746", "$type": "color" },
-        "700": { "$value": "#0E2542", "$type": "color" },
-        "800": { "$value": "#0B1F38", "$type": "color" },
-        "900": { "$value": "#050F1D", "$type": "color" }
+        "100": {
+          "$value": "#2C4A75",
+          "$type": "color"
+        },
+        "200": {
+          "$value": "#1B385C",
+          "$type": "color"
+        },
+        "300": {
+          "$value": "#15324F",
+          "$type": "color"
+        },
+        "400": {
+          "$value": "#142E50",
+          "$type": "color"
+        },
+        "500": {
+          "$value": "#122A47",
+          "$type": "color"
+        },
+        "600": {
+          "$value": "#0F2746",
+          "$type": "color"
+        },
+        "700": {
+          "$value": "#0E2542",
+          "$type": "color"
+        },
+        "800": {
+          "$value": "#0B1F38",
+          "$type": "color"
+        },
+        "900": {
+          "$value": "#050F1D",
+          "$type": "color"
+        },
+        "$description": "Dark-mode surface ramp. Deliberately a scale of its own rather than reusing `navy`: dark-mode elevation is expressed as a surface LIGHTNESS step, not shadow opacity (PRD 9), so the ramp needs evenly spaced steps that the brand navy scale does not provide."
       },
       "teal": {
-        "$description": "Brand secondary. 400 is the logo teal; 200 is the dark-mode lift.",
-        "100": { "$value": "#9CD4D4", "$type": "color" },
-        "200": { "$value": "#4FD1D1", "$type": "color" },
-        "300": { "$value": "#4FB7B7", "$type": "color" },
-        "400": { "$value": "#1FA0A0", "$type": "color" },
-        "500": { "$value": "#167C7C", "$type": "color" },
-        "600": { "$value": "#0F5C5C", "$type": "color" },
+        "100": {
+          "$value": "#9CD4D4",
+          "$type": "color"
+        },
+        "200": {
+          "$value": "#4FD1D1",
+          "$type": "color"
+        },
+        "300": {
+          "$value": "#4FB7B7",
+          "$type": "color"
+        },
+        "400": {
+          "$value": "#1FA0A0",
+          "$type": "color"
+        },
+        "500": {
+          "$value": "#167C7C",
+          "$type": "color"
+        },
+        "600": {
+          "$value": "#0F5C5C",
+          "$type": "color"
+        },
         "700": {
           "$value": "#0A4444",
           "$type": "color",
           "$description": "Added by the contrast audit. Light-mode ANSI needs TWO teals below the selection-backdrop ceiling so cyan and bright-cyan stay distinguishable; teal.500 measured 4.15:1 on the terminal selection."
-        }
+        },
+        "$description": "Brand secondary. 400 is the logo teal; 200 is the dark-mode lift."
       },
       "magenta": {
-        "$description": "Brand accent and the danger intent. 400 is the logo magenta.",
-        "100": { "$value": "#FFB1C0", "$type": "color" },
-        "200": { "$value": "#FF6B86", "$type": "color" },
-        "300": { "$value": "#ED6B85", "$type": "color" },
-        "400": { "$value": "#E63558", "$type": "color" },
-        "500": { "$value": "#C4274A", "$type": "color" },
-        "600": { "$value": "#8E1B36", "$type": "color" }
+        "100": {
+          "$value": "#FFB1C0",
+          "$type": "color"
+        },
+        "200": {
+          "$value": "#FF6B86",
+          "$type": "color"
+        },
+        "300": {
+          "$value": "#ED6B85",
+          "$type": "color"
+        },
+        "400": {
+          "$value": "#E63558",
+          "$type": "color"
+        },
+        "500": {
+          "$value": "#C4274A",
+          "$type": "color"
+        },
+        "600": {
+          "$value": "#8E1B36",
+          "$type": "color"
+        },
+        "$description": "Brand accent and the danger intent. 400 is the logo magenta."
       },
       "amber": {
-        "$description": "Warning intent. Not in the logo; tuned to coexist with navy/teal without reading as brand.",
-        "100": { "$value": "#F4C97A", "$type": "color" },
-        "200": { "$value": "#E0A04A", "$type": "color" },
-        "300": { "$value": "#C97C0A", "$type": "color" },
-        "400": { "$value": "#8C5807", "$type": "color" },
-        "500": { "$value": "#6B4305", "$type": "color" }
+        "100": {
+          "$value": "#F4C97A",
+          "$type": "color"
+        },
+        "200": {
+          "$value": "#E0A04A",
+          "$type": "color"
+        },
+        "300": {
+          "$value": "#C97C0A",
+          "$type": "color"
+        },
+        "400": {
+          "$value": "#8C5807",
+          "$type": "color"
+        },
+        "500": {
+          "$value": "#6B4305",
+          "$type": "color"
+        },
+        "$description": "Warning intent. Not in the logo; tuned to coexist with navy/teal without reading as brand."
       },
       "green": {
-        "$description": "Success intent.",
-        "100": { "$value": "#A8D9C0", "$type": "color" },
-        "200": { "$value": "#6FCF97", "$type": "color" },
-        "300": { "$value": "#4DAA85", "$type": "color" },
-        "400": { "$value": "#1F8A5E", "$type": "color" },
-        "500": { "$value": "#145C3F", "$type": "color" },
-        "600": { "$value": "#0E4530", "$type": "color" }
+        "100": {
+          "$value": "#A8D9C0",
+          "$type": "color"
+        },
+        "200": {
+          "$value": "#6FCF97",
+          "$type": "color"
+        },
+        "300": {
+          "$value": "#4DAA85",
+          "$type": "color"
+        },
+        "400": {
+          "$value": "#1F8A5E",
+          "$type": "color"
+        },
+        "500": {
+          "$value": "#145C3F",
+          "$type": "color"
+        },
+        "600": {
+          "$value": "#0E4530",
+          "$type": "color"
+        },
+        "$description": "Success intent."
       },
       "sky": {
-        "$description": "Dark-mode keyword/prompt blue. The brand navy is too dark to carry a syntax token on a dark surface, so the scale continues upward here rather than bending navy out of brand.",
-        "200": { "$value": "#8FC5FF", "$type": "color" },
-        "300": { "$value": "#6BB1FF", "$type": "color" },
-        "400": { "$value": "#2E5E9E", "$type": "color" },
-        "500": { "$value": "#1B4A85", "$type": "color" }
+        "200": {
+          "$value": "#8FC5FF",
+          "$type": "color"
+        },
+        "300": {
+          "$value": "#6BB1FF",
+          "$type": "color"
+        },
+        "400": {
+          "$value": "#2E5E9E",
+          "$type": "color"
+        },
+        "500": {
+          "$value": "#1B4A85",
+          "$type": "color"
+        },
+        "$description": "Dark-mode keyword/prompt blue. The brand navy is too dark to carry a syntax token on a dark surface, so the scale continues upward here rather than bending navy out of brand."
       },
       "plum": {
-        "$description": "The ANSI magenta slot needs a hue distinct from the brand magenta, or ANSI 5 and ANSI 1 are indistinguishable in `git diff` and pytest output.",
-        "100": { "$value": "#E9B6E2", "$type": "color" },
-        "200": { "$value": "#D98FD0", "$type": "color" },
-        "300": { "$value": "#B75BAA", "$type": "color" },
-        "400": { "$value": "#8E3583", "$type": "color" },
-        "500": { "$value": "#6B2763", "$type": "color" }
+        "100": {
+          "$value": "#E9B6E2",
+          "$type": "color"
+        },
+        "200": {
+          "$value": "#D98FD0",
+          "$type": "color"
+        },
+        "300": {
+          "$value": "#B75BAA",
+          "$type": "color"
+        },
+        "400": {
+          "$value": "#8E3583",
+          "$type": "color"
+        },
+        "500": {
+          "$value": "#6B2763",
+          "$type": "color"
+        },
+        "$description": "The ANSI magenta slot needs a hue distinct from the brand magenta, or ANSI 5 and ANSI 1 are indistinguishable in `git diff` and pytest output."
       },
       "gold": {
-        "$description": "Numeric literals and the aggregated data zone.",
-        "300": { "$value": "#D4A017", "$type": "color" },
-        "400": { "$value": "#B8860B", "$type": "color" }
+        "300": {
+          "$value": "#D4A017",
+          "$type": "color"
+        },
+        "400": {
+          "$value": "#B8860B",
+          "$type": "color"
+        },
+        "$description": "Numeric literals and the aggregated data zone."
       }
     }
   },
-
   "font": {
     "family": {
       "ui": {
@@ -141,34 +317,98 @@
     "size": {
       "$description": "The design system's own scale, mapped onto JupyterLab's ui/content/code split. `ui` runs smaller than the design system's web scale because Lab chrome is dense by nature (PRD 4.1 - the daily driver needs dense toolbars).",
       "ui": {
-        "xs": { "$value": "11px", "$type": "dimension" },
-        "sm": { "$value": "13px", "$type": "dimension" },
-        "md": { "$value": "14px", "$type": "dimension" },
-        "lg": { "$value": "16px", "$type": "dimension" }
+        "xs": {
+          "$value": "11px",
+          "$type": "dimension"
+        },
+        "sm": {
+          "$value": "13px",
+          "$type": "dimension"
+        },
+        "md": {
+          "$value": "14px",
+          "$type": "dimension"
+        },
+        "lg": {
+          "$value": "16px",
+          "$type": "dimension"
+        }
       },
       "content": {
-        "0": { "$value": "13px", "$type": "dimension" },
-        "1": { "$value": "14px", "$type": "dimension" },
-        "2": { "$value": "16px", "$type": "dimension" },
-        "3": { "$value": "18px", "$type": "dimension" },
-        "4": { "$value": "20px", "$type": "dimension" },
-        "5": { "$value": "24px", "$type": "dimension" }
+        "0": {
+          "$value": "13px",
+          "$type": "dimension"
+        },
+        "1": {
+          "$value": "14px",
+          "$type": "dimension",
+          "$description": "Markdown body, and the anchor of the content ramp. 14px, not the 15px the mockup uses at comfortable density: the mockup defaults to compact, where it is also 14px, and the body must stay exactly 1px above code (13px) so presentation mode keeps them apart. One size at every density (D-022, D-009)."
+        },
+        "2": {
+          "$value": "16px",
+          "$type": "dimension"
+        },
+        "3": {
+          "$value": "18px",
+          "$type": "dimension"
+        },
+        "4": {
+          "$value": "20px",
+          "$type": "dimension"
+        },
+        "5": {
+          "$value": "24px",
+          "$type": "dimension"
+        }
       },
-      "code": { "$value": "13px", "$type": "dimension" },
-      "codeCompact": { "$value": "12px", "$type": "dimension" }
+      "code": {
+        "$value": "13px",
+        "$type": "dimension"
+      },
+      "codeCompact": {
+        "$value": "12px",
+        "$type": "dimension"
+      }
     },
     "weight": {
-      "regular": { "$value": "400", "$type": "fontWeight" },
-      "medium": { "$value": "500", "$type": "fontWeight" },
-      "semibold": { "$value": "600", "$type": "fontWeight" },
-      "bold": { "$value": "700", "$type": "fontWeight" }
+      "regular": {
+        "$value": "400",
+        "$type": "fontWeight"
+      },
+      "medium": {
+        "$value": "500",
+        "$type": "fontWeight"
+      },
+      "semibold": {
+        "$value": "600",
+        "$type": "fontWeight"
+      },
+      "bold": {
+        "$value": "700",
+        "$type": "fontWeight"
+      }
     },
     "lineHeight": {
-      "tight": { "$value": "1.12", "$type": "number" },
-      "snug": { "$value": "1.28", "$type": "number" },
-      "normal": { "$value": "1.5", "$type": "number" },
-      "relaxed": { "$value": "1.6", "$type": "number" },
-      "code": { "$value": "1.5", "$type": "number" },
+      "tight": {
+        "$value": "1.12",
+        "$type": "number"
+      },
+      "snug": {
+        "$value": "1.28",
+        "$type": "number"
+      },
+      "normal": {
+        "$value": "1.5",
+        "$type": "number"
+      },
+      "relaxed": {
+        "$value": "1.6",
+        "$type": "number"
+      },
+      "code": {
+        "$value": "1.5",
+        "$type": "number"
+      },
       "terminal": {
         "$value": "1.35",
         "$type": "number",
@@ -176,50 +416,124 @@
       }
     },
     "letterSpacing": {
-      "tight": { "$value": "-0.02em", "$type": "dimension" },
-      "normal": { "$value": "0", "$type": "dimension" },
-      "wide": { "$value": "0.04em", "$type": "dimension" },
-      "eyebrow": { "$value": "0.14em", "$type": "dimension" }
+      "tight": {
+        "$value": "-0.02em",
+        "$type": "dimension"
+      },
+      "normal": {
+        "$value": "0",
+        "$type": "dimension"
+      },
+      "wide": {
+        "$value": "0.04em",
+        "$type": "dimension"
+      },
+      "eyebrow": {
+        "$value": "0.14em",
+        "$type": "dimension"
+      }
     }
   },
-
   "space": {
-    "$description": "4px base grid.",
-    "0": { "$value": "0", "$type": "dimension" },
-    "1": { "$value": "4px", "$type": "dimension" },
-    "2": { "$value": "8px", "$type": "dimension" },
-    "3": { "$value": "12px", "$type": "dimension" },
-    "4": { "$value": "16px", "$type": "dimension" },
-    "5": { "$value": "20px", "$type": "dimension" },
-    "6": { "$value": "24px", "$type": "dimension" },
-    "8": { "$value": "32px", "$type": "dimension" },
-    "10": { "$value": "40px", "$type": "dimension" },
-    "12": { "$value": "48px", "$type": "dimension" },
-    "16": { "$value": "64px", "$type": "dimension" }
+    "0": {
+      "$value": "0",
+      "$type": "dimension"
+    },
+    "1": {
+      "$value": "4px",
+      "$type": "dimension"
+    },
+    "2": {
+      "$value": "8px",
+      "$type": "dimension"
+    },
+    "3": {
+      "$value": "12px",
+      "$type": "dimension"
+    },
+    "4": {
+      "$value": "16px",
+      "$type": "dimension"
+    },
+    "5": {
+      "$value": "20px",
+      "$type": "dimension"
+    },
+    "6": {
+      "$value": "24px",
+      "$type": "dimension"
+    },
+    "8": {
+      "$value": "32px",
+      "$type": "dimension"
+    },
+    "10": {
+      "$value": "40px",
+      "$type": "dimension"
+    },
+    "12": {
+      "$value": "48px",
+      "$type": "dimension"
+    },
+    "16": {
+      "$value": "64px",
+      "$type": "dimension"
+    },
+    "$description": "4px base grid."
   },
-
   "radius": {
-    "sm": { "$value": "4px", "$type": "dimension" },
-    "md": { "$value": "6px", "$type": "dimension" },
-    "lg": { "$value": "10px", "$type": "dimension" },
-    "xl": { "$value": "16px", "$type": "dimension" },
-    "pill": { "$value": "999px", "$type": "dimension" }
+    "sm": {
+      "$value": "4px",
+      "$type": "dimension"
+    },
+    "md": {
+      "$value": "6px",
+      "$type": "dimension"
+    },
+    "lg": {
+      "$value": "10px",
+      "$type": "dimension"
+    },
+    "xl": {
+      "$value": "16px",
+      "$type": "dimension"
+    },
+    "pill": {
+      "$value": "999px",
+      "$type": "dimension"
+    }
   },
-
   "border": {
     "width": {
-      "thin": { "$value": "1px", "$type": "dimension" },
-      "thick": { "$value": "2px", "$type": "dimension" }
+      "thin": {
+        "$value": "1px",
+        "$type": "dimension"
+      },
+      "thick": {
+        "$value": "2px",
+        "$type": "dimension"
+      }
     }
   },
-
   "motion": {
     "$description": "Every consumer of these must have a prefers-reduced-motion branch (PRD A8). The tokens do not encode that; the components do.",
     "duration": {
-      "instant": { "$value": "0ms", "$type": "duration" },
-      "fast": { "$value": "120ms", "$type": "duration" },
-      "base": { "$value": "200ms", "$type": "duration" },
-      "slow": { "$value": "320ms", "$type": "duration" }
+      "instant": {
+        "$value": "0ms",
+        "$type": "duration"
+      },
+      "fast": {
+        "$value": "120ms",
+        "$type": "duration"
+      },
+      "base": {
+        "$value": "200ms",
+        "$type": "duration"
+      },
+      "slow": {
+        "$value": "320ms",
+        "$type": "duration"
+      }
     },
     "easing": {
       "standard": {
@@ -241,26 +555,67 @@
       "$description": "Hover-open delay for submenus. Keyboard opens at 0ms (PRD 8.4.3)."
     }
   },
-
   "density": {
     "$description": "PRD 16 Q2 asked whether compact is a new scale or an existing variant. Answered here: a small set of explicit control heights, not a global scale multiplier. A multiplier would rescale type and spacing together and break the 4px grid at fractional values.",
     "comfortable": {
-      "menuBarHeight": { "$value": "36px", "$type": "dimension" },
-      "menuItemHeight": { "$value": "28px", "$type": "dimension" },
-      "controlHeight": { "$value": "32px", "$type": "dimension" },
-      "inputHeight": { "$value": "28px", "$type": "dimension" },
-      "toolbarButtonSize": { "$value": "24px", "$type": "dimension" },
-      "statusBarHeight": { "$value": "24px", "$type": "dimension" },
-      "rowHeight": { "$value": "24px", "$type": "dimension" }
+      "menuBarHeight": {
+        "$value": "36px",
+        "$type": "dimension"
+      },
+      "menuItemHeight": {
+        "$value": "28px",
+        "$type": "dimension"
+      },
+      "controlHeight": {
+        "$value": "32px",
+        "$type": "dimension"
+      },
+      "inputHeight": {
+        "$value": "28px",
+        "$type": "dimension"
+      },
+      "toolbarButtonSize": {
+        "$value": "24px",
+        "$type": "dimension"
+      },
+      "statusBarHeight": {
+        "$value": "24px",
+        "$type": "dimension"
+      },
+      "rowHeight": {
+        "$value": "24px",
+        "$type": "dimension"
+      }
     },
     "compact": {
-      "menuBarHeight": { "$value": "28px", "$type": "dimension" },
-      "menuItemHeight": { "$value": "24px", "$type": "dimension" },
-      "controlHeight": { "$value": "24px", "$type": "dimension" },
-      "inputHeight": { "$value": "24px", "$type": "dimension" },
-      "toolbarButtonSize": { "$value": "20px", "$type": "dimension" },
-      "statusBarHeight": { "$value": "22px", "$type": "dimension" },
-      "rowHeight": { "$value": "22px", "$type": "dimension" }
+      "menuBarHeight": {
+        "$value": "28px",
+        "$type": "dimension"
+      },
+      "menuItemHeight": {
+        "$value": "24px",
+        "$type": "dimension"
+      },
+      "controlHeight": {
+        "$value": "24px",
+        "$type": "dimension"
+      },
+      "inputHeight": {
+        "$value": "24px",
+        "$type": "dimension"
+      },
+      "toolbarButtonSize": {
+        "$value": "20px",
+        "$type": "dimension"
+      },
+      "statusBarHeight": {
+        "$value": "22px",
+        "$type": "dimension"
+      },
+      "rowHeight": {
+        "$value": "22px",
+        "$type": "dimension"
+      }
     }
   }
 }

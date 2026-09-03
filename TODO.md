@@ -212,10 +212,23 @@ off the mapping table and no `--jp-*` variable is unmapped.
       10.15:1 letterform sector. Do not move the brand colour for this.
       _Not on screen yet._ The bar still shows `ui-components:jupyter`. Read
       P0-12, which also carries the B5 gap that this decision opened.
-- [ ] **P0-08** Resolve the size conflict in rendered markdown. The mockup styles
-      `.jp-md` at 15px with a line height of 1.65. `--jp-content-font-size1` is
-      14px.
-      _Done when:_ one value wins and `font.size.content.1` has that value.
+- [x] **P0-08** Resolve the size conflict in rendered markdown.
+      _Decided by Aristide on 2026-09-03:_ **14px**, at every density.
+      `font.size.content.1` was already 14px, so no value moved. Recorded as
+      **D-022**, and as a `$description` on the token itself.
+      _There was no conflict._ The mockup carries **both** numbers. `.jp-md` at
+      L495 is 15px / 1.65, and `body.density-compact .jp-md` at L966 is 14px /
+      1.55. The mockup's own default is Compact (`TWEAK_DEFAULTS` at L5585), so
+      14px is the number its screenshots show. The task text compared the
+      comfortable value against our token and read it as a disagreement.
+      _Measured in the running instance on `fixture.ipynb`, in both modes._
+      `--jp-content-font-size1` 14px, `.jp-RenderedHTMLCommon` 14px, its
+      paragraph 14px in a 22.4px line box, `h1` 24px, editor 13px. Identical in
+      Data4Now Light and Data4Now Dark, as a size should be.
+      _Line height stays 1.6._ That is 22.4 over 14, which is
+      `font.lineHeight.relaxed`, and it sits between the mockup's two values.
+      Making body type follow density would widen **D-009**, which rejects a
+      scale multiplier. One size, both densities.
 - [ ] **P0-09** Get sign-off from Design and Accessibility on **D-002**. D-002
       narrows PRD T4 ("all 16 ANSI colours pass 4.5:1"), which arithmetic cannot
       satisfy as written.
@@ -541,9 +554,9 @@ green including D4.
 - [ ] **P3-03** Rendered markdown (`.jp-RenderedHTMLCommon`). This is the largest
       single CSS surface in scope: the full type ramp, tables, code, blockquote,
       lists and hr.
-      _Not started._ `.jp-RenderedHTMLCommon` appears in no stylesheet. Settle
-      **P0-08** first. The mockup wants 15px with a line height of 1.65, and
-      `--jp-content-font-size1` is 14px. The whole ramp depends on the winner.
+      _Not started._ `.jp-RenderedHTMLCommon` appears in no stylesheet. **P0-08
+      is settled:** 14px body, 1.6 line height, at every density (D-022). Build
+      the ramp on `font.size.content.*`, which is 13/14/16/18/20/24.
 - [ ] **P3-04** Wire the generated ANSI block into rendermime. Then make sure
       that PRD T2 holds: `ls --color=always` renders identically in a terminal
       and in a notebook cell, in both modes.
