@@ -72,7 +72,7 @@ Measured in a running JupyterLab 4.6.3, in both modes:
 - `jlpm test:galata` — **14 tests green**, 12 committed baselines over 6
   surfaces × {light, dark}. Run it from the container with
   `JUPYTER_URL=http://localhost:8888`.
-- `jlpm lint:design` — six gates green. `jlpm lint:check` green. `pytest` 5
+- `jlpm lint:design` — seven gates green. `jlpm lint:check` green. `pytest` 5
   passed.
 
 P2 has one **T3 plugin swap** left. It is P2-15, the behavior of the launcher.
@@ -450,7 +450,7 @@ snapshot baseline exists.
 - [x] **P1-10** CI: token freshness check. Rebuild the tokens and assert a clean
       tree, so that a hand-edit of a generated file cannot merge. This is the
       `design-gates` job in `.github/workflows/build.yml`.
-- [x] **P1-11** The five design lints (`jlpm lint:design`). Lint 1: no hardcoded values (AC4). Lint 2: every menu `:hover` is paired with `.lm-mod-active` (M1). Lint 3: no literal color in an SVG (I2). Lint 4: every `!important` is annotated (§7.4(4)). Lint 5: **every `var(--d4n-*)` resolves to a declared property**. P0-11 later added a sixth, `lint:anchors`.
+- [x] **P1-11** The five design lints (`jlpm lint:design`). Lint 1: no hardcoded values (AC4). Lint 2: every menu `:hover` is paired with `.lm-mod-active` (M1). Lint 3: no literal color in an SVG (I2). Lint 4: every `!important` is annotated (§7.4(4)). Lint 5: **every `var(--d4n-*)` resolves to a declared property**. P0-11 later added a sixth, `lint:anchors`, and queue housekeeping a seventh, `lint:queue`.
       The last lint is not in the PRD. We added it after a rename broke 56
       references in the middle of the project. Several of them were focus rings
       that collapsed to `outline: none`. Read `docs/decisions.md` D-013. Nothing

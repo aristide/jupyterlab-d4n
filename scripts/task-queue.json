@@ -15,17 +15,6 @@
     },
     {
       "order": 2,
-      "id": "P2-04",
-      "title": "Sidebar rails and panel headers",
-      "runnable": true,
-      "risk": "low",
-      "dependsOn": [],
-      "blockerKind": "none",
-      "reason": "The remaining CSS and the both-mode measurement need nobody; the authored-at-20px icons are P5-01 manifest/asset work and the task text explicitly allows shipping scaled icons with a written note instead of waiting.",
-      "riskReason": "Extends one theme-gated stylesheet (sidebar.css, already taking the rail width from --d4n-sidebar-rail-width so no private variable is touched); the icon half changes no shipped CSS."
-    },
-    {
-      "order": 3,
       "id": "P2-05",
       "title": "Dock tab bar — teal current-tab border, dirty dot, close affordance, split handle",
       "runnable": true,
@@ -36,7 +25,7 @@
       "riskReason": "One stylesheet, already scoped through .lm-DockPanel-tabBar and .lm-TabPanel-tabBar so it cannot leak into the sidebar rails."
     },
     {
-      "order": 4,
+      "order": 3,
       "id": "P2-12",
       "title": "Declarative toolbar and menu restructuring through overrides.json",
       "runnable": true,
@@ -47,7 +36,7 @@
       "riskReason": "overrides.json recomposes every toolbar and menu in the application: a wrong item name is dropped silently, a disabled menu is a behaviour change users see, and a malformed file takes the settings load down with it — the closest thing in P2 to a start-time failure outside the plugin swaps."
     },
     {
-      "order": 5,
+      "order": 4,
       "id": "P2-14",
       "title": "Status bar overflow — collapse at 1024px into a ⋯ popover",
       "runnable": true,
@@ -58,7 +47,7 @@
       "riskReason": "New shell plugin acting on IStatusBar: statusBar.ts explicitly forbids registering it as an IStatusBar provider, and doing so would shadow core's working bar; the 1024px viewport number is also expected to move the way the menu bar's did."
     },
     {
-      "order": 6,
+      "order": 5,
       "id": "P2-15",
       "title": "T3: launcher behavior — section order, root copy, no-kernels state, search",
       "runnable": true,
@@ -67,6 +56,17 @@
       "blockerKind": "none",
       "reason": "It is a plugin implementation with a precise Done when (L1 to L9 plus the four behaviours) and needs no sign-off, asset or new visual design — §8.11.5 already specifies the error state copy — though Q3 on the readout is still open with Design and PM.",
       "riskReason": "It must disable @jupyterlab/launcher-extension:plugin in the same commit: two ILauncher providers make JupyterLab refuse to start, and a replacement that misses the launcher:create command id leaves four dead + affordances owned by four other plugins. P1-09 found the safety claim behind this task is not what the source says: a duplicate provided token is a SILENT overwrite in PluginRegistry, not a startup refusal, so disabling the core plugin in the same change is the only guard, not a belt-and-braces one (D-024)."
+    },
+    {
+      "order": 6,
+      "id": "P2-16",
+      "title": "Rail tooltips — decide the placement, delay and dismissal, or drop the task",
+      "runnable": false,
+      "risk": "medium",
+      "dependsOn": [],
+      "blockerKind": "human_decision",
+      "reason": "D-019 established that rail tooltips are not reachable from CSS: Lumino sets title=caption on the tab, so the browser owns placement and delay. Reaching them means a custom TabBar renderer or a hover widget — a plugin — and the task text itself allows dropping it instead. Placement, delay, dismissal and screen-reader behaviour are all product decisions nobody has made, so an agent building it would be inventing four of them.",
+      "riskReason": "Adds a hover surface to the highest-traffic chrome in the product, and a tooltip that appears wrongly is worse than the native one it replaces."
     },
     {
       "order": 7,
@@ -426,8 +426,8 @@
       "runnable": true,
       "risk": "medium",
       "dependsOn": ["P1-07"],
-      "blockerKind": "task_dependency",
-      "reason": "Installing the P0/P1 extensions, writing the compat CSS and capturing snapshots is all machine work and packages/compat-shim already holds the scaffold plus three vendor stylesheets — but the \"dedicated Galata snapshots\" half needs the harness and baseline that P1-07 delivers.",
+      "blockerKind": "none",
+      "reason": "Installing the P0/P1 extensions, writing the compat CSS and capturing snapshots is all machine work, and packages/compat-shim already holds the scaffold plus three vendor stylesheets. The blocker was the Galata harness and baseline; P1-07 delivered both on 2026-09-03, so nothing remains.",
       "riskReason": "It adds vendor stylesheets to a shipped package and installs third-party extensions whose own JupyterLab pins can move the version in the dev image, which would break every later task's environment."
     },
     {
