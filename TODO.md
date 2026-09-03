@@ -69,7 +69,7 @@ Measured in a running JupyterLab 4.6.3, in both modes:
   cannot drive those 165 states yet. A skipped selector is reported, never
   passed.
 - `jlpm test:contrast` — 478 pairings, 0 failures.
-- `jlpm lint:design` — five gates green. `jlpm lint:check` green. `pytest` 5
+- `jlpm lint:design` — six gates green. `jlpm lint:check` green. `pytest` 5
   passed.
 
 P2 has one **T3 plugin swap** left. It is P2-15, the behavior of the launcher.
@@ -237,26 +237,32 @@ off the mapping table and no `--jp-*` variable is unmapped.
 - [ ] **P0-10** Sign off `mapping/jp-adapter.yaml` with Design and Engineering.
       This is **the** P0 exit gate (PRD §11).
       _Done when:_ a person reviews it row by row and approves it on a PR.
-- [ ] **P0-11** Re-derive the anchors in
-      `design-reference/data4now/COMPONENT-INDEX.md`. The per-row line numbers
-      are stale. P0-02 proved it. The header now matches the file. The table
-      does not.
-      _Measured on 2026-09-02._ Rows up to `IPYWIDGETS` (L610) are correct.
-      Every CSS banner after that point is 76 lines low. The index says
-      `TOOLTIP` L2652 and the file says L2728. `SETTINGS EDITOR`, `TERMINAL`,
-      `SPLASH`, `NOTIFICATIONS`, `DIALOG`, `LAUNCHER`, `COMMAND PALETTE`,
-      `CONTEXT MENU`, `DEBUGGER`, `GIT` and `TABLE OF CONTENTS` all carry the
-      same 76-line error. Body anchors are 103 lines low. The index says
-      `#tooltip-root` L5456 and the file says L5559.
-      _The JS column is worse._ It cites banners such as
-      `// ===== NOTIFICATIONS =====` at L6550. That string is not in the file.
-      The React section names its components with `function NotifHost()` and
-      similar. Use those names, or the `ReactDOM.createRoot` calls.
-      _Cause._ The index was written against an older revision of the design
-      page. The drift does not come from the P0-02 rebuild, which preserved
-      every line number.
-      _Done when:_ every `L####` in the file matches a `grep` of the quoted
-      anchor beside it.
+- [x] **P0-11** Re-derive the anchors in
+      `design-reference/data4now/COMPONENT-INDEX.md`.
+      _Done on 2026-09-03._ Every anchor in the file is now literal and
+      measured, and **`jlpm lint:anchors` proves it** — a sixth design lint,
+      wired into `jlpm lint:design`.
+      _How bad it was._ The file made 38 `anchor` + line claims. **All 38 were
+      false.** Two separate faults sat on top of each other. The line numbers
+      came from an older revision: every CSS banner after `IPYWIDGETS` (L610)
+      was 76 lines low, and every body anchor was 103 lines low. The quoted
+      strings were wrong as well. The file wrote banners as
+      `/* ===== APP SHELL ===== */` with five equals signs, and the real banners
+      carry thirteen. So no anchor in the file could be pasted into `grep -F`,
+      which is exactly what its own instructions told the reader to do.
+      _The JS column named things that do not exist._ It cited
+      `// ===== NOTIFICATIONS =====` at L6550 and four more like it. None of
+      those strings is in the file. The React section names its components with
+      `function NotifHost() {` and similar, so the rows now cite those, plus the
+      data arrays and the mount nodes.
+      _Now._ 79 checked anchors, all resolving. The lint was proved to fail: one
+      line number moved by one gives `x line 25: :root { — L15 is: /* JupyterLab
+tokens, brand-mapped */` and exit 1.
+      _Found while doing it._ The JupyterHub section cites **eleven files that
+      are not in this repo**. They exist in the design project and nobody
+      imported them. `preview-assets/admin-shared.css` and `admin-shared.js` did
+      come across, which is how we know the pages are real. They are out of
+      scope, so the rows stay, marked "Imported: no".
 
 ---
 
@@ -321,7 +327,7 @@ snapshot baseline exists.
 - [x] **P1-10** CI: token freshness check. Rebuild the tokens and assert a clean
       tree, so that a hand-edit of a generated file cannot merge. This is the
       `design-gates` job in `.github/workflows/build.yml`.
-- [x] **P1-11** The five design lints (`jlpm lint:design`). Lint 1: no hardcoded values (AC4). Lint 2: every menu `:hover` is paired with `.lm-mod-active` (M1). Lint 3: no literal color in an SVG (I2). Lint 4: every `!important` is annotated (§7.4(4)). Lint 5: **every `var(--d4n-*)` resolves to a declared property**.
+- [x] **P1-11** The five design lints (`jlpm lint:design`). Lint 1: no hardcoded values (AC4). Lint 2: every menu `:hover` is paired with `.lm-mod-active` (M1). Lint 3: no literal color in an SVG (I2). Lint 4: every `!important` is annotated (§7.4(4)). Lint 5: **every `var(--d4n-*)` resolves to a declared property**. P0-11 later added a sixth, `lint:anchors`.
       The last lint is not in the PRD. We added it after a rename broke 56
       references in the middle of the project. Several of them were focus rings
       that collapsed to `outline: none`. Read `docs/decisions.md` D-013. Nothing
