@@ -149,6 +149,53 @@ sign-off: see D-002 and `TODO.md` P0-09.
 
 ---
 
+## Deployment surfaces
+
+| Surface                            | State                                                      |
+| ---------------------------------- | ---------------------------------------------------------- |
+| JupyterHub, multi-user             | Supported. Tested.                                         |
+| Local `jupyter lab`                | Supported. Tested.                                         |
+| Docker image (`docker compose up`) | Supported. Tested. This is where the CI numbers come from. |
+| **JupyterLite**                    | **Not supported for v1. Not tested.** See below.           |
+
+### JupyterLite is not supported, and here is exactly what that means
+
+PRD §14 R7 allows either answer. We chose "documented as unsupported" over a
+best-effort claim nobody checks, because an untested claim rots silently and
+this one has a real failure mode behind it. Decision: **D-024**.
+
+Nothing here is a guess about Lite. It is a list of what our wheel ships and
+which of it a Lite build reads.
+
+| What the wheel installs                                                                               | Read by JupyterLite?                                                    |
+| ----------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `share/jupyter/labextensions` — the eight federated extensions                                        | **Yes.** The CSS, both themes, the icons and the frontend plugins load. |
+| `share/jupyter/lab/settings/overrides.json` — the default theme, the CodeMirror and terminal settings | **No.** Lite takes overrides from its own build config.                 |
+| `etc/jupyter/labconfig/page_config.json` — disables the core splash we replace                        | **No.** Lite has its own `page_config`.                                 |
+| `etc/jupyter/jupyter_server_config.d` — enables the server extension                                  | **No.** Lite has no server.                                             |
+
+So a Lite build would load the look and lose the configuration around it:
+
+1. **It would not start on our theme.** `overrides.json` is what sets
+   Data4Now Light as the default. Unread, the build boots on JupyterLab Light
+   and a user has to pick ours from Settings ▸ Theme.
+2. **Two plugins would provide `ISplashScreen`.** With the core splash left
+   enabled, both it and `@d4n/shell-chrome:splash` register. Read from the
+   source rather than assumed: `PluginRegistry.registerPlugin` throws only on a
+   duplicate plugin **id**, and for a provided token it runs
+   `this._services.set(data.provides, data.id)` — a silent overwrite. So the
+   application still starts, and **which splash you get depends on registration
+   order**, which is not something we control.
+3. **The server extension does not run.** It costs nothing a user sees: the
+   status endpoint is read by our test jobs, and the brand-asset route serves
+   nothing (D-023 put the favicon inside the labextension, so the tab icon works
+   in Lite).
+4. **The terminal is absent.** Already handled — `terminalBridge.ts`,
+   `menuBarOverflow.ts` and `shell-chrome/src/index.ts` each guard for it.
+
+None of that is hard to fix. It is a Lite build config that repeats the three
+files above. We are not doing it for v1, and we are not claiming it works.
+
 ## Status
 
 The token pipeline, the adapter contract, the contrast audit, both themes and

@@ -1022,6 +1022,82 @@ scoped as its own task.
 
 ---
 
+## D-024 — JupyterLite is not supported for v1, and the reason is configuration
+
+**Decided by Aristide, 2026-09-03.** This answers PRD **Q7** and closes P1-09.
+The user-facing statement is the "Deployment surfaces" section of `README.md`.
+
+PRD §14 R7 offers two endings: "best-effort; separate CI job" or "documented as
+unsupported". We take the second. A best-effort claim with no job behind it is
+a claim that ages without anyone finding out, and this one has a real failure
+mode under it rather than a vague risk.
+
+### What a Lite build would actually get
+
+Measured from what the wheel installs, not guessed:
+
+| Installed by the wheel                                     | Read by Lite? |
+| ---------------------------------------------------------- | ------------- |
+| `share/jupyter/labextensions` (eight federated extensions) | **Yes**       |
+| `share/jupyter/lab/settings/overrides.json`                | **No**        |
+| `etc/jupyter/labconfig/page_config.json`                   | **No**        |
+| `etc/jupyter/jupyter_server_config.d`                      | **No**        |
+
+The look loads. The configuration around it does not. Three consequences, in
+order of how much they matter:
+
+1. **It would not start on our theme.** `overrides.json` is what makes
+   Data4Now Light the default.
+2. **Two plugins would provide `ISplashScreen`,** because the core splash stays
+   enabled without our `page_config.json`.
+3. **The server extension does not run,** which costs a user nothing. D-023 put
+   the favicon inside the labextension, so the tab icon survives. The status
+   endpoint is read only by our own test jobs.
+
+The terminal's absence is already handled: three modules in `shell-chrome`
+guard for it explicitly.
+
+### A claim in TODO.md that this task contradicts
+
+Consequence 2 above sent me to read the plugin registry, and what is there does
+not match what `TODO.md` P2-15 asserts: "**Two `ILauncher` providers make
+JupyterLab refuse to start.**"
+
+`PluginRegistry.registerPlugin` in `@lumino/coreutils` throws on a duplicate
+plugin **id** only:
+
+```js
+if (this._plugins.has(plugin.id)) {
+  throw new TypeError(`Plugin '${plugin.id}' is already registered.`);
+}
+…
+if (data.provides) {
+  this._services.set(data.provides, data.id);   // silent overwrite
+}
+```
+
+`@jupyterlab/application` adds no guard of its own — searched, nothing. So a
+second provider of the same token **overwrites the first silently**, and the
+winner depends on registration order. That is worse than a refusal, not better:
+a crash is visible.
+
+**I did not reproduce it.** The experiment needs the core splash re-enabled, and
+the container refuses: `docker/entrypoint.sh` rewrites
+`/usr/local/etc/jupyter/labconfig/page_config.json` on every start and lists the
+plugin under `lockedExtensions`, which exists precisely to stop it being turned
+back on. So this is source evidence, not observed behaviour.
+
+**P2-15 keeps its wording, with this caveat attached.** Whoever does that task
+should run the experiment before relying on "refuses to start" as a safety net.
+If the registry is right, disabling the core plugin in the same change is not a
+belt-and-braces measure — it is the only thing standing between the product and
+a silently wrong launcher.
+
+**Revisit when** someone asks for Lite, or when P2-15 settles the duplicate
+provider question by experiment.
+
+---
+
 ## Still open
 
 Tracked in `TODO.md`; listed here so the set is visible in one place.
@@ -1032,7 +1108,6 @@ Tracked in `TODO.md`; listed here so the set is visible in one place.
 | Q3    | Does the launch-target readout ship in v1?                    | Design + PM  | P2-08 |
 | Q4    | How much of the icon set exists vs needs authoring?           | Design       | P0-04 |
 | Q5    | matplotlib/Vega opt-in helper in v1 or deferred?              | PM           | P3-14 |
-| Q7    | JupyterLite in scope for v1?                                  | PM           | P1-09 |
 | Q8    | Upstream the a11y contrast fixes to core?                     | Eng Lead     | P6-08 |
 | —     | 20px-native rail icon export — the set is 24px scaled (D-018) | Design       | P2-04 |
 | —     | Rail tooltip: replace the renderer, or accept native (D-019)  | Design + Eng | P2-04 |

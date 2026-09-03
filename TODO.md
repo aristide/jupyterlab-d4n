@@ -426,9 +426,27 @@ snapshot baseline exists.
       **and** a generated `FAVICON_DATA_URL` module, so webpack never sees it.
       Selectors are back to 97 matched, 0 broken, three runs running, and the
       favicon costs zero network requests.
-- [ ] **P1-09** Decide the scope of JupyterLite (**Q7**).
-      _Done when:_ the decision is recorded, and either a CI job exists or the
-      documentation says that JupyterLite is not supported.
+- [x] **P1-09** Decide the scope of JupyterLite (**Q7**).
+      _Decided by Aristide on 2026-09-03:_ **not supported for v1, and not
+      tested.** Recorded as **D-024**, and stated for users in the "Deployment
+      surfaces" section of `README.md`. PRD §14 R7 allows either ending. A
+      best-effort claim with no CI job behind it ages without anyone finding
+      out, and this one has a real failure mode under it.
+      _Measured from what the wheel installs, not guessed._ Lite reads
+      `share/jupyter/labextensions`, so the CSS, both themes, the icons and the
+      frontend plugins load. It reads **none** of
+      `share/jupyter/lab/settings/overrides.json`,
+      `etc/jupyter/labconfig/page_config.json` or
+      `etc/jupyter/jupyter_server_config.d`. So the look loads and the
+      configuration around it does not: the build would not start on our theme,
+      and two plugins would provide `ISplashScreen`.
+      _The favicon survives._ D-023 put it inside the labextension as a data
+      URL, so the tab icon works in Lite even with no server.
+      _Turned up by this task, and it contradicts P2-15._ Read P2-15's caveat
+      below and the last section of D-024. `PluginRegistry.registerPlugin`
+      throws on a duplicate plugin **id** only; a duplicate provided token is a
+      silent overwrite. The claim that two providers "make JupyterLab refuse to
+      start" is not what the source says.
 - [x] **P1-10** CI: token freshness check. Rebuild the tokens and assert a clean
       tree, so that a hand-edit of a generated file cannot merge. This is the
       `design-gates` job in `.github/workflows/build.yml`.
@@ -606,9 +624,20 @@ Galata is green.
       four dead affordances in four places. None of them look like a fault of the
       launcher.
       _Done when:_ L1 to L9 hold with the four behaviors above, and the core
-      plugin is disabled **in the same change**. Two `ILauncher` providers make
-      JupyterLab refuse to start. Stub:
+      plugin is disabled **in the same change**. Stub:
       `packages/shell-chrome/src/launcher.ts`.
+      _Caveat added by P1-09, and read it before you rely on the old wording._
+      This entry used to say "Two `ILauncher` providers make JupyterLab refuse
+      to start". **The source does not say that.**
+      `PluginRegistry.registerPlugin` in `@lumino/coreutils` throws on a
+      duplicate plugin **id** only; for a provided token it runs
+      `this._services.set(data.provides, data.id)`, a silent overwrite, and
+      `@jupyterlab/application` adds no guard. So two providers leave the winner
+      to registration order. That is **worse** than a refusal, because a crash
+      is visible and this is not. Not reproduced: the container locks the core
+      splash (`docker/entrypoint.sh` rewrites `page_config.json` on every start
+      and lists it under `lockedExtensions`), so the experiment could not run
+      here. Run it before treating "it would crash" as a safety net. See D-024.
 - [x] **P2-09** **T3: splash screen.** Replace it through `ISplashScreen`.
       **P0-02 does not block this.** An earlier note here said that the markup
       was lost, and that we must recover the file first. That was too strong. The
