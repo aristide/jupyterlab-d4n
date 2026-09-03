@@ -8,6 +8,7 @@ import { ITerminalTracker } from '@jupyterlab/terminal';
 
 import { activateAdaptiveTheme } from './adaptiveTheme';
 import { activateEditorThemeSync } from './editorThemeSync';
+import { faviconPlugin } from './favicon';
 import { menuBarOverflowPlugin } from './menuBarOverflow';
 import { splashPlugin } from './splash';
 import { activateTerminalBridge } from './terminalBridge';
@@ -94,7 +95,8 @@ const plugins: JupyterFrontEndPlugin<unknown>[] = [
   editorThemeSync,
   terminalBridge,
   splashPlugin,
-  menuBarOverflowPlugin
+  menuBarOverflowPlugin,
+  faviconPlugin
 ];
 
 export default plugins;

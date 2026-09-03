@@ -1,22 +1,34 @@
 """Server-side handlers.
 
 This project is presentation-layer only (PRD §3.2): zero kernel, server or
-execution behaviour changes. The server extension exists because exactly two
-things in the design are **provably unreachable** from a frontend labextension,
-and pretending otherwise just means they ship unstyled:
+execution behaviour changes.
 
-* **The favicon** (PRD §8.9.2). The browser tab icon is referenced by the Jupyter
-  server's page template and served from its static assets. No labextension can
-  change it.
+WHAT THIS EXTENSION IS FOR, AS OF P1-08
+---------------------------------------
+It was written on the premise that two things were **provably unreachable**
+from a frontend labextension. One of those turned out to be reachable.
+
+* **The favicon** (PRD §8.9.2). §8.9.2 says a labextension cannot change it.
+  Measured on a running instance, that is wrong at runtime: the page template
+  emits ordinary ``<link class="idle favicon">`` and ``<link class="busy
+  favicon">`` elements, and rewriting their ``href`` from JavaScript works.
+  ``@d4n/shell-chrome:favicon`` does exactly that, and it ships the asset inside
+  the labextension, so a plain ``pip install`` and a JupyterLite build get the
+  mark too. See ``docs/decisions.md`` D-023. **The favicon no longer needs this
+  server extension.**
 * **Kernelspec logos** (PRD §7.8.2). ``logo-32x32.png`` / ``logo-64x64.png`` /
   ``logo-svg.svg`` live inside each kernelspec directory and are served by the
-  server from the kernelspec resource path.
+  server from the kernelspec resource path. Still unreachable from the
+  frontend — and we deliberately do **not** intercept them. See D-010: leaving
+  the language marks stock sidesteps the trademark question, works for kernels
+  installed at any time, and the launcher's neutral plate makes the
+  raster/vector difference read as intentional.
 
-For kernel logos we deliberately do **not** intercept — see ``docs/decisions.md``
-D-010. Leaving the language marks stock sidesteps the trademark question, works
-for kernels installed at any time, and the launcher's neutral plate makes the
-raster/vector difference read as intentional. The hook below is for the favicon
-only.
+So what remains below is the status endpoint, which the Galata suite and
+``jlpm test:selectors`` read to assert the extension is live before asserting
+anything about the DOM, plus a brand-asset route that is now a **spare**: it is
+the delivery path for any future asset that must have a URL rather than live
+inside a bundle. It serves nothing today, and ``static/`` is empty.
 
 Everything else the design does is CSS and frontend plugins.
 """
@@ -30,9 +42,10 @@ import tornado
 from jupyter_server.base.handlers import APIHandler, JupyterHandler
 from jupyter_server.utils import url_path_join
 
-#: Assets shipped with the wheel. Populated by TODO P1-08 (favicon delivery);
-#: the handler below degrades to a 404 while it is empty, which lets the server
-#: extension ship before the design decision is made rather than blocking on it.
+#: Assets shipped with the wheel. Empty, and expected to stay that way: P1-08
+#: settled the favicon in the frontend (D-023), which was the only planned
+#: occupant. The handler degrades to a 404, so the route costs nothing while it
+#: waits for an asset that genuinely needs a URL.
 STATIC_ROOT = Path(__file__).parent / "static"
 
 NAMESPACE = "jupyterlab-d4n"

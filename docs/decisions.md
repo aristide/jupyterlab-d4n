@@ -944,6 +944,84 @@ document is on screen to read. If 14px proves too small there, the change is to
 
 ---
 
+## D-023 — The favicon is a frontend swap, and the busy variant is refused
+
+**Decided by Aristide, 2026-09-03.** This answers PRD **Q11** and closes P1-08.
+
+### PRD §8.9.2 is wrong about the frontend, and the task inherited the error
+
+§8.9.2 states the favicon is "**not overridable from a labextension**" and
+offers three server-side routes. Measured on the running instance, that is not
+true at runtime. `jupyter_server`'s page template emits two ordinary elements:
+
+```html
+{% block favicon %}
+<link rel="icon" href="…/favicons/favicon.ico" class="idle favicon" />
+<link rel="" href="…/favicons/favicon-busy-1.ico" class="busy favicon" />
+{% endblock %}
+```
+
+Rewriting `href` from JavaScript works, and the browser repaints the tab.
+Verified after the swap: both links resolve to our asset, the response is 200
+`image/png`, and the browser decoded it at 64×64.
+
+What §8.9.2 **is** right about is the first paint. The stock mark sits in the
+first byte of HTML and is on screen before any labextension runs, so this route
+cannot avoid a brief flash of it. That is the price, and it buys the two things
+the server routes cannot: a plain `pip install` and a JupyterLite build both get
+the mark, because the asset ships inside the labextension rather than behind our
+server config.
+
+### Busy-state swapping is refused, but the stock mark is not left showing
+
+The swap itself is upstream's. Something in core flips `rel` between the two
+elements on kernel activity, and `jupyter_server` ships seven icons for it:
+idle, busy 1–3, file, notebook, terminal. So the task's "implement busy
+swapping" was really "author assets for a mechanism that already runs".
+
+**We author one asset.** A 16px glyph that changes on kernel activity is noise,
+and the status bar already carries kernel state at a size a person can read.
+
+Refusing the variant is not the same as leaving the element alone. A busy link
+still pointing at `favicon-busy-1.ico` would show the Jupyter mark for as long
+as a cell runs — failing criterion **B3** exactly when a user is watching the
+tab, which is the reason they are watching it. So **both links get our mark**.
+The swap still happens and it is invisible.
+
+### Why a PNG, when D-021 fought for a vector
+
+PRD §4.2 puts **Safari 17** in scope, and Safari does not render an SVG
+referenced by `rel="icon"`. An SVG-only favicon leaves a supported browser with
+no icon. So `packages/icons/svg/brand/favicon.svg` is the source of truth and
+`scripts/render-favicon.mjs` rasterises it to 64×64 — never hand-drawn, never
+edited. 64 covers a 4× display and downscales cleanly; the mark is a disc and a
+wedge, and nothing in it needs hinting at 16px.
+
+The favicon is a **different asset** from the top-panel mark, and that is not a
+B5 problem. B5 governs the splash and the top panel, which share
+`LOGO_MARK_SVG`. The favicon adds the navy plate, because a tab icon is drawn by
+the browser chrome against a background we do not control — measured legible at
+16px on white and on `#202124`. It also cannot use `currentColor`: outside our
+document there is nothing to inherit, so every value in it is explicit and
+commented under the §7.8.4 exception.
+
+### Consequences
+
+- **The server extension is no longer needed for the favicon.** Its docstring
+  said it existed for exactly that. Corrected. What remains is the status
+  endpoint plus a brand-asset route that now serves nothing — kept as the
+  delivery path for a future asset that must have a URL. `static/` is empty and
+  expected to stay that way.
+- **The tab TEXT is still stock.** `document.title` reads "JupyterLab", set by
+  the page template. B3 covers the mark, not the words, so this decision does
+  not touch it. Recorded because a branded icon beside the word "JupyterLab" is
+  the kind of half-finish P0-06 was written to prevent.
+
+**Revisit when** someone asks for a busy state, or when the page title is
+scoped as its own task.
+
+---
+
 ## Still open
 
 Tracked in `TODO.md`; listed here so the set is visible in one place.
@@ -956,6 +1034,5 @@ Tracked in `TODO.md`; listed here so the set is visible in one place.
 | Q5    | matplotlib/Vega opt-in helper in v1 or deferred?              | PM           | P3-14 |
 | Q7    | JupyterLite in scope for v1?                                  | PM           | P1-09 |
 | Q8    | Upstream the a11y contrast fixes to core?                     | Eng Lead     | P6-08 |
-| Q11   | Favicon delivery route; busy-state swapping?                  | Platform     | P1-08 |
 | —     | 20px-native rail icon export — the set is 24px scaled (D-018) | Design       | P2-04 |
 | —     | Rail tooltip: replace the renderer, or accept native (D-019)  | Design + Eng | P2-04 |

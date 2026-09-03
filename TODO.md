@@ -385,11 +385,47 @@ snapshot baseline exists.
       _Also added:_ `tests/tsconfig.json`, so typed ESLint rules cover
       `tests/**/*.ts`. Without it eslint refused the files as "not included in
       the project". Proved it lints by injecting an unused variable.
-- [ ] **P1-08** Favicon delivery (**Q11**). The favicon is a server-side asset,
-      and a labextension cannot reach it (PRD §8.9.2). The `jupyterlab_d4n`
-      server extension is the hook, and it exists.
-      _Done when:_ the D4N mark shows in the browser tab. Busy-state swapping is
-      either implemented or refused in writing.
+- [x] **P1-08** Favicon delivery (**Q11**).
+      _Decided by Aristide and done on 2026-09-03._ A frontend link rewrite,
+      one authored asset, busy variant refused in writing. Recorded as **D-023**.
+      _The task inherited a PRD error._ §8.9.2 says a labextension cannot reach
+      the favicon. Measured on the running instance, that is wrong at runtime:
+      the page template emits ordinary `<link class="idle favicon">` and
+      `<link class="busy favicon">` elements, and rewriting `href` from
+      JavaScript works. §8.9.2 is right only about the first paint — the stock
+      mark is in the first byte of HTML, so this route flashes it briefly.
+      _Verified in the running instance._ Both links resolve to
+      `/lab/extensions/@d4n/shell-chrome/static/*.png`, the response is 200
+      `image/png`, and the browser decoded it at 64×64.
+      _Busy swapping is upstream's, and it is refused._ Core flips `rel` between
+      the two elements on kernel activity, and `jupyter_server` ships seven
+      icons for it. We author **one**. But both links get it, because a busy
+      link still pointing at `favicon-busy-1.ico` would show the Jupyter mark
+      for as long as a cell runs — failing **B3** exactly when a user is
+      watching the tab.
+      _A PNG, not the vector._ PRD §4.2 puts Safari 17 in scope, and Safari does
+      not render an SVG `rel="icon"`.
+      `packages/icons/svg/brand/favicon.svg` is the source;
+      `jlpm build:favicon` rasterises it to 64×64. Measured legible at 16px on
+      white and on `#202124`.
+      _Two consequences carried forward._ The server extension no longer needs
+      to exist for the favicon — its docstring said it did, and is corrected.
+      And `document.title` is still "JupyterLab": B3 covers the mark, not the
+      words, so a branded icon now sits beside a stock name.
+      _The first attempt broke the whole package, and the canary caught it._
+      Importing the PNG normally makes `@jupyterlab/builder` load it as
+      `asset/resource`, so webpack resolves a runtime public path. Inside a
+      **federated** module that produced a bare directory URL: the browser
+      refused `…/@d4n/shell-chrome/static` as a script with MIME type
+      `text/html`, and **every plugin in `@d4n/shell-chrome` stopped loading** —
+      splash, terminal bridge, adaptive theme, menu-bar overflow.
+      `jlpm test:selectors` reported it as one broken selector,
+      `body[data-d4n-menubar-overflow] #jp-menu-panel`, three runs out of three.
+      That entry was registered as exactly this canary, and it earned its place.
+      The fix removes the asset import: `jlpm build:favicon` now emits the PNG
+      **and** a generated `FAVICON_DATA_URL` module, so webpack never sees it.
+      Selectors are back to 97 matched, 0 broken, three runs running, and the
+      favicon costs zero network requests.
 - [ ] **P1-09** Decide the scope of JupyterLite (**Q7**).
       _Done when:_ the decision is recorded, and either a CI job exists or the
       documentation says that JupyterLite is not supported.

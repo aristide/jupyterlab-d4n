@@ -30,6 +30,7 @@
         "build": "jlpm build:tokens && jlpm build:lib && jlpm build:labextension:dev",
         "build:prod": "jlpm clean && jlpm build:tokens && jlpm build:lib:prod && jlpm build:labextension",
         "build:tokens": "yarn workspace @d4n/tokens run build",
+        "build:favicon": "node scripts/render-favicon.mjs",
         "build:lib": "node scripts/run-workspaces.mjs build:lib",
         "build:lib:prod": "node scripts/run-workspaces.mjs build:lib:prod",
         "build:labextension": "node scripts/run-workspaces.mjs build:labextension && node scripts/stamp-install-json.mjs",
