@@ -4,17 +4,6 @@
   "tasks": [
     {
       "order": 1,
-      "id": "P0-10",
-      "title": "Sign off mapping/jp-adapter.yaml with Design and Engineering (the P0 exit gate)",
-      "runnable": false,
-      "risk": "low",
-      "dependsOn": [],
-      "blockerKind": "human_signoff",
-      "reason": "The Done-when is explicitly a person reviewing 233 rows one by one and approving them on a PR.",
-      "riskReason": "Approval only; the mapping file itself is unchanged by the act of signing it off."
-    },
-    {
-      "order": 2,
       "id": "P1-07",
       "title": "Galata harness and snapshot baseline",
       "runnable": true,
@@ -25,7 +14,7 @@
       "riskReason": "Test-only and additive — tests/galata/ holds only configuration today, and committed baselines affect no shipped surface."
     },
     {
-      "order": 3,
+      "order": 2,
       "id": "P1-08",
       "title": "Favicon delivery (Q11)",
       "runnable": false,
@@ -36,7 +25,7 @@
       "riskReason": "The hook is the jupyterlab_d4n server extension, which the Jupyter server loads at startup, so a fault there can stop the server rather than just mis-render a tab."
     },
     {
-      "order": 4,
+      "order": 3,
       "id": "P1-09",
       "title": "Decide the scope of JupyterLite (Q7)",
       "runnable": false,
@@ -47,7 +36,7 @@
       "riskReason": "Produces a decision record and then either a new CI job or a documentation line; neither touches shipped CSS or plugins."
     },
     {
-      "order": 5,
+      "order": 4,
       "id": "P2-03",
       "title": "Menu dropdowns (.lm-Menu) — fixed four-column grid, M1 to M8",
       "runnable": true,
@@ -58,7 +47,7 @@
       "riskReason": "menu.css governs every menu in the application because Lumino portals menus into body, so one bad grid template misaligns menus everywhere; §8.4.5 also permits escalating to a custom Menu.IRenderer, which turns a CSS task into a JS one."
     },
     {
-      "order": 6,
+      "order": 5,
       "id": "P2-04",
       "title": "Sidebar rails and panel headers",
       "runnable": true,
@@ -69,7 +58,7 @@
       "riskReason": "Extends one theme-gated stylesheet (sidebar.css, already taking the rail width from --d4n-sidebar-rail-width so no private variable is touched); the icon half changes no shipped CSS."
     },
     {
-      "order": 7,
+      "order": 6,
       "id": "P2-05",
       "title": "Dock tab bar — teal current-tab border, dirty dot, close affordance, split handle",
       "runnable": true,
@@ -80,7 +69,7 @@
       "riskReason": "One stylesheet, already scoped through .lm-DockPanel-tabBar and .lm-TabPanel-tabBar so it cannot leak into the sidebar rails."
     },
     {
-      "order": 8,
+      "order": 7,
       "id": "P2-12",
       "title": "Declarative toolbar and menu restructuring through overrides.json",
       "runnable": true,
@@ -91,7 +80,7 @@
       "riskReason": "overrides.json recomposes every toolbar and menu in the application: a wrong item name is dropped silently, a disabled menu is a behaviour change users see, and a malformed file takes the settings load down with it — the closest thing in P2 to a start-time failure outside the plugin swaps."
     },
     {
-      "order": 9,
+      "order": 8,
       "id": "P2-14",
       "title": "Status bar overflow — collapse at 1024px into a ⋯ popover",
       "runnable": true,
@@ -102,7 +91,7 @@
       "riskReason": "New shell plugin acting on IStatusBar: statusBar.ts explicitly forbids registering it as an IStatusBar provider, and doing so would shadow core's working bar; the 1024px viewport number is also expected to move the way the menu bar's did."
     },
     {
-      "order": 10,
+      "order": 9,
       "id": "P2-15",
       "title": "T3: launcher behavior — section order, root copy, no-kernels state, search",
       "runnable": true,
@@ -113,7 +102,7 @@
       "riskReason": "It must disable @jupyterlab/launcher-extension:plugin in the same commit: two ILauncher providers make JupyterLab refuse to start, and a replacement that misses the launcher:create command id leaves four dead + affordances owned by four other plugins."
     },
     {
-      "order": 11,
+      "order": 10,
       "id": "P3-01",
       "title": "Cell container, active-cell indicator, prompts, 24px collapser hit area",
       "runnable": true,
@@ -124,7 +113,7 @@
       "riskReason": "Additive rules in one already theme-gated stylesheet; the worst outcome is a 24px collapser hit area that swallows clicks near the prompt, which is visually obvious and revertable, and cannot affect boot."
     },
     {
-      "order": 12,
+      "order": 11,
       "id": "P3-02",
       "title": "Output area, stream output, error output, 2px danger left border",
       "runnable": true,
@@ -135,7 +124,7 @@
       "riskReason": "Additive rules in a single shipped stylesheet on tokens that already exist; no plugin, no token source and no boot path is touched."
     },
     {
-      "order": 13,
+      "order": 12,
       "id": "P3-03",
       "title": "Rendered markdown (.jp-RenderedHTMLCommon) type ramp, tables, code, lists",
       "runnable": true,
@@ -146,7 +135,7 @@
       "riskReason": "The largest single CSS surface in scope, but it no longer moves a token: the ramp is font.size.content.* as it already stands, so the blast radius is .jp-RenderedHTMLCommon rather than every rendered output."
     },
     {
-      "order": 14,
+      "order": 13,
       "id": "P3-04",
       "title": "Wire the generated ANSI block into rendermime and verify T2",
       "runnable": true,
@@ -157,7 +146,7 @@
       "riskReason": "Mostly verification; any code change is an import or a selector in generated-adjacent CSS, and the generated file itself is rebuilt by the freshness gate rather than hand-edited."
     },
     {
-      "order": 15,
+      "order": 14,
       "id": "P3-05",
       "title": "CodeMirror 6 theme and HighlightStyle across eleven languages",
       "runnable": true,
@@ -168,7 +157,7 @@
       "riskReason": "It rewrites the HighlightStyle and theme object that every editor and every notebook cell mounts; a malformed extension or a bad tag list makes editors render unstyled or throw on open, and the design lints do not inspect a JS theme object."
     },
     {
-      "order": 16,
+      "order": 15,
       "id": "P3-06",
       "title": "Terminal bridge — all four triggers, T1 to T10",
       "runnable": true,
@@ -179,7 +168,7 @@
       "riskReason": "Contained to xterm options for terminal widgets; a regression hands the palette back to core's `inherit` object per D-004 but touches no other surface and cannot stop the app starting."
     },
     {
-      "order": 17,
+      "order": 16,
       "id": "P3-07",
       "title": "Autocomplete popup, inline signature, tooltip, console panel",
       "runnable": true,
@@ -190,7 +179,7 @@
       "riskReason": "The completer and the tooltip portal outside the shell into body, so a wrong position, size or stacking rule can cover the editor and block typing — a failure the contrast and selector gates would pass."
     },
     {
-      "order": 18,
+      "order": 17,
       "id": "P3-08",
       "title": "Wire CM6 breakpoint gutter and execution-line decorations to the debugger",
       "runnable": true,
@@ -201,7 +190,7 @@
       "riskReason": "It activates a gutter and a StateField inside every editor the debugger attaches to; a faulty effect or range set throws inside CodeMirror at stop time, and D4's contrast gate against every syntax token is easy to regress silently."
     },
     {
-      "order": 19,
+      "order": 18,
       "id": "P3-09",
       "title": "Debugger panel shell, callstack, breakpoints, sources, empty states",
       "runnable": true,
@@ -212,7 +201,7 @@
       "riskReason": "A new panel-scoped stylesheet plus generated empty-state content; confined to the debugger sidebar and revertable, though the empty states put English strings into CSS content, which a reviewer may want to relocate."
     },
     {
-      "order": 20,
+      "order": 19,
       "id": "P3-10",
       "title": "Debugger variables tree view",
       "runnable": true,
@@ -223,7 +212,7 @@
       "riskReason": "Additive CSS on one sidebar section using tokens that already exist and are already audited; no JS, no plugin and no token source involved."
     },
     {
-      "order": 21,
+      "order": 20,
       "id": "P3-11",
       "title": "T3/T4: DataGrid — apply buildGridStyle and buildTextRenderer to both grids",
       "runnable": true,
@@ -234,7 +223,7 @@
       "riskReason": "It disables a core plugin (@jupyterlab/csvviewer-extension:csv) in page_config.json in the same change; if the replacement misses the document-widget factory or the file-type registration, CSV and TSV files stop opening for every user, and the same D-015/D-016 trap applies where the disabled plugin's schema survives."
     },
     {
-      "order": 22,
+      "order": 21,
       "id": "P3-12",
       "title": "Notebook search overlay and the other five search mounts",
       "runnable": true,
@@ -245,7 +234,7 @@
       "riskReason": "S1 forces the change into the shared inputs.css that all six mounts consume, so one regression hits the command palette, file-browser filter, settings search and extension-manager search at once; the overlay also floats over the document where a bad offset can occlude the first cell."
     },
     {
-      "order": 23,
+      "order": 22,
       "id": "P3-13",
       "title": "ipywidgets — variables in compat-shim, sliders, file upload, repaint",
       "runnable": true,
@@ -256,7 +245,7 @@
       "riskReason": "It edits compat-shim's vendored ipywidgets stylesheet and the --jp-widgets-* mapping, which repaint every widget in every output area, and those variables sit deliberately outside the audited adapter so the token lints give less cover than elsewhere."
     },
     {
-      "order": 24,
+      "order": 23,
       "id": "P3-14",
       "title": "Decide the opt-in helper for matplotlib and Vega (Q5)",
       "runnable": false,
@@ -267,7 +256,7 @@
       "riskReason": "Whatever is produced is a decision record or an opt-in package that ships nothing into the interface; the danger is scope creep and a fabricated PM decision in docs/decisions.md, not a broken build."
     },
     {
-      "order": 25,
+      "order": 24,
       "id": "P4-01",
       "title": "RJSF global CSS pass against the stable class names",
       "runnable": true,
@@ -278,7 +267,7 @@
       "riskReason": "It is the single stylesheet every RJSF field in the settings editor depends on, so one wrong global rule degrades every settings form at once, and reaching spec is likely to need new Tier-3 token groups (no checkbox/radio/switch/settings groups exist in components.tokens.json today)."
     },
     {
-      "order": 26,
+      "order": 25,
       "id": "P4-02",
       "title": "Settings editor shell, plugin list and JSON view",
       "runnable": true,
@@ -289,7 +278,7 @@
       "riskReason": "Additive CSS on one new surface, gated under body[data-jp-theme-name^='Data4Now'] (D-003); it disables nothing, touches no token, and cannot affect application boot."
     },
     {
-      "order": 27,
+      "order": 26,
       "id": "P4-03",
       "title": "fieldRenderer: keybinding capture",
       "runnable": true,
@@ -300,7 +289,7 @@
       "riskReason": "An exception inside an RJSF field takes down the whole settings form, not just that row (stated in renderers/README.md), and a capture listener that leaks swallows keystrokes application-wide; a wrong registry key fails silently with the stock field still rendering."
     },
     {
-      "order": 28,
+      "order": 27,
       "id": "P4-04",
       "title": "fieldRenderer: theme picker",
       "runnable": true,
@@ -311,7 +300,7 @@
       "riskReason": "It replaces the control that switches themes; if the renderer throws or the registry key `@jupyterlab/apputils-extension:themes.theme` is wrong, the settings form breaks or silently keeps the stock select, and theme switching is the one interaction every other verification step in this project depends on."
     },
     {
-      "order": 29,
+      "order": 28,
       "id": "P4-05",
       "title": "fieldRenderer: editor settings",
       "runnable": true,
@@ -322,7 +311,7 @@
       "riskReason": "The live preview mounts a CodeMirror instance inside an RJSF field, so a mount or dispose fault takes the whole settings form down with it; it also writes real editor configuration, which is user-visible state outside the settings editor."
     },
     {
-      "order": 30,
+      "order": 29,
       "id": "P4-06",
       "title": "fieldRenderer: font picker",
       "runnable": true,
@@ -333,7 +322,7 @@
       "riskReason": "Additive single-field component, but it shares the documented RJSF hazard that one throw removes the entire settings form; font enumeration also behaves differently in the container than on a host, so a browser-verified pass can still be wrong elsewhere."
     },
     {
-      "order": 31,
+      "order": 30,
       "id": "P4-07",
       "title": "fieldRenderer: color picker",
       "runnable": true,
@@ -344,7 +333,7 @@
       "riskReason": "It writes colour strings into live plugin settings (the README names the terminal ANSI overrides as a target), so a bad write is user-visible outside the settings editor, and it carries the same whole-form RJSF failure mode as the other renderers."
     },
     {
-      "order": 32,
+      "order": 31,
       "id": "P4-08",
       "title": "All form controls: input, select, checkbox, radio, switch (+ custom listbox for the kernel and cell-type pickers)",
       "runnable": true,
@@ -355,7 +344,7 @@
       "riskReason": "The custom listbox replaces the kernel picker and the cell-type picker — two core notebook affordances — so a fault ships an instance where the user cannot change kernel or cell type; and checkbox/radio/switch have no component tokens today, so reaching spec means adding to the Tier-3 token surface."
     },
     {
-      "order": 33,
+      "order": 32,
       "id": "P4-09",
       "title": "Dialogs, toasts, tooltips and progress, plus the focus contract",
       "runnable": true,
@@ -366,7 +355,7 @@
       "riskReason": "It extends several shipped stylesheets at once (dialog.css, notifications.css, plus new tooltip and progress rules) and, if core's focus trap turns out to be insufficient, adds keyboard behaviour to a modal overlay where a mistake can trap focus with no way out."
     },
     {
-      "order": 34,
+      "order": 33,
       "id": "P4-10",
       "title": "Decision point: does the settings editor reach spec, or does it need a T3 replacement of settingeditor-extension:form-ui?",
       "runnable": false,
@@ -387,7 +376,7 @@
       "riskReason": "The yes-branch disables `@jupyterlab/settingeditor-extension:form-ui` and re-provides it; on the D-015/D-016 precedent a swap that misses a surviving command id or settings schema leaves dead affordances, and an incomplete replacement leaves the application with no working settings editor."
     },
     {
-      "order": 35,
+      "order": 34,
       "id": "P5-01",
       "title": "Complete the icon override manifest from the P0-04 audit",
       "runnable": false,
@@ -398,7 +387,7 @@
       "riskReason": "Icon overrides change the glyph on every owned surface at once, and a wrong registry name is not an error: LabIcon.resolve registers a placeholder under it, so the mistake is silent and also poisons that name for the next extension."
     },
     {
-      "order": 36,
+      "order": 35,
       "id": "P5-02",
       "title": "Review the icon contact sheet for consistent optical weight (I3)",
       "runnable": false,
@@ -409,7 +398,7 @@
       "riskReason": "The deliverable is a finding, not a code change; nothing ships from it directly."
     },
     {
-      "order": 37,
+      "order": 36,
       "id": "P5-03",
       "title": "Apply the motion tokens with a prefers-reduced-motion branch on every consumer",
       "runnable": true,
@@ -420,7 +409,7 @@
       "riskReason": "Applying motion tokens per consumer edits several shipped stylesheets, and adding a sixth lint to the lint:design chain can fail the whole gate for files nobody expected it to touch."
     },
     {
-      "order": 38,
+      "order": 37,
       "id": "P5-04",
       "title": "Compact density (D-009) wired through the chrome, with the terminal bridge re-fit",
       "runnable": true,
@@ -431,7 +420,7 @@
       "riskReason": "It re-dimensions control heights across many shipped stylesheets, adds a settings key and a new plugin, and drives trigger (c) of the terminal bridge, so a mistake is visible on every surface at once."
     },
     {
-      "order": 39,
+      "order": 38,
       "id": "P5-05",
       "title": "Empty, loading, error, permission-denied and offline states for every panel",
       "runnable": false,
@@ -442,7 +431,7 @@
       "riskReason": "Rendering a state where core renders nothing means replacing panel plugins rather than styling them, and a swap that re-provides a token core still provides can stop JupyterLab starting — the failure mode P2-15 records for ILauncher."
     },
     {
-      "order": 40,
+      "order": 39,
       "id": "P5-06",
       "title": "Table of contents panel (PRD §8.10)",
       "runnable": true,
@@ -453,7 +442,7 @@
       "riskReason": "One new stylesheet plus its selectors.json rows, scoped to the TOC panel; the exposure is that TC7's tree semantics (role, aria-level, aria-expanded) may not be reachable from CSS and would have to be reported rather than forced."
     },
     {
-      "order": 41,
+      "order": 40,
       "id": "P6-01",
       "title": "Full accessibility audit, A1 to A13",
       "runnable": false,
@@ -464,7 +453,7 @@
       "riskReason": "The deliverable is an audit record; no shipped code changes as part of the task itself."
     },
     {
-      "order": 42,
+      "order": 41,
       "id": "P6-02",
       "title": "Third-party compatibility matrix, P0 and P1 rows, both modes, with Galata snapshots",
       "runnable": true,
@@ -475,7 +464,7 @@
       "riskReason": "It adds vendor stylesheets to a shipped package and installs third-party extensions whose own JupyterLab pins can move the version in the dev image, which would break every later task's environment."
     },
     {
-      "order": 43,
+      "order": 42,
       "id": "P6-03",
       "title": "Performance budgets (PRD §10.5) gated in CI",
       "runnable": true,
@@ -486,7 +475,7 @@
       "riskReason": "New measurement scripts and a CI job; nothing that ships to the browser changes."
     },
     {
-      "order": 44,
+      "order": 43,
       "id": "P6-04",
       "title": "Upgrade playbook (Appendix C), documented and rehearsed against a real minor bump",
       "runnable": false,
@@ -497,7 +486,7 @@
       "riskReason": "A rehearsal moves the JupyterLab version pin, which can break selectors, fail the adapter completeness check and leave the application unable to start — and it does so across the whole repo, not one surface."
     },
     {
-      "order": 45,
+      "order": 44,
       "id": "P6-05",
       "title": "Manual QA scenarios 1 to 9, both modes (PRD §10.6)",
       "runnable": true,
@@ -508,7 +497,7 @@
       "riskReason": "Verification only, no shipped code change; the real hazard is a false green, so any scenario the harness cannot genuinely drive (pointer feel, ANSI colour by eye) must be reported as skipped rather than passed."
     },
     {
-      "order": 46,
+      "order": 45,
       "id": "P6-06",
       "title": "Packaging check: pip install jupyterlab_d4n && jupyter lab (AC1)",
       "runnable": true,
@@ -519,7 +508,7 @@
       "riskReason": "Verification; any fix lands in packaging metadata (pyproject, install.json, the shipped overrides) that the existing build job already exercises."
     },
     {
-      "order": 47,
+      "order": 46,
       "id": "P6-07",
       "title": "Test AC10 end to end — stock theme plus arbitrary extension install",
       "runnable": true,
@@ -530,7 +519,7 @@
       "riskReason": "Test-only; a failure is a report about the gate, not a blind patch to it."
     },
     {
-      "order": 48,
+      "order": 47,
       "id": "P6-08",
       "title": "Decide whether to send the accessibility contrast fixes upstream to JupyterLab core (Q8)",
       "runnable": false,
@@ -541,7 +530,7 @@
       "riskReason": "At most a decision entry in docs/decisions.md; nothing in the product changes."
     },
     {
-      "order": 49,
+      "order": 48,
       "id": "P6-09",
       "title": "Pilot: 20 daily users or more, one week, zero P0 bugs (AC13)",
       "runnable": false,

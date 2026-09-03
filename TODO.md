@@ -55,7 +55,7 @@ them:
 
 | Phase | Scope                    | State                                         |
 | ----- | ------------------------ | --------------------------------------------- |
-| P0    | Audit & contract         | Machine-measured. Open items need a person.   |
+| P0    | Audit & contract         | **Done.** Exit gate signed 2026-09-03.        |
 | P1    | Token pipeline & themes  | **Done**                                      |
 | P2    | Chrome & navigation      | Most surfaces styled. P2-15 is the last swap. |
 | P3    | Notebook & editor        | Scaffolded                                    |
@@ -105,6 +105,11 @@ What exists and works today:
 
 Hard gate. PRD §11: engineering cannot claim the P1 exit until a person signs
 off the mapping table and no `--jp-*` variable is unmapped.
+
+**The gate is closed.** Aristide signed `mapping/jp-adapter.yaml` on 2026-09-03
+(P0-10), and the completeness check has been green since P0-03. Every task in
+this phase is done. Read P0-10 for what the sign-off did and did not cover: one
+reviewer, and 214 of the 233 rows accepted in bulk.
 
 - [x] **P0-01** Import the design system from Claude Design into
       `design-reference/data4now/`.
@@ -244,9 +249,21 @@ off the mapping table and no `--jp-*` variable is unmapped.
       colour has a relative luminance both ≤ 0.179 and ≥ 0.249.
       _Carry forward._ The PRD text is now wrong rather than unmet. Nobody has
       rewritten T4. Correct §8.7.2 and T4 at the next PRD revision.
-- [ ] **P0-10** Sign off `mapping/jp-adapter.yaml` with Design and Engineering.
+- [x] **P0-10** Sign off `mapping/jp-adapter.yaml` with Design and Engineering.
       This is **the** P0 exit gate (PRD §11).
-      _Done when:_ a person reviews it row by row and approves it on a PR.
+      _Signed off by Aristide on 2026-09-03._ The sign-off is recorded in the
+      adapter's own header, where a reader of the contract will find it.
+      _What was signed._ 233 rows, every one carrying a rationale, plus 158
+      excluded variables with their owner named. The completeness check in
+      `build.mjs` was active and green: every `--jp-*` the running JupyterLab
+      reads is mapped, excluded, or `--jp-private-*`.
+      _How it was reviewed, stated plainly._ Design and Engineering are held by
+      one person. Sections 1 to 3 (ELEVATION, BORDERS, FOCUS RING — 19 rows)
+      were read row by row. Sections 4 to 27 (214 rows) were accepted in bulk,
+      after the reviewer was shown the 22 rows that pin a `literal:` value and
+      the 5 rows whose rationale records a deliberate departure from the PRD.
+      This is one reviewer, not three, and it is not a line-by-line reading of
+      all 233. Re-open any row on evidence.
 - [x] **P0-11** Re-derive the anchors in
       `design-reference/data4now/COMPONENT-INDEX.md`.
       _Done on 2026-09-03._ Every anchor in the file is now literal and

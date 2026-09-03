@@ -15,6 +15,31 @@
 # component and "hovered menu item" in another. Every row below is a reviewed
 # decision, and `rationale` is REQUIRED — build.mjs fails on a row without one.
 #
+#
+# SIGN-OFF — 2026-09-03, Aristide. TODO P0-10, the PRD §11 exit gate.
+#
+# 233 rows, every one carrying a rationale, plus 158 excluded variables with
+# their owner named. The completeness check in build.mjs was active and green
+# at sign-off: every `--jp-*` the running JupyterLab reads is mapped here,
+# excluded, or `--jp-private-*`.
+#
+# HOW IT WAS REVIEWED, stated plainly so a later reader does not over-read it.
+# Design and Engineering are held by one person on this project. Sections 1 to 3
+# (ELEVATION, BORDERS, FOCUS RING — 19 rows) were read row by row. Sections 4 to
+# 27 (214 rows) were accepted in bulk, after the reviewer was shown the two
+# classes of row most likely to need argument:
+#
+#   * the 22 rows that pin a `literal:` value instead of pointing at a token,
+#     including the three search-toggle opacities set to 1, which defeat core's
+#     opacity-based state on purpose and hand the state to colour;
+#   * the five rows whose rationale records a deliberate departure —
+#     `--jp-elevation-z6`, `--jp-ui-font-color3`,
+#     `--jp-content-link-visited-color`, `--jp-info-color1` and
+#     `--jp-mirror-editor-comment-color`.
+#
+# This is one reviewer, not three, and it is not a line-by-line reading of all
+# 233. Re-open any row on evidence rather than treating the gate as closed
+# argument.
 # REVIEW RULES
 #   * Ordered by JupyterLab's own variables.css so a diff against an upstream
 #     bump reads cleanly.
