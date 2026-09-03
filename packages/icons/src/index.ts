@@ -323,5 +323,5 @@ const plugin: JupyterFrontEndPlugin<void> = {
 };
 
 export default plugin;
-export { OVERRIDES, LANGUAGE_MARKS, PENDING } from './manifest';
+export { LOGO_MARK_SVG, OVERRIDES, LANGUAGE_MARKS, PENDING } from './manifest';
 export type { IPendingIcon } from './manifest';

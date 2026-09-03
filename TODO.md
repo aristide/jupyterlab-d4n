@@ -210,8 +210,9 @@ off the mapping table and no `--jp-*` variable is unmapped.
       _Recorded, not fixed._ The wedge measures 2.62:1 against the light-mode
       bar. WCAG 1.4.11 exempts logotypes, and the shape is carried by the
       10.15:1 letterform sector. Do not move the brand colour for this.
-      _Not on screen yet._ The bar still shows `ui-components:jupyter`. Read
-      P0-12, which also carries the B5 gap that this decision opened.
+      _On screen since P0-12._ It is the override for `ui-components:jupyter`,
+      and the splash draws the same asset. The asset moved to
+      `packages/icons/svg/brand/logo-mark.svg`, which D-021 records.
 - [x] **P0-08** Resolve the size conflict in rendered markdown.
       _Decided by Aristide on 2026-09-03:_ **14px**, at every density.
       `font.size.content.1` was already 14px, so no value moved. Recorded as
@@ -263,6 +264,35 @@ tokens, brand-mapped */` and exit 1.
       imported them. `preview-assets/admin-shared.css` and `admin-shared.js` did
       come across, which is how we know the pages are real. They are out of
       scope, so the rows stay, marked "Imported: no".
+- [x] **P0-12** Put the D-021 mark on screen, and close the B5 gap.
+      _Done on 2026-09-03._ Both halves landed together, because either alone
+      leaves the product showing two different brand marks.
+      _Wired._ `ui-components:jupyter` is overridden in
+      `packages/icons/src/manifest.ts`. Measured live: the bar renders
+      `<svg data-icon="ui-components:jupyter">` at 22×22, 12px inset, in both
+      modes. The console reports `applied 58/58 icon overrides`.
+      _B5 holds, and the code enforces it._ `@d4n/icons` now exports
+      `LOGO_MARK_SVG`, the same string the override uses, and `splash.ts`
+      imports it. Sameness is a property of the import, not of memory. Measured
+      on both surfaces in both modes: identical `d` on both paths, identical
+      wedge `rgb(230, 53, 88)`, identical `<title>`. Splash 52px inside the 96px
+      plate, bar 22px. The letterform sector differs on purpose, because
+      `currentColor` takes each surface's foreground: splash
+      `rgb(255, 255, 255)`, bar `rgb(244, 246, 250)`.
+      The mockup's separate magenta dot on the plate is gone. Its own comment
+      said it echoed the pie wedge, and the wedge is there now. `splash.dot`
+      survives, because the loader gradient still ends on it. `splash.dotSize`
+      is deleted, and `splash.markGlyphSize` (52px) replaces it.
+      _The asset moved_ to `packages/icons/svg/brand/logo-mark.svg`. P0-07 put it
+      in `packages/ui-overrides/style/images/`, but the manifest imports from
+      `../svg/`, and one copy beats two that drift. `lint:icons` scans both
+      directories, so it stays linted. Recorded in D-021.
+      _The failure this turned up._ The first attempt left the bar **empty**.
+      `LabIcon` logged `SVG HTML was malformed` and drew nothing. The cause was
+      the B6 comment itself: it named `--d4n-color-palette-magenta-400`, and a
+      double hyphen is illegal inside an XML comment. `LabIcon` rejects the whole
+      asset rather than the comment. **`lint:icons` now catches it**, proved by
+      putting the hyphens back: one problem, exit 1.
 
 ---
 
@@ -271,26 +301,6 @@ tokens, brand-mapped */` and exit 1.
 Exit: both themes install and switch, the contrast audit is green, and the
 snapshot baseline exists.
 
-- [ ] **P0-12** Put the D-021 mark on screen, and close the B5 gap.
-      Two pieces of work that must land together, because either one alone
-      leaves the product showing two different brand marks.
-      _Piece one: wire the mark._ `packages/icons/src/manifest.ts` parks three
-      names for the logo decision — `ui-components:jupyter`,
-      `ui-components:jupyter-favicon` and `ui-components:jupyterlab-wordmark`.
-      Only the first renders anywhere: the top panel. Override it with
-      `logo-mark.svg`. The manifest imports from `../svg/`, and the asset sits
-      in `packages/ui-overrides/style/images/`, so decide whether the asset
-      moves or the import crosses packages. Do not guess the registry name:
-      `LabIcon.resolve` creates a placeholder for an unknown name and reports
-      nothing.
-      _Piece two: the splash._ PRD **B5** says the splash and the top panel use
-      the same mark. P2-09 shipped a 96px rounded tile with the letter D and a
-      magenta dot, per the mockup. The bar will carry the pie-chart O. The
-      tile's own comment in `packages/shell-chrome/src/splash.ts` says its dot
-      "echoes the pie-chart wedge inside the logo's O", so the O is the source.
-      Put the O in the tile.
-      _Done when:_ B1, B2 and B5 all hold, and the top panel and the splash are
-      photographed side by side in both modes.
 - [x] **P1-01** Four-tier token architecture, both modes, W3C DTCG source.
       _Done when:_ `jlpm build:tokens` writes CSS, TS and JSON. It must fail on
       an asymmetry between light and dark, on an unresolved reference, or on a

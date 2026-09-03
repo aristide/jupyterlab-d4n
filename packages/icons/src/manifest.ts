@@ -38,9 +38,11 @@
  * COVERAGE IS PARTIAL AND THAT IS RECORDED, NOT HIDDEN
  * ---------------------------------------------------
  * The Data4Now export ships 120 icons; the running build registers 129 names,
- * and the two sets are not the same shape. 57 names are overridden here, 3 are
- * deliberately deferred (`LANGUAGE_MARKS`), 3 are Jupyter trademarks that belong
- * to the logo decision rather than to this file, and 66 have no D4N equivalent.
+ * and the two sets are not the same shape. 58 names are overridden here, 3 are
+ * deliberately deferred (`LANGUAGE_MARKS`), 2 are Jupyter marks that no surface
+ * draws, and 66 have no D4N equivalent. The third Jupyter name,
+ * `ui-components:jupyter`, is the top-panel logo and is now overridden — D-021
+ * decided the mark and P0-12 wired it.
  * Where the design system has no asset (`caret-up`, `collapse`, `move-up`, the
  * ten debugger glyphs) the name is deliberately absent rather than mapped to an
  * approximate neighbour — `docs/icon-manifest.md` is the authoring brief.
@@ -49,6 +51,9 @@
  * 1×1 SVG that core renders where a menu row needs an icon-sized gap. Giving it
  * a glyph puts a mark in every blank slot in the product.
  */
+
+// brand/
+import logoMarkSvg from '../svg/brand/logo-mark.svg';
 
 // actions/
 import chevronDownSvg from '../svg/actions/chevron-down.svg';
@@ -218,8 +223,27 @@ export const OVERRIDES: Readonly<Record<string, string>> = {
   'ui-components:info': infoSvg,
   'ui-components:trusted': shieldSvg,
   'ui-components:user': userSvg,
-  'ui-components:users': usersSvg
+  'ui-components:users': usersSvg,
+
+  // Brand. Core registers its own mark under this name and renders it in
+  // `#jp-MainLogo`, the only surface that draws it (P0-04 census). D-021
+  // decided what replaces it and why the lockup could not: at the 22px the bar
+  // gives it, the two-line lockup is illegible, so this is the pie-chart O
+  // from the logo's own NOW. `LOGO_MARK_SVG` below is the same string, exported
+  // so the splash draws the same mark rather than a lookalike (PRD B5).
+  'ui-components:jupyter': logoMarkSvg
 };
+
+/**
+ * The Data4Now brand mark, for surfaces that cannot go through `LabIcon`.
+ *
+ * The splash paints before `data-jp-theme-name` reaches `<body>`, so it builds
+ * its DOM by hand and cannot resolve a registered icon. Exporting the string
+ * is what makes PRD **B5** — "splash screen and top panel logo use the same
+ * mark" — a fact about the code rather than a promise. Its letterform sector is
+ * `currentColor`, so a consumer sets `color` and the wedge stays brand magenta.
+ */
+export const LOGO_MARK_SVG: string = logoMarkSvg;
 
 /**
  * Registered, real, and **deliberately not applied**.

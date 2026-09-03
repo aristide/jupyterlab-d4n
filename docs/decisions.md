@@ -814,6 +814,47 @@ not "fix" it by moving the brand colour.
    which is what the mockup specifies and what P2-01 built. Left as it is. The
    1:1 aspect of the mark means 22px costs 2px of width, not of legibility.
 
+### What P0-12 closed, on 2026-09-03
+
+1. **Wired.** `ui-components:jupyter` is overridden with the mark. The bar
+   renders `<svg data-icon="ui-components:jupyter">` at 22×22 with a 12px inset,
+   in both modes.
+2. **B5 holds.** The splash carries the same mark. `@d4n/icons` exports
+   `LOGO_MARK_SVG`, the same string the override uses, and
+   `packages/shell-chrome/src/splash.ts` imports it. Sameness is now a property
+   of the import, not of anyone remembering. Measured on both surfaces in both
+   modes: identical `d` on both paths, identical wedge `rgb(230, 53, 88)`,
+   identical `<title>`. The splash draws it at 52px inside the 96px plate, the
+   bar at 22px.
+   The one value that differs is the letterform sector, and deliberately:
+   `currentColor` takes each surface's own foreground, so the splash gives
+   `rgb(255, 255, 255)` and the bar `rgb(244, 246, 250)`. That is what
+   `currentColor` is for. Do not pin it.
+   The mockup's separate magenta dot on the plate is gone. Its own comment said
+   it echoed the pie wedge, and the wedge is now there.
+3. **The asset moved to `packages/icons/svg/brand/logo-mark.svg`.** P0-07 put it
+   in `packages/ui-overrides/style/images/`, which is where PRD §8.9 files brand
+   assets and where `lint:icons` already looked. But the delivery route is a
+   `LabIcon` override, and `packages/icons/src/manifest.ts` imports from
+   `../svg/`. One copy where the code reads it beats two copies that drift.
+   `lint:icons` scans both directories, so the asset stays linted.
+4. **§8.9.1's 20px is still 22px.** Unchanged, and still fine.
+
+### The failure this turned up, and the lint that now catches it
+
+The first wiring attempt left the bar **empty**. `LabIcon` logged
+`SVG HTML was malformed for LabIcon instance. name: ui-components:jupyter` and
+rendered nothing at all.
+
+The cause was the comment that criterion B6 requires. It named the token the
+literal mirrors, `--d4n-color-palette-magenta-400`, and **`--` is illegal inside
+an XML comment**. `LabIcon` does not report a comment problem — it rejects the
+whole asset. So the file that documents the exception is the file that can
+destroy the icon, and the failure is silent apart from one console warning.
+
+`lint:icons` now rejects `--` inside any SVG comment, with the reason spelled
+out. Proved by putting the double hyphen back: one problem, exit 1.
+
 **Revisit when** the About dialog is built, because that is the first surface
 with room for the full lockup, and it needs the lockup as a vector.
 

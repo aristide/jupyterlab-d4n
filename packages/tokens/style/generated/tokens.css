@@ -689,9 +689,9 @@ body[data-jp-theme-name^='Data4Now'] {
   --d4n-splash-mark-bg-to: var(--d4n-color-chrome-rail-bg);
   --d4n-splash-mark-size: 96px;
   --d4n-splash-mark-radius: 22px;
+  --d4n-splash-mark-glyph-size: 52px;
   --d4n-splash-accent: var(--d4n-color-action-default);
   --d4n-splash-dot: var(--d4n-color-danger-subtle);
-  --d4n-splash-dot-size: 14px;
   --d4n-splash-wordmark: var(--d4n-color-text-strong);
   --d4n-splash-muted: var(--d4n-color-chrome-rail-fg);
   --d4n-splash-wash-dot: var(--d4n-color-chrome-top-panel-hover);

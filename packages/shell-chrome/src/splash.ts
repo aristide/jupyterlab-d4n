@@ -4,6 +4,7 @@ import {
 } from '@jupyterlab/application';
 import { ISplashScreen } from '@jupyterlab/apputils';
 import { DisposableDelegate, IDisposable } from '@lumino/disposable';
+import { LOGO_MARK_SVG } from '@d4n/icons';
 import { tokensFor } from '@d4n/tokens';
 
 /**
@@ -137,9 +138,14 @@ export function buildSplashNode(): HTMLElement {
     gap: t.space['6']
   } as Partial<CSSStyleDeclaration>);
 
+  // PRD B5: the splash and the top panel use the SAME mark, and `LOGO_MARK_SVG`
+  // is the same string `ui-components:jupyter` is overridden with, so that is
+  // enforced by the import rather than by remembering. The glyph replaces the
+  // letterform the mockup drew here; the mockup's separate magenta dot is gone
+  // because its own comment said it echoed the pie wedge, and the wedge is now
+  // present.
   const mark = document.createElement('div');
   mark.setAttribute('aria-hidden', 'true');
-  mark.textContent = 'D';
   Object.assign(mark.style, {
     position: 'relative',
     display: 'flex',
@@ -149,27 +155,28 @@ export function buildSplashNode(): HTMLElement {
     height: s.markSize,
     borderRadius: s.markRadius,
     background: `linear-gradient(135deg, ${s.markBgFrom} 0%, ${s.markBgTo} 100%)`,
-    color: s.accent,
-    fontFamily: t.font.family.ui,
-    fontWeight: '800',
-    fontSize: '38px',
-    letterSpacing: t.font.letterSpacing.tight,
+    // The mark's letterform sector is `currentColor`. The wedge carries its own
+    // brand magenta, so only this one value is set.
+    color: s.wordmark,
     boxShadow: `0 16px 40px rgba(0, 0, 0, 0.45), inset 0 1px 0 ${s.markInnerEdge}`
   } as Partial<CSSStyleDeclaration>);
 
-  // The magenta dot echoing the pie-chart wedge inside the logo's O.
-  const dot = document.createElement('span');
-  Object.assign(dot.style, {
-    position: 'absolute',
-    right: '14px',
-    bottom: '12px',
-    width: s.dotSize,
-    height: s.dotSize,
-    borderRadius: '50%',
-    background: s.dot,
-    boxShadow: `0 0 0 3px ${s.markBgTo}`
+  const glyph = document.createElement('span');
+  Object.assign(glyph.style, {
+    display: 'flex',
+    width: s.markGlyphSize,
+    height: s.markGlyphSize
   } as Partial<CSSStyleDeclaration>);
-  mark.appendChild(dot);
+  // The asset is ours and is linted (`jlpm lint:icons`): no <style>, no id, no
+  // script. It is the only markup on this surface that does not come from a
+  // string literal in this file.
+  glyph.innerHTML = LOGO_MARK_SVG;
+  const glyphSvg = glyph.querySelector('svg');
+  if (glyphSvg) {
+    glyphSvg.setAttribute('width', '100%');
+    glyphSvg.setAttribute('height', '100%');
+  }
+  mark.appendChild(glyph);
   lockup.appendChild(mark);
 
   const wordmark = document.createElement('div');

@@ -81,6 +81,19 @@ for (const dir of SVG_DIRS) {
         why: 'no <title> — screen readers get nothing (PRD I5)'
       });
     }
+
+    // A double hyphen inside an XML comment is illegal, and LabIcon does not
+    // report it as a comment problem: it rejects the WHOLE asset with "SVG HTML
+    // was malformed" and leaves core's glyph on screen. It cost time on P0-12,
+    // where the offending text was a comment naming the token it mirrors.
+    for (const comment of svg.match(/<!--[\s\S]*?-->/g) ?? []) {
+      if (comment.slice(4, -3).includes('--')) {
+        problems.push({
+          file: rel,
+          why: '"--" inside an XML comment — LabIcon rejects the whole asset as malformed'
+        });
+      }
+    }
   }
 }
 

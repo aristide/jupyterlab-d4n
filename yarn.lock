@@ -367,7 +367,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@d4n/icons@workspace:packages/icons":
+"@d4n/icons@^0.1.0, @d4n/icons@workspace:packages/icons":
   version: 0.0.0-use.local
   resolution: "@d4n/icons@workspace:packages/icons"
   dependencies:
@@ -395,6 +395,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@d4n/shell-chrome@workspace:packages/shell-chrome"
   dependencies:
+    "@d4n/icons": ^0.1.0
     "@d4n/tokens": ^0.1.0
     "@jupyterlab/application": ^4.5.0
     "@jupyterlab/apputils": ^4.5.0

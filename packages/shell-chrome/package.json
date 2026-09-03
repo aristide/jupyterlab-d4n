@@ -1,59 +1,60 @@
 {
-    "name": "@d4n/shell-chrome",
-    "version": "0.1.0",
-    "private": true,
-    "description": "Data4Now design system — T4 runtime bridges (adaptive theme, editor theme sync, xterm.js, Lumino DataGrid)",
-    "license": "BSD-3-Clause",
-    "author": {
-        "name": "Data4Now",
-        "email": "platform@data4now.org"
-    },
-    "main": "lib/index.js",
-    "types": "lib/index.d.ts",
-    "files": [
-        "lib/**/*.{d.ts,js,js.map}",
-        "src/**/*.ts"
-    ],
-    "scripts": {
-        "build:lib": "tsc --sourceMap",
-        "build:lib:prod": "tsc",
-        "build:labextension": "jupyter labextension build .",
-        "build:labextension:dev": "jupyter labextension build --development True .",
-        "clean:lib": "rimraf lib tsconfig.tsbuildinfo",
-        "watch:labextension": "jupyter labextension watch ."
-    },
-    "dependencies": {
-        "@d4n/tokens": "^0.1.0",
-        "@jupyterlab/application": "^4.5.0",
-        "@jupyterlab/apputils": "^4.5.0",
-        "@jupyterlab/settingregistry": "^4.5.0",
-        "@jupyterlab/terminal": "^4.5.0",
-        "@lumino/coreutils": "^2.0.0",
-        "@lumino/datagrid": "^2.0.0",
-        "@lumino/disposable": "^2.0.0",
-        "@lumino/signaling": "^2.0.0",
-        "@lumino/widgets": "^2.0.0"
-    },
-    "devDependencies": {
-        "@jupyterlab/builder": "^4.5.0",
-        "rimraf": "^5.0.1",
-        "typescript": "~5.5.4"
-    },
-    "jupyterlab": {
-        "extension": true,
-        "outputDir": "../../jupyterlab_d4n/labextensions/@d4n/shell-chrome",
-        "discovery": {
-            "server": {
-                "managers": [
-                    "pip"
-                ],
-                "base": {
-                    "name": "jupyterlab_d4n"
-                }
-            }
+  "name": "@d4n/shell-chrome",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Data4Now design system — T4 runtime bridges (adaptive theme, editor theme sync, xterm.js, Lumino DataGrid)",
+  "license": "BSD-3-Clause",
+  "author": {
+    "name": "Data4Now",
+    "email": "platform@data4now.org"
+  },
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "files": [
+    "lib/**/*.{d.ts,js,js.map}",
+    "src/**/*.ts"
+  ],
+  "scripts": {
+    "build:lib": "tsc --sourceMap",
+    "build:lib:prod": "tsc",
+    "build:labextension": "jupyter labextension build .",
+    "build:labextension:dev": "jupyter labextension build --development True .",
+    "clean:lib": "rimraf lib tsconfig.tsbuildinfo",
+    "watch:labextension": "jupyter labextension watch ."
+  },
+  "dependencies": {
+    "@d4n/icons": "^0.1.0",
+    "@d4n/tokens": "^0.1.0",
+    "@jupyterlab/application": "^4.5.0",
+    "@jupyterlab/apputils": "^4.5.0",
+    "@jupyterlab/settingregistry": "^4.5.0",
+    "@jupyterlab/terminal": "^4.5.0",
+    "@lumino/coreutils": "^2.0.0",
+    "@lumino/datagrid": "^2.0.0",
+    "@lumino/disposable": "^2.0.0",
+    "@lumino/signaling": "^2.0.0",
+    "@lumino/widgets": "^2.0.0"
+  },
+  "devDependencies": {
+    "@jupyterlab/builder": "^4.5.0",
+    "rimraf": "^5.0.1",
+    "typescript": "~5.5.4"
+  },
+  "jupyterlab": {
+    "extension": true,
+    "outputDir": "../../jupyterlab_d4n/labextensions/@d4n/shell-chrome",
+    "discovery": {
+      "server": {
+        "managers": [
+          "pip"
+        ],
+        "base": {
+          "name": "jupyterlab_d4n"
         }
-    },
-    "publishConfig": {
-        "access": "public"
+      }
     }
+  },
+  "publishConfig": {
+    "access": "public"
+  }
 }
