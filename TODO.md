@@ -911,12 +911,47 @@ green including D4.
       with a transparent background — **and does the same under a stock theme in
       the same build**, so it is upstream behaviour, not a defect this task
       introduced or should paper over.
-- [ ] **P3-03** Rendered markdown (`.jp-RenderedHTMLCommon`). This is the largest
-      single CSS surface in scope: the full type ramp, tables, code, blockquote,
-      lists and hr.
-      _Not started._ `.jp-RenderedHTMLCommon` appears in no stylesheet. **P0-08
-      is settled:** 14px body, 1.6 line height, at every density (D-022). Build
-      the ramp on `font.size.content.*`, which is 13/14/16/18/20/24.
+- [x] **P3-03** Rendered markdown (`.jp-RenderedHTMLCommon`).
+      _Done 2026-09-04, and it was not the largest surface in scope._ The entry
+      called it "the full type ramp, tables, code, blockquote, lists and hr". The
+      ramp needed nothing at all: core routes it through variables the Tier-4
+      adapter already feeds. Measured on a fixture carrying every construct,
+      both modes, before a line was written — body 14px / 22.4px, `h1`..`h6` at
+      24 20 18 16 14 13px, which is `content.5` down to `content.0` exactly, and
+      heading weight 600. Links, alerts, list markers, list indents and heading
+      margins were all correct too. Writing any of that again would have given
+      every value two owners.
+      _Four real defects, all in `style/surfaces/markdown.css` (new):_ 1. **A fenced block was not a block.** `<pre>` computed to the canvas
+      colour — the same as the page behind it — with no padding and no
+      radius, while _inline_ code did get a plate. The emphasis was
+      inverted. It now sits on `surface.sunken`, the same plate the inline
+      span uses, so the two forms of code agree. 2. **The blockquote bar was `5px`**, a hardcoded upstream literal no
+      variable reaches. Now `border.width.thick`, the same structural weight
+      the stderr block uses, with secondary text. 3. **Tables were centred in the text column.** A 137px table sat 382px
+      right of the paragraph above it. Now left-aligned, and the header cell
+      is left too — it had kept the browser default of `center` while every
+      body cell was left. 4. **`kbd` carried a hardcoded black inset shadow into dark mode**, where
+      it reads as a smudge rather than a key edge. Also an off-scale `3px`
+      radius, and no font-family at all — so the one element that is by
+      definition a key legend fell through to the browser's monospace.
+      _A fifth defect was worse, and was not CSS._ **Light-mode tables had no
+      striping whatsoever.** Core stripes odd rows with `surface.canvas` and even
+      rows with `--jp-rendermime-table-row-background`, which the adapter pointed
+      at `color.surface.raised` — and in light mode that IS `surface.canvas`,
+      both being `palette.neutral.0`. Two identical colours. Dark mode looked
+      correct, which is why it survived. Fixed in `mapping/jp-adapter.yaml`
+      (D-029).
+      _The audit could not have caught it, so the audit changed too._ The
+      `canvas` vs `sunken` gate ran in dark mode only, because light-mode
+      elevation is carried by borders. That is right for `overlay` and `raised`
+      and wrong for this pair, which is the only thing separating one table row
+      from the next. It now runs in both modes, and it was verified by putting
+      the bug back: the audit fails with `1.00:1 (min 1.04) #FFFFFF on #FFFFFF`.
+      _The committed fixture grew a table, a blockquote, a fenced block and a
+      `kbd`_, because a selector the CSS depends on has to match a real element.
+      They went into `notebooks/fixture.ipynb` rather than a second file: the
+      server root is that directory, so a new file would move the
+      `file-browser` snapshot.
 - [ ] **P3-04** Wire the generated ANSI block into rendermime. Then make sure
       that PRD T2 holds: `ls --color=always` renders identically in a terminal
       and in a notebook cell, in both modes.

@@ -473,13 +473,6 @@ function buildChecks(mode, t) {
       t['color.surface.canvas'],
       'surface.raised vs surface.canvas (dark elevation step)'
     );
-    add(
-      'VIS',
-      1.04,
-      t['color.surface.canvas'],
-      t['color.surface.sunken'],
-      'surface.canvas vs surface.sunken (dark elevation step)'
-    );
   } else {
     add(
       'VIS',
@@ -489,6 +482,27 @@ function buildChecks(mode, t) {
       'border.subtle carries light-mode panel separation'
     );
   }
+  // canvas vs sunken runs in BOTH modes, which is the one elevation step that
+  // does. The others are dark-only because light-mode elevation is carried by
+  // borders, so a lightness gate on them would fail by design. This pair is
+  // different: it is not decoration in light mode, it is the ONLY thing
+  // separating the two row colours of a rendered table. Core stripes odd rows
+  // with surface.canvas and even rows with surface.sunken, so if the two ever
+  // converge the striping disappears silently.
+  //
+  // That is not hypothetical. It is what P3-03 found: the adapter pointed
+  // table striping at surface.raised, which in light mode IS surface.canvas —
+  // both are palette.neutral.0 — and every light-mode table had been shipping
+  // with no striping at all while dark mode looked correct. Nothing caught it,
+  // because no gate ran in light mode. This is that gate (D-029).
+  add(
+    'VIS',
+    1.04,
+    t['color.surface.canvas'],
+    t['color.surface.sunken'],
+    'surface.canvas vs surface.sunken (rendered-table striping, both modes)'
+  );
+
   // Selection must be visible against the code background, or the user cannot
   // see what they selected. The other half of this constraint — the syntax ramp
   // staying legible ON the selection — is in the A4 block below.

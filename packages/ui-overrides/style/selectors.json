@@ -541,6 +541,37 @@
       "nonQueryable": [".jp-Notebook .jp-Cell .jp-Collapser:hover"]
     },
     {
+      "file": "style/surfaces/markdown.css",
+      "upstream": ["@jupyterlab/rendermime 4.6.3 style/base.css"],
+      "selectors": [
+        {
+          "selector": ".jp-RenderedHTMLCommon > pre",
+          "state": "notebook-open",
+          "note": "The fenced code block. Core gives it the canvas colour and no padding, so it is the plate here that makes it read as a block at all."
+        },
+        {
+          "selector": ".jp-RenderedHTMLCommon blockquote",
+          "state": "notebook-open",
+          "note": "Core hardcodes a 5px bar, one of the few rendermime literals no variable reaches. If this stops matching, the off-scale width comes back."
+        },
+        {
+          "selector": ".jp-RenderedHTMLCommon table",
+          "state": "notebook-open",
+          "note": "Undoes core auto margins. Left unscoped on purpose: it is equally true of a pandas DataFrame, which renders through the same class."
+        },
+        {
+          "selector": ".jp-RenderedMarkdown.jp-RenderedHTMLCommon th",
+          "state": "notebook-open",
+          "note": "Scoped to markdown deliberately. Core right-aligns cells for everything that is NOT markdown, and an unscoped rule would silently undo that."
+        },
+        {
+          "selector": ".jp-RenderedHTMLCommon kbd",
+          "state": "notebook-open",
+          "note": "Core draws it with a hardcoded rgba(0,0,0,.25) inset shadow that reads as a smudge on the dark plate."
+        }
+      ]
+    },
+    {
       "file": "style/surfaces/inputs.css",
       "upstream": [
         "@jupyterlab/ui-components 4.6.3 style/base.css",

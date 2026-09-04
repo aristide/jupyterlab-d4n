@@ -1,0 +1,134 @@
+/* SURFACE: rendered markdown and rendered HTML (PRD §6.2, §8.2)
+ *
+ * Upstream selectors verified against:
+ *   @jupyterlab/rendermime  4.6.3  style/base.css
+ *   (declared range: ^4.5.0)
+ *
+ * Every selector is mirrored in ../selectors.json (PRD §7.4(5)).
+ *
+ * WHAT IS DELIBERATELY ABSENT, WHICH IS ALMOST ALL OF IT
+ *
+ * This was scoped as "the largest single CSS surface in scope: the full type
+ * ramp, tables, code, blockquote, lists and hr". It is not, and the reason is
+ * that core already routes nearly the whole surface through variables the
+ * Tier-4 adapter feeds. Measured in the running instance on a markdown fixture
+ * carrying every construct, BOTH MODES, before a line of this file existed:
+ *
+ *   body            14px / 22.4px          content.1, lineHeight.relaxed
+ *   h1..h6          24 20 18 16 14 13px    content.5 down to content.0, exact
+ *   heading weight  600                    weight.semibold
+ *   links, alerts, list markers, list indents, heading margins — all correct,
+ *   both modes, no rule of ours involved.
+ *
+ * So the type ramp needed nothing. Restating it here would give every one of
+ * those values two owners and guarantee they drift, which is the same argument
+ * notebook.css makes about prompt geometry. What follows is only the four
+ * places where measurement found a real defect.
+ *
+ * A FIFTH DEFECT IS NOT HERE, because it was not a CSS defect. Light-mode
+ * tables had NO striping at all: core stripes odd rows with `--jp-layout-color0`
+ * and even rows with `--jp-rendermime-table-row-background`, and the adapter
+ * pointed the second at `color.surface.raised` — which in light mode IS
+ * `color.surface.canvas`, both being `palette.neutral.0`. Two identical
+ * colours. That is fixed where it belongs, in `mapping/jp-adapter.yaml`
+ * (docs/decisions.md D-029), not by a rule here.
+ */
+
+/* 1. A FENCED CODE BLOCK IS NOT A BLOCK.
+ *
+ * Measured: `<pre>` computed to the canvas colour in both modes — the same
+ * value as the page behind it — with `padding: 0` and no radius, because core
+ * sets `background-color: var(--jp-layout-color0)` on it. Meanwhile INLINE code
+ * does get a plate, from `--jp-layout-color2`. The emphasis was inverted: a
+ * three-line fenced block read as loose text while a two-word inline span read
+ * as a chip.
+ *
+ * `surface.sunken` is the same plate the inline span already lands on, so the
+ * two forms of code now agree rather than contradict.
+ *
+ * MARGIN GOES TO ZERO ON THE LEFT, and that is a consequence of adding the
+ * plate rather than a separate opinion. Core indents `> pre` by `2em` on both
+ * sides, which is a reasonable way to mark an un-plated block. Once the block
+ * has its own background, the indent makes it float out of the text column
+ * instead. It now starts where the paragraphs start.
+ *
+ * Specificity: core's three `pre` rules are all (0,2,1) under
+ * `.jp-ThemedContainer`. This is (0,3,1) and needs no `!important`. */
+body[data-jp-theme-name^='Data4Now'] .jp-RenderedHTMLCommon > pre {
+  margin: var(--d4n-space-4) var(--d4n-space-0);
+  padding: var(--d4n-space-3);
+  background: var(--d4n-color-surface-sunken);
+  border-radius: var(--d4n-radius-md);
+}
+
+/* 2. THE BLOCKQUOTE BAR WAS 5px, WHICH IS ON NO SCALE.
+ *
+ * Core hardcodes `border-left: 5px solid` — one of the few places in rendermime
+ * that states a literal rather than a variable, so the adapter could not reach
+ * it. 2px is `border.width.thick`, and it is deliberately the SAME structural
+ * weight the stderr block uses in notebook.css: both are "this run of text is
+ * set apart", and drawing them at two different widths would imply a difference
+ * that is not there.
+ *
+ * The text also goes secondary. A quotation that renders in the same colour as
+ * the prose around it is marked only by the bar, and the bar is now thinner. */
+body[data-jp-theme-name^='Data4Now'] .jp-RenderedHTMLCommon blockquote {
+  margin: var(--d4n-space-4) var(--d4n-space-0);
+  padding: var(--d4n-space-0) var(--d4n-space-3);
+  color: var(--d4n-color-text-secondary);
+  border-left: var(--d4n-border-width-thick) solid
+    var(--d4n-color-border-strong);
+}
+
+/* 3. TABLES WERE CENTRED IN THE TEXT COLUMN.
+ *
+ * Core sets `margin-left: auto; margin-right: auto`. Measured, a three-row
+ * markdown table 137px wide sat 382px to the right of the paragraph above it,
+ * in a 960px column. Centring is a figure treatment; a table in a document is a
+ * block and aligns with the text.
+ *
+ * This is left unscoped rather than restricted to `.jp-RenderedMarkdown`
+ * because it is equally true of a pandas DataFrame, which renders through the
+ * same class. On a wide frame the auto margins were already a no-op, so the
+ * change only shows up where the table is narrow — which is exactly where the
+ * centring looked wrong. */
+body[data-jp-theme-name^='Data4Now'] .jp-RenderedHTMLCommon table {
+  margin-left: var(--d4n-space-0);
+  margin-right: var(--d4n-space-0);
+}
+
+/* The header cell kept the browser default of `center` while every body cell
+ * was left, so a markdown table's columns did not line up with their own
+ * headings.
+ *
+ * SCOPED TO `.jp-RenderedMarkdown` ON PURPOSE. Core deliberately right-aligns
+ * cells for everything that is NOT markdown
+ * (`:not(.jp-RenderedMarkdown).jp-RenderedHTMLCommon th`), which is what makes
+ * numeric DataFrame columns readable. An unscoped rule here would silently undo
+ * that. */
+body[data-jp-theme-name^='Data4Now']
+  .jp-RenderedMarkdown.jp-RenderedHTMLCommon
+  th {
+  text-align: left;
+}
+
+/* 4. `kbd` CARRIED A HARDCODED BLACK SHADOW INTO DARK MODE.
+ *
+ * Core draws it with `box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.25)`, a
+ * literal that no variable reaches. On the light plate it reads as a key edge.
+ * On the dark plate it is black-on-navy: the key looks smudged rather than
+ * raised. The edge is drawn with a border token instead, which inverts with the
+ * mode for free.
+ *
+ * Two smaller things go with it. The radius was `3px`, which is on no scale
+ * (D-012 makes the same argument), and the font-family was unset — so the one
+ * element in the whole surface that is BY DEFINITION a key legend fell through
+ * to the browser's default monospace instead of the project's. */
+body[data-jp-theme-name^='Data4Now'] .jp-RenderedHTMLCommon kbd {
+  padding: var(--d4n-space-0) var(--d4n-space-1);
+  font-family: var(--d4n-font-family-mono);
+  background-color: var(--d4n-color-surface-sunken);
+  border: var(--d4n-border-width-thin) solid var(--d4n-color-border-strong);
+  border-radius: var(--d4n-radius-sm);
+  box-shadow: none;
+}

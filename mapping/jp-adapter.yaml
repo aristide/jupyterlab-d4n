@@ -740,8 +740,8 @@ mappings:
     token: color.danger.faint
     rationale: "The error-output block. PRD §8.2 also gives it a 2px danger left border, which is structural CSS in ui-overrides."
   - jp: --jp-rendermime-table-row-background
-    token: color.surface.raised
-    rationale: "Rendered-table striping."
+    token: color.surface.sunken
+    rationale: "Rendered-table striping, and it has to be SUNKEN rather than raised. Core stripes odd rows with --jp-layout-color0 (surface.canvas) and even rows with this row, so the two must differ. In light mode surface.raised IS surface.canvas — both resolve to palette.neutral.0, because this system carries light-mode elevation with shadow and border rather than with tint. Mapped to raised, every light-mode table lost its striping entirely while dark mode kept it (measured on a rendered markdown table, P3-03, docs/decisions.md D-029). surface.sunken differs from canvas in BOTH modes, and stays clear of surface.hover so a hovered stripe still reads."
   - jp: --jp-rendermime-table-row-hover-background
     token: color.surface.hover
     rationale: "Rendered-table row hover."

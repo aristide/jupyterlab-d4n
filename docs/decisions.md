@@ -1486,6 +1486,66 @@ wide and cheap to re-run.
 
 ---
 
+## D-029 — Rendered-table striping is `surface.sunken`, and the light-mode elevation gate exists because of it
+
+**Found and fixed during P3-03, 2026-09-04.** `--jp-rendermime-table-row-background`
+moves from `color.surface.raised` to `color.surface.sunken`, and the
+`canvas` vs `sunken` check in `tests/contrast/audit.mjs` moves out of the
+dark-only block so that it runs in both modes.
+
+### Every light-mode table had been shipping with no striping
+
+Core stripes a rendered table in two declarations:
+
+```css
+.jp-RenderedHTMLCommon tbody tr:nth-child(odd) {
+  background: var(--jp-layout-color0);
+}
+.jp-RenderedHTMLCommon tbody tr:nth-child(even) {
+  background: var(--jp-rendermime-table-row-background);
+}
+```
+
+The first resolves to `color.surface.canvas`. The second resolved to
+`color.surface.raised`. In light mode those are **the same colour**: both are
+`{color.palette.neutral.0}`, because this system carries light-mode elevation
+with shadow and border rather than with tint. Measured on a rendered markdown
+table, three body rows:
+
+| mode  | row 1     | row 2     | distinct |
+| ----- | --------- | --------- | -------- |
+| light | `#FFFFFF` | `#FFFFFF` | 1        |
+| dark  | `#0E2542` | `#122A47` | 2        |
+
+Dark mode looked correct, which is why this survived. `surface.sunken` differs
+from `surface.canvas` in both modes, and stays clear of `surface.hover`, so a
+hovered stripe still reads.
+
+### The real defect was that nothing could catch it
+
+The contrast audit ran three elevation-step gates in dark mode and none in
+light, on the stated grounds that light-mode separation is carried by borders,
+so a lightness gate would fail by design. That reasoning is correct for
+`overlay` and `raised`. It is wrong for this one pair, because `canvas` against
+`sunken` is not decoration in light mode: it is the only thing that makes a
+table row distinguishable from the row above it.
+
+So the gate now runs in both modes at the same 1.04 threshold. It was verified
+by reintroducing the bug — pointing light `sunken` at `neutral.0` — and
+confirming the audit fails with `1.00:1 (min 1.04) #FFFFFF on #FFFFFF`, then
+restoring it.
+
+**The general lesson, which is why this is written down.** A token alias that
+is correct in one mode can be a no-op in the other, and a mode-asymmetric
+audit will report a clean run either way. When a rule depends on two tokens
+**differing**, that difference needs a gate in every mode the rule ships in.
+
+**Revisit when** another surface starts depending on two surface tokens being
+distinguishable in light mode. The answer is the same: add the pair to the
+audit rather than trusting the ramp.
+
+---
+
 ## Still open
 
 Tracked in `TODO.md`; listed here so the set is visible in one place.

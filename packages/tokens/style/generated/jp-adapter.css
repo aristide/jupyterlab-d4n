@@ -135,7 +135,7 @@ body[data-jp-theme-name^='Data4Now'] {
   --jp-side-by-side-output-size: 1fr;
   --jp-side-by-side-resized-cell: var(--jp-side-by-side-output-size);
   --jp-rendermime-error-background: var(--d4n-color-danger-faint);
-  --jp-rendermime-table-row-background: var(--d4n-color-surface-raised);
+  --jp-rendermime-table-row-background: var(--d4n-color-surface-sunken);
   --jp-rendermime-table-row-hover-background: var(--d4n-color-surface-hover);
   --jp-dialog-background: var(--d4n-color-overlay-scrim);
   --jp-console-padding: var(--d4n-space-3);
