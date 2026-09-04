@@ -1401,6 +1401,91 @@ already a prefix match.
 
 ---
 
+## D-028 — D-001 breaks core's `:root` computed privates, and we bridge them
+
+**Decided while doing P2-18, 2026-09-04.** This is the recorded exception to PRD
+§7.4(3), "never target a `--jp-private-*` variable". One file writes them:
+`packages/ui-overrides/style/private-bridges.css`.
+
+### The mechanism, and it is a consequence of D-001
+
+Core computes some private variables at `:root` from other `--jp-*` variables:
+
+```css
+:root {
+  --jp-private-toolbar-height: calc(31px + var(--jp-border-width));
+}
+```
+
+**D-001 declares our Tier-4 adapter on `body`, not `:root`,** so that selecting
+a stock theme returns stock JupyterLab (AC10). A `:root` rule cannot see a
+`body`-scoped variable. `var(--jp-border-width)` resolves to nothing there, the
+`calc()` is invalid at computed-value time, and the property is **discarded
+entirely** — it computes to nothing, not to a fallback.
+
+### What it cost, and how visible it was not
+
+`--jp-private-toolbar-height` is written into an **inline** style on every
+`<jp-toolbar>` as `min-height`. That is why no stylesheet audit found it: a scan
+of every rule in `document.styleSheets` that sets `height` or `min-height` and
+matches the element returned exactly one rule, core's own
+`.jp-Toolbar { min-height: var(--jp-toolbar-micro-height) }`, and that variable
+resolves to `8px` in **both** themes. Only CDP's `getMatchedStylesForNode`,
+which reports the inline style, showed the real declaration.
+
+Measured, notebook toolbar, same build, same page:
+
+|                        | ours before | stock | ours after |
+| ---------------------- | ----------- | ----- | ---------- |
+| toolbar height         | **1px**     | 32px  | 32px       |
+| toolbar `min-height`   | **0px**     | 32px  | 32px       |
+| `save` item height     | **0px**     | 31px  | 31px       |
+| button inside the item | 21px        | 21px  | 21px       |
+
+The notebook toolbar was, simply, invisible — while its buttons were still
+21px tall inside zero-height items.
+
+Two variables were affected. Read off `:root` in both themes:
+
+```
+--jp-private-toolbar-height     ours UNSET   stock calc(31px + 1px)
+--jp-private-code-span-padding  ours UNSET   stock calc((1.3077 - 1) * 13px / 2)
+```
+
+Two other composed `:root` properties are **fine and deliberately not bridged**:
+`--jp-private-sidebar-tab-horizontal-min-width` and
+`--jp-side-by-side-resized-cell` compose values core also defines at `:root`, so
+nothing of ours is involved and both resolve identically in the two themes.
+
+### Why bridge rather than move the adapter to `:root`
+
+Defining `--jp-border-width` and the code-font pair at `:root` would fix the
+`calc()` — and would leave those values behind when a stock theme is selected.
+That is exactly what AC10 forbids. Bridging keeps every value inside our scope,
+so the repair disappears with the theme. Confirmed after the fix: the two
+variables are still **UNSET at `:root`** and resolve on `body`, and the stock
+theme in the same build is unchanged at 32px.
+
+The bridge **restates core's own formulas**. It changes where they are computed,
+not what they are, which is why the control for it is "ours now equals stock"
+rather than a judgement about the right height. `--d4n-toolbar-height` is 32px
+for that parity. **The mockup draws its notebook toolbar at 36px**, and moving
+to it is a separate, deliberate change, not part of this repair.
+
+### The standing risk
+
+Writing a private name means upstream can change it and this file goes stale
+silently. No lint can catch that: `lint:vars` only follows `--d4n-*`, and the
+selector-integrity job cannot see a custom property. The check is the comparison
+the table above describes — each bridged variable against a stock theme in the
+same build — and it is a human step at every JupyterLab bump (Appendix C).
+
+**Revisit when** JupyterLab moves these definitions, or if a third composed
+`:root` private appears — the enumeration that found these two is four rules
+wide and cheap to re-run.
+
+---
+
 ## Still open
 
 Tracked in `TODO.md`; listed here so the set is visible in one place.

@@ -581,6 +581,7 @@ body[data-jp-theme-name^='Data4Now'] {
   --d4n-dialog-entry-translate: 4px;
   --d4n-toolbar-bg: var(--d4n-color-surface-raised);
   --d4n-toolbar-border: var(--d4n-color-border-subtle);
+  --d4n-toolbar-height: 32px;
   --d4n-toolbar-bg-active: var(--d4n-color-surface-active);
   --d4n-toolbar-button-size: var(--d4n-density-comfortable-toolbar-button-size);
   --d4n-toolbar-button-size-compact: var(--d4n-density-compact-toolbar-button-size);

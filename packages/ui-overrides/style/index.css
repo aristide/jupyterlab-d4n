@@ -22,6 +22,11 @@
 
 @import url('../../tokens/style/index.css');
 
+/* Repairs the `:root`-scoped private variables that D-001's body scoping
+ * breaks. It precedes every surface, because those surfaces are laid out
+ * against heights this file restores (docs/decisions.md D-028). */
+@import url('./private-bridges.css');
+
 /* Surfaces. Order is load-bearing only where two rules tie on specificity:
  * `focus.css` and `motion.css` come last because both must be able to override
  * a surface rule (a focus ring that a surface rule painted over, an animation a

@@ -779,34 +779,40 @@ Galata is green.
       so a silently dropped override fails the integrity job. 97 matched → 98.
       _Turned up while verifying:_ the notebook toolbar is collapsed. Read
       **P2-18**. It is not caused by this task.
-- [ ] **P2-18** The notebook toolbar is invisible (found during P2-12).
-      **`.jp-NotebookPanel-toolbar` computes to `height: 1px` under our theme
-      and 32px under a stock one, in the same build.** Its items are 0px tall
-      while the buttons inside them are 21px, so the whole toolbar is collapsed
-      and its contents are not visible.
-      _Measured._ Data4Now Light: toolbar 968×1, `min-height: 0px`, `save` item
-      height 0, inner control 21px. JupyterLab Light in the same build and the
-      same page: toolbar 32px, `min-height: 32px`, `save` item 31px, inner
-      control 21px. So it is ours.
-      _What it is not._ It is not the P2-12 overrides — the stock-theme control
-      ran with those same overrides applied. It is not a rule in `toolbar.css`
-      setting a height: the only declaration that matches is core's own
-      `.jp-Toolbar { min-height: var(--jp-toolbar-micro-height) }`, and
-      `--jp-toolbar-micro-height` resolves to `8px` in **both** themes. A scan
-      of every rule in `document.styleSheets` that sets `height` or `min-height`
-      and matches the element found that one rule and nothing else — yet the
-      computed value is 0px for us and 32px for stock.
-      _Where to look next._ The element is `<jp-toolbar>`, a FAST custom element
-      whose layout lives in a shadow root, and core adds
-      `contain: style size !important` to it, in the notebook package own
-      toolbar stylesheet at line 24. Size containment means the height comes
-      from the
-      element's own properties, not its children. Check adopted stylesheets and
-      the shadow root, which `document.styleSheets` does not enumerate.
-      _Done when:_ the notebook toolbar is 32px in both modes with its buttons
-      visible, and a Galata snapshot covers it so it cannot silently collapse
-      again.
-      supported JupyterLab and assert that every selector matches one element or
+- [x] **P2-18** The notebook toolbar is invisible (found during P2-12).
+      _Fixed on 2026-09-04._ Recorded as **D-028**. The toolbar now measures
+      32px in both modes with 31px items, identical to a stock theme in the same
+      build, and the P2-12 separators are visible in it.
+      _The cause was D-001, not a toolbar rule._ Core computes
+      `--jp-private-toolbar-height` at **`:root`** from `var(--jp-border-width)`.
+      D-001 puts our adapter on `body` so AC10 holds, and a `:root` rule cannot
+      see a `body`-scoped variable — the `calc()` is invalid at computed-value
+      time and the property is discarded entirely, not defaulted.
+      _Why nothing found it earlier._ The value is written into an **inline**
+      style on every `<jp-toolbar>`. A scan of every rule in
+      `document.styleSheets` setting `height` or `min-height` and matching the
+      element returned one rule, core's own, whose variable resolves to `8px` in
+      both themes. Only CDP `getMatchedStylesForNode`, which reports the inline
+      style, showed the real declaration.
+      _It was not one variable._ Enumerating core's `:root` rules that compose a
+      `--jp-*` into another property found four. Two are broken for us —
+      `--jp-private-toolbar-height` and `--jp-private-code-span-padding`, both
+      UNSET against stock's real values. Two are fine and are deliberately not
+      bridged, because they compose values core also defines at `:root`.
+      _The fix is scoped, not global._ `private-bridges.css` restates core's own
+      formulas at our `body` scope. Defining the inputs at `:root` instead would
+      have fixed the calc and left the values behind under a stock theme, which
+      AC10 forbids. Verified after: both variables are still UNSET at `:root`,
+      resolve on `body`, and the stock theme is unchanged.
+      _Open, and deliberately not taken here._ The mockup draws the notebook
+      toolbar at **36px**; `--d4n-toolbar-height` is 32px for stock parity so
+      that this repair changed only where the value is computed. Moving to 36px
+      is a design change for the notebook work.
+      _Standing risk._ Writing a private name means upstream can rename it and
+      this file goes stale silently. No lint can catch it — `lint:vars` follows
+      only `--d4n-*`. The check is comparing each bridged variable against a
+      stock theme in the same build, and it belongs in the Appendix C upgrade
+      playbook (P6-04).
       more.
       _Done when:_ `jlpm test:selectors` fails loudly on a selector that you
       break on purpose.

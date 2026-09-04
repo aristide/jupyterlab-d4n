@@ -485,6 +485,11 @@
       "$value": "{color.border.subtle}",
       "$type": "color"
     },
+    "height": {
+      "$value": "32px",
+      "$type": "dimension",
+      "$description": "Toolbar height. It exists because core computes --jp-private-toolbar-height at :root as calc(31px + var(--jp-border-width)), and D-001 puts our --jp-* adapter on body, where a :root calc cannot see it - so the property resolved to nothing and every toolbar collapsed to 1px (P2-18). 32px is core parity, chosen deliberately over the mockup 36px so this repair changes only WHERE the value is computed, not what it is. The 36px the mockup draws for the notebook toolbar is a separate design change."
+    },
     "bgActive": {
       "$value": "{color.surface.active}",
       "$type": "color"

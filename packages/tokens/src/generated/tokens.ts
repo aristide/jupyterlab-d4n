@@ -443,6 +443,7 @@ export const d4n = {
     "toolbar": {
       "bg": "#FFFFFF",
       "border": "#E4E9F0",
+      "height": "32px",
       "bgActive": "#DFE6EF",
       "buttonSize": "24px",
       "buttonSizeCompact": "20px",
@@ -1158,6 +1159,7 @@ export const d4n = {
     "toolbar": {
       "bg": "#122A47",
       "border": "#142E50",
+      "height": "32px",
       "bgActive": "#2C4A75",
       "buttonSize": "24px",
       "buttonSizeCompact": "20px",

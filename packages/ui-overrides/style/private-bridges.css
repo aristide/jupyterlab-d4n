@@ -1,0 +1,71 @@
+/* PRIVATE-VARIABLE BRIDGES — the one place `--jp-private-*` is written.
+ *
+ * PRD §7.4(3) says never target a `--jp-private-*` variable, and every other
+ * file here obeys it. This file is the recorded exception (docs/decisions.md
+ * D-028), and the reason is a consequence of D-001 rather than a preference.
+ *
+ * THE MECHANISM
+ *
+ * Core defines some private variables at `:root`, computed from other `--jp-*`
+ * variables:
+ *
+ *   :root {
+ *     --jp-private-toolbar-height: calc(31px + var(--jp-border-width));
+ *   }
+ *
+ * D-001 declares our Tier-4 adapter on `body`, not on `:root`, so that
+ * selecting a stock theme returns stock JupyterLab (AC10). But a `:root` rule
+ * cannot see a `body`-scoped variable. `var(--jp-border-width)` resolves to
+ * nothing there, the `calc()` becomes invalid at computed-value time, and the
+ * whole custom property is thrown away — it computes to nothing at all, not to
+ * a fallback.
+ *
+ * WHAT THAT COST, MEASURED
+ *
+ * `--jp-private-toolbar-height` is written into an INLINE style on every
+ * `<jp-toolbar>` as `min-height`. Unset, the notebook toolbar computed to
+ * `height: 1px` with items 0px tall, while the buttons inside them were still
+ * 21px — so the toolbar was, simply, invisible. A stock theme in the same build
+ * measured 32px. Two variables were affected, confirmed by reading them off
+ * `:root` in both themes:
+ *
+ *   --jp-private-toolbar-height     ours UNSET   stock calc(31px + 1px)
+ *   --jp-private-code-span-padding  ours UNSET   stock calc((1.3077 - 1) * 13px / 2)
+ *
+ * Two other composed `:root` properties are FINE and are deliberately not
+ * bridged: `--jp-private-sidebar-tab-horizontal-min-width` and
+ * `--jp-side-by-side-resized-cell` compose values that core also defines at
+ * `:root`, so nothing of ours is involved and both resolve identically in the
+ * two themes.
+ *
+ * WHY BRIDGE RATHER THAN MOVE THE ADAPTER TO :root
+ *
+ * Defining `--jp-border-width` and the code-font pair at `:root` would fix the
+ * calc, and would also leave those values behind when a stock theme is
+ * selected. That is exactly what AC10 forbids. Bridging keeps every value
+ * inside our own scope, so the repair disappears with the theme.
+ *
+ * The values RESTATE CORE'S OWN FORMULAS. This file changes where they are
+ * computed, not what they are — so the control for it is "ours now equals
+ * stock". Any change to the design's toolbar height is a separate, deliberate
+ * act: the mockup draws its notebook toolbar at 36px, and `--d4n-toolbar-height`
+ * is 32px for parity until someone decides otherwise.
+ *
+ * WHEN UPSTREAM CHANGES ONE OF THESE, THIS FILE GOES STALE SILENTLY. That is
+ * the standing risk of writing a private name. The check that catches it is the
+ * one the numbers above describe: compare each variable against a stock theme
+ * in the same build, which `jlpm test:selectors` cannot do and a human can.
+ */
+
+body[data-jp-theme-name^='Data4Now'] {
+  /* Core: `calc(31px + var(--jp-border-width))`. Restated through a token so
+   * `lint:tokens` stays true and the height has one name. */
+  --jp-private-toolbar-height: var(--d4n-toolbar-height);
+
+  /* Core: `calc((var(--jp-code-line-height) - 1) * var(--jp-code-font-size) / 2)`.
+   * Restated verbatim — both inputs are adapter rows and resolve at this
+   * scope. */
+  --jp-private-code-span-padding: calc(
+    (var(--jp-code-line-height) - 1) * var(--jp-code-font-size) / 2
+  );
+}
