@@ -890,12 +890,27 @@ green including D4.
       _Done when:_ a running cell is distinguishable from an idle one without
       reading the prompt text, in both modes, and the treatment respects
       `prefers-reduced-motion` (A8) if it animates.
-- [ ] **P3-02** Output area, stream output, error output, and the 2px danger left
+- [x] **P3-02** Output area, stream output, error output, and the 2px danger left
       border.
-      _Partly on disk:_ the same file styles `.jp-OutputArea-output`,
-      `.jp-OutputArea-promptOverlay` and `.jp-RenderedText`. The error output
-      treatment is not there yet. It needs a `danger.subtle` plate and a 2px
-      `danger.default` left border.
+      _Verified on 2026-09-04, and the entry above it was stale in both
+      directions._ It said "the error output treatment is not there yet" — it is
+      there and it works — and that the file styles
+      `.jp-OutputArea-promptOverlay`, which it does not; that class appears only
+      in a comment.
+      _How it was verified._ A notebook fixture carrying **stored** outputs, so
+      no kernel was needed and the states are deterministic: a stdout stream, a
+      stderr stream, and an error traceback. Written into the server root,
+      measured, and deleted afterwards.
+      _Measured, both modes:_ - stdout — canvas background, no left border. Plain, as intended. - stderr stream — plate `rgb(252,227,233)` light and `rgb(61,20,32)` dark,
+      left border **2px solid** `rgb(196,39,74)` / `rgb(255,107,134)`. - traceback — the same treatment, because JupyterLab tags tracebacks with
+      the same `application/vnd.jupyter.stderr` mime type. The file's comment
+      predicted that and it holds.
+      So the signal is structural as well as chromatic, which is what A7 asks
+      for: a stderr block is identifiable without relying on the red wash.
+      _`.jp-OutputArea-promptOverlay` is not ours to fix._ It measures 0px wide
+      with a transparent background — **and does the same under a stock theme in
+      the same build**, so it is upstream behaviour, not a defect this task
+      introduced or should paper over.
 - [ ] **P3-03** Rendered markdown (`.jp-RenderedHTMLCommon`). This is the largest
       single CSS surface in scope: the full type ramp, tables, code, blockquote,
       lists and hr.
