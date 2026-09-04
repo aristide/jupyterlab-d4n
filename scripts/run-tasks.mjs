@@ -10,6 +10,7 @@
  *   node scripts/run-tasks.mjs --yes           run the queue
  *   node scripts/run-tasks.mjs --yes --only P2-04
  *   node scripts/run-tasks.mjs --yes --max 3
+ *   node scripts/run-tasks.mjs --yes --keep-going --max-turns 400
  *   node scripts/run-tasks.mjs --follow        attach to the live run and stream it
  *   node scripts/run-tasks.mjs --status        print the current state as JSON
  *   node scripts/run-tasks.mjs --report        print the report table
@@ -121,7 +122,14 @@ const EFFORT = 'max';
 const EFFORT_LEVELS = ['low', 'medium', 'high', 'xhigh', 'max'];
 
 /** Stops a task that has lost the plot from running until the budget does. */
-const MAX_TURNS = 120;
+// The per-task turn budget. It is a FLAG rather than a constant because 120 was
+// measured to be too small for the widest tasks: P3-07 styles four surfaces from
+// nothing, and its session ran 61m45s and stopped at 120 turns with three
+// finished stylesheets on disk, no gates run and no commit. A task that dies at
+// the ceiling loses nothing it wrote, but it does lose its own verification,
+// which is the part that matters. Raise this for a broad task rather than
+// letting it die at the line.
+let MAX_TURNS = 120;
 
 /** Startup alone costs about 14s before any model work. Be generous. */
 const TASK_TIMEOUT_MS = 90 * 60 * 1000;
@@ -169,6 +177,15 @@ function parseArgs(argv) {
       a.status = true;
     } else if (v === '--report') {
       a.report = true;
+    } else if (v === '--max-turns') {
+      const n = Number(
+        requireValue(argv[++i], '--max-turns needs a whole number')
+      );
+      if (!Number.isInteger(n) || n < 1) {
+        console.error('--max-turns needs a whole number of 1 or more.');
+        process.exit(2);
+      }
+      MAX_TURNS = n;
     } else if (v === '--keep-going') {
       a.keepGoing = true;
     } else if (v === '--include-high-risk') {
