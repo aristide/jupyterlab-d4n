@@ -993,23 +993,38 @@ green including D4.
       _T2 is not automated._ It needs a live terminal session, a canvas
       screenshot and a pixel decode. The next person to touch xterm must re-run
       it by hand; D-030 records exactly how.
-- [ ] **P3-05** CodeMirror 6 theme and `HighlightStyle`. It is scaffolded in
-      `packages/editor-theme/` with 78 distinct Lezer tags. This covers the whole
-      tag set, not the 13-item sample in the PRD. **Test it against all eleven
-      languages** that PRD §7.5 lists. A tag that falls through to the default
-      color is a bug.
-      **This is not obvious, and it changes how you test.** Only five of the
-      eleven have a Lezer grammar in JupyterLab 4.5. R, Julia, YAML, TOML, Bash
-      and LaTeX run through `StreamLanguage`. `StreamLanguage` resolves CM5 style
-      names to tags through about a dozen legacy aliases. The aliases are
-      `variable-2` → `special(variableName)`, `def` →
-      `definition(variableName)`, `builtin` → `standard(variableName)`, `error` →
-      `invalid`, `header` → `heading`, and `string-2` → `special(string)`.
-      `src/highlight.ts` lists those aliased forms. A tag list that covers only
-      Lezer misses every one of them, and it does so silently. **Test both
-      paths.**
-      _Done when:_ a fixture notebook in each of the eleven languages renders
-      with zero unstyled tokens, in both modes.
+- [x] **P3-05** CodeMirror 6 theme and `HighlightStyle`, tested against all
+      eleven languages.
+      _Done 2026-09-04. Zero tags fall through, in both modes._ One fixture per
+      language, opened in the editor, every token span read back with its
+      computed colour, weight and style. Both paths covered as the entry
+      demanded: five Lezer grammars (Python, SQL, Markdown, JSON, TypeScript)
+      and six `StreamLanguage` modes (R, Julia, YAML, TOML, Bash, LaTeX).
+      _Distinct colours per language, light / dark:_ Python 8/9, R 6/6,
+      Julia 7/7, SQL 7/7, Markdown 6/6, JSON 4/4, YAML 4/4, TOML 4/4, Bash 7/7,
+      TypeScript 9/10, LaTeX 6/6. The two modes agree span for span, which is
+      expected — the tag coverage is structural, only the palette changes.
+      _The aliased stream tags resolve._ R colours `function`/`if`, `<-`, `42L`
+      and `TRUE`; Bash colours `if`/`then`/`fi` and `$s`; TOML colours
+      `[section]` as metadata. A Lezer-only tag list would have missed all of
+      them, exactly as the entry warned.
+      _One real bug, and it was not language-specific (D-031)._ A bracket beside
+      the cursor rendered at **the default text colour**. CodeMirror does not add
+      `cm-matchingBracket` to the syntax span — it **replaces** it — and the rule
+      set a background and an outline but no `color`. Read off the live element:
+      cursor beside the brace gives `class="cm-matchingBracket"` at
+      `rgb(44,62,85)`, cursor one keystroke away gives the highlight class at
+      `rgb(70,86,109)`. JSON only showed it first because a JSON file opens with
+      `{` on line 1 and the cursor lands on it. Both rules now restate
+      `text.secondary`, and the two new pairings are gated at 4.5:1.
+      _Two things the next person needs._ 1. **`.json` never opens in the editor.** It opens in the JSON viewer, and
+      `?factory=Editor` in the URL does not change that. Reaching CodeMirror
+      needs `defaultViewers: { json: 'Editor' }` in the settings mock. Whether
+      `.jp-RenderedJSON` itself is styled is a separate question that no task
+      currently covers. 2. **`editor-theme` is outside the selector harness.** It has no `style/`
+      directory, because it generates its CSS through `EditorView.theme()`.
+      So `test:selectors` cannot see that it depends on `.cm-matchingBracket`,
+      `.cm-focused` and the rest. If upstream renames one, nothing fails.
 - [ ] **P3-06** Terminal bridge. It is scaffolded. **Test all four triggers**
       (PRD §8.7.4). Trigger (b) matters most: terminals that you open _after_ a
       theme switch. This is the most common shipped bug in this class of work,

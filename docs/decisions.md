@@ -1587,6 +1587,51 @@ has held.
 
 ---
 
+## D-031 — CodeMirror replaces the syntax span class, so a decoration must restate the colour
+
+**Found and fixed during P3-05, 2026-09-04.** Both bracket-matching rules in
+`packages/editor-theme/src/theme.ts` now state `color: c.text.secondary`, and
+the two resulting pairings are gated in `tests/contrast/audit.mjs`.
+
+### A bracket under the cursor had no colour
+
+The rules set a background and an outline and nothing else, on the reasonable
+assumption that CodeMirror **adds** `cm-matchingBracket` to the span the syntax
+highlighter already produced. It does not. It replaces it. Measured on a JSON
+file, reading the class list off the element rather than inferring it:
+
+| state                     | class on the brace   | computed colour            |
+| ------------------------- | -------------------- | -------------------------- |
+| cursor beside the brace   | `cm-matchingBracket` | `rgb(44,62,85)` — default  |
+| cursor one keystroke away | the highlight class  | `rgb(70,86,109)` — bracket |
+
+So for as long as the cursor sat beside it, the glyph fell through to the
+default text colour. PRD §7.5 names that exact condition a bug.
+
+### It was never a JSON problem
+
+JSON is only where it showed up first, because a JSON file opens with `{` on
+line 1 and the cursor lands at position 0. Every language with brackets has it —
+Python, TypeScript, R, Julia, Bash — whenever the cursor sits beside a bracket,
+which for a bracket-matching feature is the entire time it is doing anything.
+
+### Two gates went in with the fix
+
+`text.secondary` on `syntax.bracketMatchBg` and on `danger.faint` are body-weight
+text on backdrops that nothing else in the audit covered. Both are gated at the
+A4 threshold of 4.5:1. A bracket that cannot be read is worse than one with no
+fill at all.
+
+**The general lesson.** When a decoration and a highlight can land on the same
+character, do not assume the classes compose. Read the class list off the live
+element in the state that matters.
+
+**Revisit when** another CodeMirror decoration is added that can cover a token —
+a linter underline, an inline diff mark. The question to ask each time is
+whether it replaces the highlight span, and the way to answer it is to look.
+
+---
+
 ## Still open
 
 Tracked in `TODO.md`; listed here so the set is visible in one place.

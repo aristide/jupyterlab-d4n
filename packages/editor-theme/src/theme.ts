@@ -118,12 +118,27 @@ export function buildEditorTheme(isLight: boolean): Extension {
       // prefix is what lets this rule outrank it without `!important`.
       // Matching and non-matching get different colours *and* a different fill,
       // because a red-vs-teal outline alone is not an A7-safe signal.
+      //
+      // BOTH MUST RESTATE THE GLYPH COLOUR, and that is not belt-and-braces.
+      // CodeMirror does not ADD this class to the syntax-highlighted span, it
+      // REPLACES it: measured on a JSON file, a brace under the cursor carries
+      // class="cm-matchingBracket" alone, where the same brace one keystroke
+      // later carries the highlight class and the bracket colour. So a rule that
+      // sets only a background and an outline leaves the glyph itself falling
+      // through to the default text colour — the one thing PRD 7.5 calls a bug —
+      // for as long as the cursor sits beside it. It is not a JSON problem:
+      // every language with brackets hits it (P3-05).
+      //
+      // text.secondary is exactly what the bracket would have been. The
+      // decoration now adds the fill and the outline instead of costing a colour.
       '&.cm-focused .cm-matchingBracket, .cm-matchingBracket': {
+        color: c.text.secondary,
         backgroundColor: c.syntax.bracketMatchBg,
         outline: `${thin} solid ${c.syntax.bracketMatchBorder}`,
         outlineOffset: `calc(-1 * ${thin})`
       },
       '&.cm-focused .cm-nonmatchingBracket, .cm-nonmatchingBracket': {
+        color: c.text.secondary,
         backgroundColor: c.danger.faint,
         outline: `${thin} solid ${c.danger.default}`,
         outlineOffset: `calc(-1 * ${thin})`

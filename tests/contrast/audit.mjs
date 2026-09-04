@@ -538,6 +538,28 @@ function buildChecks(mode, t) {
     }
   }
 
+  // --- the bracket-matching glyph -----------------------------------------
+  // Both decorations restate `text.secondary` on the glyph, because CodeMirror
+  // REPLACES the syntax span class rather than adding to it — without the
+  // restatement a bracket under the cursor falls through to the default text
+  // colour (P3-05, docs/decisions.md D-031). That puts body-weight text on two
+  // backdrops nothing else in this audit covers, so they are gated here at the
+  // A4 threshold: a bracket you cannot read is worse than one with no fill.
+  add(
+    'A4',
+    4.5,
+    t['color.text.secondary'],
+    t['color.syntax.bracketMatchBg'],
+    'text.secondary on syntax.bracketMatchBg (matched bracket glyph)'
+  );
+  add(
+    'A4',
+    4.5,
+    t['color.text.secondary'],
+    t['color.danger.faint'],
+    'text.secondary on danger.faint (unmatched bracket glyph)'
+  );
+
   // --- ANSI (PRD T3/T4) ---------------------------------------------------
   // Gated against BOTH the terminal background and the notebook output
   // background. They are the same colour here by design (D-002), but the audit
