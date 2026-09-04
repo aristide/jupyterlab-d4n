@@ -748,19 +748,64 @@ Galata is green.
       it unstyled. Never render an empty bottom bar (PRD §8.5.3).
 - [x] **P2-11** Log console level badges. They use the `color.log.*` tokens,
       which exist. Use badges, not tinted body text. Tinted 11px text fails A1.
-- [ ] **P2-12** Declarative restructuring of toolbars and menus through
-      `overrides.json` (PRD §7.6). **No DOM manipulation. No reordering with a
-      MutationObserver.** Anything that you cannot express declaratively becomes
-      a T3 replacement.
-      _Not started._ `jupyter-config/lab-settings/overrides.json` holds only the
-      theme, the CodeMirror and the terminal settings. It has no
-      `jupyter.lab.toolbars` key and no `jupyter.lab.menus` key.
-      _One rule already waits for it._ `toolbar.css` styles a
-      `jp-Toolbar-separator` that **does not exist in 4.6.3**. The string appears
-      nowhere in the bundle. That rule receives the item that this task adds.
-      `selectors.json` marks the selector optional, so the integrity job does not
-      report it as broken markup before then.
-- [x] **P2-13** The `selectors.json` integrity job (PRD §10.3). Boot each
+- [x] **P2-12** Declarative restructuring of toolbars and menus through
+      `overrides.json` (PRD §7.6).
+      _Done on 2026-09-04._ Recorded as **D-027**. The mechanism is established,
+      the dead separator rule is alive, and the integrity job now guards it.
+      _The PRD names the wrong key._ `jupyter.lab.toolbars` is schema metadata
+      contributed by plugins and merged across them; it is not writable from
+      `overrides.json`. The settable property is `toolbar` on the **aggregator**
+      plugin — the one carrying `jupyter.lab.transform: true`. Ten of the twelve
+      plugins that declare a toolbar are aggregators. **Two are contributors
+      only** and have no settable properties at all, so writing under
+      `@jupyterlab/launcher-extension:plugin` or
+      `@jupyterlab/workspaces-extension:indicator` is a silent no-op.
+      _Merge is by `name`, shallow._ An override carries deltas only; unknown
+      names are appended; order is `rank` with default 50 and a stable sort. The
+      six rank-less `Cell` toolbar items therefore keep declaration order, and
+      reordering them needs ranks on all six.
+      _`jp-Toolbar-separator` never existed._ The string appears nowhere in
+      4.6.3 — not in `node_modules`, not in the served bundle. It came from the
+      mockup's `.jp-tb-sep`, renamed into something that looks like a Jupyter
+      class. The item type universe is exactly `command` and `spacer`, with
+      `additionalProperties: false`, and `"type": "separator"` does not fail
+      quietly: it **discards the whole plugin's toolbar list**. Menus get a
+      separator type; toolbars deliberately do not.
+      _So a separator is a spacer we name._ Two are declared at ranks 25 and 35,
+      the grouping the mockup draws at L4336-4347, and `toolbar.css` styles them
+      through `[data-jp-item-name^='d4n-sep']` — (0,4,0) against upstream's
+      (0,3,0), no `!important`. Measured in both modes: correct order, 1×16,
+      `flex-grow: 0`. `selectors.json` carries the selector as **not optional**,
+      so a silently dropped override fails the integrity job. 97 matched → 98.
+      _Turned up while verifying:_ the notebook toolbar is collapsed. Read
+      **P2-18**. It is not caused by this task.
+- [ ] **P2-18** The notebook toolbar is invisible (found during P2-12).
+      **`.jp-NotebookPanel-toolbar` computes to `height: 1px` under our theme
+      and 32px under a stock one, in the same build.** Its items are 0px tall
+      while the buttons inside them are 21px, so the whole toolbar is collapsed
+      and its contents are not visible.
+      _Measured._ Data4Now Light: toolbar 968×1, `min-height: 0px`, `save` item
+      height 0, inner control 21px. JupyterLab Light in the same build and the
+      same page: toolbar 32px, `min-height: 32px`, `save` item 31px, inner
+      control 21px. So it is ours.
+      _What it is not._ It is not the P2-12 overrides — the stock-theme control
+      ran with those same overrides applied. It is not a rule in `toolbar.css`
+      setting a height: the only declaration that matches is core's own
+      `.jp-Toolbar { min-height: var(--jp-toolbar-micro-height) }`, and
+      `--jp-toolbar-micro-height` resolves to `8px` in **both** themes. A scan
+      of every rule in `document.styleSheets` that sets `height` or `min-height`
+      and matches the element found that one rule and nothing else — yet the
+      computed value is 0px for us and 32px for stock.
+      _Where to look next._ The element is `<jp-toolbar>`, a FAST custom element
+      whose layout lives in a shadow root, and core adds
+      `contain: style size !important` to it, in the notebook package own
+      toolbar stylesheet at line 24. Size containment means the height comes
+      from the
+      element's own properties, not its children. Check adopted stylesheets and
+      the shadow root, which `document.styleSheets` does not enumerate.
+      _Done when:_ the notebook toolbar is 32px in both modes with its buttons
+      visible, and a Galata snapshot covers it so it cannot silently collapse
+      again.
       supported JupyterLab and assert that every selector matches one element or
       more.
       _Done when:_ `jlpm test:selectors` fails loudly on a selector that you

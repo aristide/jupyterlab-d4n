@@ -111,17 +111,36 @@ body[data-jp-theme-name^='Data4Now'] button.jp-ToolbarButtonComponent {
  * then run actions, then the cell-type selector — as drawn in the imported
  * mockup (`.jp-tb-sep`).
  *
- * JupyterLab 4.6 has no separator item: `Toolbar` ships a spacer and nothing
- * else, and `jupyter.lab.toolbars` cannot name one. This rule is therefore the
- * receiving end of TODO P2-12 (declarative toolbar restructuring), which is
- * where the item that carries the class gets added; it is inert until then and
- * is marked `optional` in selectors.json for that reason. It is stated now so
- * that the grouping arrives with the restructuring rather than after it.
+ * IT IS A NAMED SPACER, AND IT HAS TO BE. This rule used to target
+ * `.jp-Toolbar-separator`, a class that appears nowhere in 4.6.3 — not in the
+ * node_modules tree, not in the served bundle, JS or CSS. The name came from
+ * the mockup's own `.jp-tb-sep` and was rewritten into something that looks
+ * like a Jupyter class. It could never have matched. That is the same failure
+ * mode `docs/icon-manifest.md` records for registry names, and P2-12 caught it.
+ *
+ * The declarative API offers exactly two item types, `command` and `spacer`,
+ * with `additionalProperties: false` — so no custom class can be attached, and
+ * `"type": "separator"` is a hard validation error that makes the client
+ * DISCARD THE WHOLE PLUGIN'S TOOLBAR LIST with only a console message. Menus do
+ * get a `separator` type; toolbars deliberately do not.
+ *
+ * What we do control is `name`, which the factory writes to `data-jp-item-name`.
+ * So the separator is declared in `overrides.json` as a `spacer` named
+ * `d4n-sep-*`, and this rule turns that flex spacer back into a hairline. The
+ * attribute adds one class-level unit, giving (0,4,0) against upstream's
+ * `.jp-Toolbar > .jp-Toolbar-item.jp-Toolbar-spacer { flex-grow: 1 }` at
+ * (0,3,0) — so it wins with no `!important`.
+ *
+ * `flex: 0 0 auto` is the load-bearing half: without it the element is a
+ * growing spacer, measured at 40×0. The explicit height matters for the same
+ * reason — `height: 100%` computes to 0 in this layout.
  *
  * Height is the icon size rather than the mockup's 18px: a rule as tall as the
  * glyphs it sits between reads as part of the same row, and 18px is not on any
  * scale (D-012 makes the same argument about radius). */
-body[data-jp-theme-name^='Data4Now'] .jp-Toolbar .jp-Toolbar-separator {
+body[data-jp-theme-name^='Data4Now']
+  .jp-Toolbar
+  > .jp-Toolbar-item.jp-Toolbar-spacer[data-jp-item-name^='d4n-sep'] {
   flex: 0 0 auto;
   align-self: center;
   width: var(--d4n-border-width-thin);

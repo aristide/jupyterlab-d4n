@@ -1311,6 +1311,96 @@ for other reasons.
 
 ---
 
+## D-027 — Declarative toolbar composition: the PRD names the wrong key, and a separator is a named spacer
+
+**Decided while doing P2-12, 2026-09-04.**
+
+### `jupyter.lab.toolbars` is not the key you write
+
+PRD §7.6 shows `overrides.json` entries written under a plugin id with a
+`"toolbar"` array, and the surrounding text calls the mechanism
+`jupyter.lab.toolbars`. Those are two different things and only one of them is
+settable:
+
+- `jupyter.lab.toolbars` is **schema metadata**, contributed by a plugin and
+  merged across plugins. It is not writable from `overrides.json`.
+- The settable property is `toolbar` on the **aggregator** plugin — the one
+  carrying `jupyter.lab.transform: true` and a `properties.toolbar`.
+
+Ten of the twelve plugins that declare a toolbar are aggregators. **Two are
+contributors only** and have no settable properties at all:
+`@jupyterlab/launcher-extension:plugin` (contributes `new-launcher` to the file
+browser) and `@jupyterlab/workspaces-extension:indicator` (contributes
+`workspaceIndicator` to the top bar). Writing under a contributor's id is a
+silent no-op — to move the launcher button you write under
+`@jupyterlab/filebrowser-extension:widget`.
+
+Merge semantics, read from `settingregistry.js` `reconcileToolbarItems` and
+`apputils/lib/toolbar/factory.js`: items match on `name` only and shallow-merge
+`{...ref, ...addition}`, so an override carries **deltas only**. An unknown name
+is appended. Order is `rank`, default 50, with a stable sort — so the six
+rank-less items on the `Cell` toolbar keep declaration order, and reordering
+them would require assigning ranks to all six.
+
+### A toolbar separator does not exist, and asking for one is dangerous
+
+`toolbar.css` styled `.jp-Toolbar-separator`. That string appears **nowhere** in
+4.6.3 — not in `node_modules`, not in the served bundle, JS or CSS. It came from
+the mockup's own `.jp-tb-sep`, renamed into something that looks like a Jupyter
+class. It could never have matched. Same failure mode as the retired icon
+registry guesses in `docs/icon-manifest.md`.
+
+The item type universe is exactly two, and it is enforced:
+
+```json
+"type": { "enum": ["command", "spacer"] }
+"required": ["name"], "additionalProperties": false
+```
+
+Menus get a `separator` type. Toolbars deliberately do not. And `"type":
+"separator"` is not merely ignored — it fails validation and the client
+**discards the entire plugin's toolbar list**, with only a console message. That
+would silently empty the notebook toolbar.
+
+`additionalProperties: false` also rules out attaching a class. The only
+attribute we control is `name`, which the factory writes to
+`data-jp-item-name`.
+
+### So the separator is a spacer we name
+
+`overrides.json` declares two on the Notebook toolbar, at the ranks the mockup's
+grouping implies:
+
+```json
+"@jupyterlab/notebook-extension:panel": {
+  "toolbar": [
+    { "name": "d4n-sep-run",      "type": "spacer", "rank": 25 },
+    { "name": "d4n-sep-celltype", "type": "spacer", "rank": 35 }
+  ]
+}
+```
+
+and `toolbar.css` turns those flex spacers back into hairlines through
+`[data-jp-item-name^='d4n-sep']`. The attribute adds one class-level unit,
+giving (0,4,0) against upstream's `.jp-Toolbar > .jp-Toolbar-item.jp-Toolbar-spacer
+{ flex-grow: 1 }` at (0,3,0) — so it wins with **no `!important`**.
+
+Measured in both modes: order is save, insert, cut, copy, paste, **d4n-sep-run**,
+run, interrupt, restart, restart-and-run, **d4n-sep-celltype**, cellType, spacer,
+… — exactly the mockup's grouping at `JupyterLab Theme.html` L4336-4347. Both
+separators are 1×16 with `flex-grow: 0`, background `#E4E9F0` light and
+`#142E50` dark.
+
+`selectors.json` carries the new selector as **not optional** and at state
+`notebook-open`, so the integrity job fails if the override is ever silently
+dropped. It moved the count from 97 matched to 98.
+
+**Revisit when** upstream adds a real separator type, or when another toolbar
+needs grouping — the same named-spacer pattern applies, and the CSS hook is
+already a prefix match.
+
+---
+
 ## Still open
 
 Tracked in `TODO.md`; listed here so the set is visible in one place.

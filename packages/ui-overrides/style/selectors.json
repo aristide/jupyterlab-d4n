@@ -762,10 +762,9 @@
           "note": "The plain-DOM path core marks deprecated; no shadow root, so the geometry lands on the element itself. Measured 0 in a stock 4.6.3 boot — third-party toolbar items are what still render it."
         },
         {
-          "selector": ".jp-Toolbar .jp-Toolbar-separator",
-          "state": "boot",
-          "optional": true,
-          "note": "Inert until TODO P2-12. JupyterLab 4.6.3 has no separator item — the string `jp-Toolbar-separator` does not appear anywhere in the 4.6.3 bundle, JS or CSS — so this rule is the receiving end of the declarative toolbar restructuring that adds the item, not a dependency on markup that exists today."
+          "selector": ".jp-Toolbar > .jp-Toolbar-item.jp-Toolbar-spacer[data-jp-item-name^='d4n-sep']",
+          "state": "notebook-open",
+          "note": "The toolbar separator, and it is a SPACER we name rather than a separator we declare. P2-12 established that 4.6.3 offers exactly two toolbar item types, `command` and `spacer`, with additionalProperties:false — `\"type\": \"separator\"` is a validation error that discards the whole plugin's toolbar list. This selector replaced `.jp-Toolbar .jp-Toolbar-separator`, which was registered as optional because the class appears nowhere in the bundle and never could have matched. It is no longer optional: `overrides.json` declares d4n-sep-run and d4n-sep-celltype on the Notebook toolbar, so it must match once a notebook is open. If it stops matching, the override was silently dropped."
         },
         {
           "selector": ".jp-Toolbar.jp-Toolbar-micro",

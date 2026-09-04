@@ -18,5 +18,11 @@
   },
   "@jupyterlab/terminal-extension:plugin": {
     "theme": "inherit"
+  },
+  "@jupyterlab/notebook-extension:panel": {
+    "toolbar": [
+      { "name": "d4n-sep-run", "type": "spacer", "rank": 25 },
+      { "name": "d4n-sep-celltype", "type": "spacer", "rank": 35 }
+    ]
   }
 }
