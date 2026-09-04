@@ -385,6 +385,23 @@ snapshot baseline exists.
       _Also added:_ `tests/tsconfig.json`, so typed ESLint rules cover
       `tests/**/*.ts`. Without it eslint refused the files as "not included in
       the project". Proved it lints by injecting an unused variable.
+      _Hardened during P2-05, 2026-09-03._ The suite was not deterministic and
+      the theme-pin test is what exposed it. Three causes, all now fixed: 1. **The theme attribute is not the theme.** `data-jp-theme-name` is set
+      when the theme manager STARTS applying; its stylesheet loads after.
+      Snapshots caught half-styled frames, so a DIFFERENT surface failed each
+      run. `settle` now waits past it. 2. **The menu-bar overflow plugin settles last**, after `app.restored` and
+      after its own font wait. The two snapshots that still flaked were
+      exactly the two containing the menu bar. `settle` now waits for
+      `body[data-d4n-menubar-overflow]`. 3. **Contention.** Two browsers boot JupyterLab against one server, so the
+      30s waits were too short. They are 60s.
+      Three consecutive runs are now 14/14. A first attempt polled computed
+      colours until they repeated: that turned image mismatches into 60s
+      timeouts inside the helper, which is worse, and it was reverted.
+      _And the suite depends on server state nobody was guarding._ The P2-05
+      agents left two `untitled.txt` files, five terminals and a kernel behind,
+      which moved the file browser and status bar snapshots. Removed, and the
+      container restarted. A probe that creates files or sessions must clean up,
+      or the next baseline run blames the wrong change.
 - [x] **P1-08** Favicon delivery (**Q11**).
       _Decided by Aristide and done on 2026-09-03._ A frontend link rewrite,
       one authored asset, busy variant refused in writing. Recorded as **D-023**.
@@ -587,13 +604,61 @@ Galata is green.
       _Done when:_ rail tooltips use the `.lm-Menu` surface tokens with a decided
       placement, delay, dismissal and screen-reader behaviour — or the task is
       dropped with a reason.
-- [ ] **P2-05** Dock tab bar. A 2px teal top border on the current tab, a dirty-state dot, and a close affordance. The split handle gets an 8px hit area over a 1px visual.
-      _On disk:_ `surfaces/tab-bar.css`, 179 lines. It is scoped through
-      `.lm-DockPanel-tabBar` and `.lm-TabPanel-tabBar`, so it cannot leak into
-      the sidebar rails.
-      _What remains:_ browser measurement in both modes. Test the split handle
-      with a pointer, not by reading the rule. An 8px hit area over a 1px visual
-      can measure correctly and still feel wrong.
+- [x] **P2-05** Dock tab bar. A 2px teal top border on the current tab, a
+      dirty-state dot, and a close affordance. The split handle gets an 8px hit
+      area over a 1px visual.
+      _Done on 2026-09-03._ Five verification agents drove it in both modes and
+      **all five failed**. The surface looked finished and almost nothing it
+      claimed to do worked. Six root causes: four fixed, two recorded. See
+      **D-026**.
+      _The headline._ The tab was 32px inside a 26px bar, and Lumino's
+      `contain: strict` on the bar threw the top 6px away. The 2px teal accent
+      was **never painted** — zero pixels of the token colour in a 970×46 scan,
+      while `getComputedStyle` reported a correct 2px teal band. The 4px radius
+      and the 1px top border were never painted either, and the top 6px of every
+      tab was not clickable. A stock-JupyterLab control measured overshoot 0, so
+      it was ours. `bottom-dock.css:82-86` already carried the fix for its own
+      bar and its comment describes this exact trap; the main dock had never
+      been given the line. After: overshoot 0, top clickable, accent
+      photographed at 4× in both modes.
+      _The dirty dot never existed._ Core's mechanism reveals `.jp-icon-busy`
+      inside the close SVG. `packages/icons` overrides that icon with a stroked
+      path carrying neither class, so core's swap and our fill override both
+      selected nothing — a dirty tab was pixel-identical to a clean one. The
+      mockup never wanted the swap: it puts a separate 7px dot between the label
+      and the ×. That is what this sheet now draws, in the flow, which also
+      un-orphans `--d4n-tab-dirty-dot-size`.
+      _Two smaller repairs._ The close hit target was 16×16, the glyph size with
+      no padding; it is now 24px with `cursor: pointer`. Tabs shrank without a
+      floor until labels hit 0px; `--d4n-tab-min-width` is 120px, which is a
+      judgement rather than a measured constant.
+      _Method note worth keeping._ My first check after fixing the height used a
+      hand-rolled PNG decoder and said the accent was still missing. The
+      screenshot showed it plainly. Where a pixel claim decides a verdict, look
+      at the image as well.
+      _Not fixed, and tracked as P2-17:_ the 8px split-handle hit area, and the
+      close affordance's keyboard reachability.
+- [ ] **P2-17** Dock split handles and the close affordance (split out of P2-05,
+      **D-026**). Two things P2-05 measured and deliberately did not fix.
+      _The 8px hit area does not exist._ Lumino sets `contain: strict` inline on
+      every `DockLayout` handle, and `contain: style` on `SplitLayout` handles
+      with the comment "Do not use size containment to allow the handle to fill
+      the available space". So the identical rule pair measures **8.0px on
+      `.lm-SplitPanel-handle` and 5.0px on `.lm-DockPanel-handle`**. Real
+      pointer drags 1px outside 739–743 do not move the split.
+      Worse, `tab-bar.css:130-144` restates a `min-width: 8px` that
+      `@lumino/widgets/style/dockpanel.css:51-59` already ships, so it changes
+      nothing: our hit area equals stock JupyterLab's, and the comment claiming
+      the token "tracks the design rather than Lumino's default" is describing
+      Lumino's default. Delete it or make it real.
+      _The close affordance is keyboard-unreachable_ and has no accessible name:
+      upstream renders a bare `<div title="Close …">` with no role and no tab
+      stop. That is a renderer replacement, not a stylesheet change.
+      _Done when:_ the handle's hit area is measured, not asserted — either by
+      overriding `contain` with the cost measured, or by widening the handle in
+      JS, or by recording that stock is accepted and deleting the dead rule. And
+      the close affordance is operable from the keyboard with a name, or that is
+      refused in writing.
 - [x] **P2-06** Command palette, file browser listing and toolbar, running panel,
       extension manager.
 - [x] **P2-07** Status bar — done as **T2**, not the T3 swap §8.5.1 specifies.

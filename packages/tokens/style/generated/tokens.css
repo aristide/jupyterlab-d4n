@@ -561,6 +561,8 @@ body[data-jp-theme-name^='Data4Now'] {
   --d4n-tab-dirty-dot-size: 6px;
   --d4n-tab-dirty-dot: var(--d4n-color-action-default);
   --d4n-tab-padding-x: var(--d4n-space-3);
+  --d4n-tab-min-width: 120px;
+  --d4n-tab-close-hit: 24px;
   --d4n-tab-font-size: var(--d4n-font-size-ui-sm);
   --d4n-tab-split-handle-hit: var(--d4n-space-2);
   --d4n-tab-split-handle-visual: var(--d4n-border-width-thin);

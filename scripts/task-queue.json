@@ -4,17 +4,6 @@
   "tasks": [
     {
       "order": 1,
-      "id": "P2-05",
-      "title": "Dock tab bar — teal current-tab border, dirty dot, close affordance, split handle",
-      "runnable": true,
-      "risk": "low",
-      "dependsOn": [],
-      "blockerKind": "none",
-      "reason": "What remains is browser measurement plus a pointer-driven drag of the 8px hit area over the 1px visual, both scriptable; only the subjective 'still feel wrong' caveat is beyond a machine, and it is a caveat, not the Done when.",
-      "riskReason": "One stylesheet, already scoped through .lm-DockPanel-tabBar and .lm-TabPanel-tabBar so it cannot leak into the sidebar rails."
-    },
-    {
-      "order": 2,
       "id": "P2-12",
       "title": "Declarative toolbar and menu restructuring through overrides.json",
       "runnable": true,
@@ -25,7 +14,7 @@
       "riskReason": "overrides.json recomposes every toolbar and menu in the application: a wrong item name is dropped silently, a disabled menu is a behaviour change users see, and a malformed file takes the settings load down with it — the closest thing in P2 to a start-time failure outside the plugin swaps."
     },
     {
-      "order": 3,
+      "order": 2,
       "id": "P2-14",
       "title": "Status bar overflow — collapse at 1024px into a ⋯ popover",
       "runnable": true,
@@ -36,7 +25,7 @@
       "riskReason": "New shell plugin acting on IStatusBar: statusBar.ts explicitly forbids registering it as an IStatusBar provider, and doing so would shadow core's working bar; the 1024px viewport number is also expected to move the way the menu bar's did."
     },
     {
-      "order": 4,
+      "order": 3,
       "id": "P2-15",
       "title": "T3: launcher behavior — section order, root copy, no-kernels state, search",
       "runnable": true,
@@ -47,7 +36,7 @@
       "riskReason": "It must disable @jupyterlab/launcher-extension:plugin in the same commit: two ILauncher providers make JupyterLab refuse to start, and a replacement that misses the launcher:create command id leaves four dead + affordances owned by four other plugins. P1-09 found the safety claim behind this task is not what the source says: a duplicate provided token is a SILENT overwrite in PluginRegistry, not a startup refusal, so disabling the core plugin in the same change is the only guard, not a belt-and-braces one (D-024)."
     },
     {
-      "order": 5,
+      "order": 4,
       "id": "P2-16",
       "title": "Rail tooltips — decide the placement, delay and dismissal, or drop the task",
       "runnable": false,
@@ -56,6 +45,17 @@
       "blockerKind": "human_decision",
       "reason": "D-019 established that rail tooltips are not reachable from CSS: Lumino sets title=caption on the tab, so the browser owns placement and delay. Reaching them means a custom TabBar renderer or a hover widget — a plugin — and the task text itself allows dropping it instead. Placement, delay, dismissal and screen-reader behaviour are all product decisions nobody has made, so an agent building it would be inventing four of them.",
       "riskReason": "Adds a hover surface to the highest-traffic chrome in the product, and a tooltip that appears wrongly is worse than the native one it replaces."
+    },
+    {
+      "order": 5,
+      "id": "P2-17",
+      "title": "Dock split handle hit area and the close affordance keyboard path",
+      "runnable": false,
+      "risk": "medium",
+      "dependsOn": [],
+      "blockerKind": "human_decision",
+      "reason": "P2-05 measured both and deliberately left them. The 8px handle hit area needs either overriding Lumino inline contain: strict on a node it repositions every resize - weakening an upstream performance hint - or widening the handle in JS. The close affordance needs a TabBar renderer replacement to become keyboard-operable. Both are trade-offs a person should sign, not defaults an agent should pick, and one option is simply accepting stock and deleting the dead rule.",
+      "riskReason": "Touches drag-resize behaviour on every split in the product, and a renderer replacement changes markup that other selectors depend on."
     },
     {
       "order": 6,

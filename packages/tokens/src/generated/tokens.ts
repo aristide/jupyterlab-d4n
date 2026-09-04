@@ -419,6 +419,8 @@ export const d4n = {
       "dirtyDotSize": "6px",
       "dirtyDot": "#167C7C",
       "paddingX": "12px",
+      "minWidth": "120px",
+      "closeHit": "24px",
       "fontSize": "13px",
       "splitHandleHit": "8px",
       "splitHandleVisual": "1px"
@@ -1132,6 +1134,8 @@ export const d4n = {
       "dirtyDotSize": "6px",
       "dirtyDot": "#4FD1D1",
       "paddingX": "12px",
+      "minWidth": "120px",
+      "closeHit": "24px",
       "fontSize": "13px",
       "splitHandleHit": "8px",
       "splitHandleVisual": "1px"

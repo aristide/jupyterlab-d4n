@@ -1206,6 +1206,111 @@ out to be wanted after all — in which case it must be rebuilt from
 
 ---
 
+## D-026 — The dock tab bar: a height that never rendered, and a dirty dot that never existed
+
+**Decided while doing P2-05, 2026-09-03.** Five verification agents drove the
+tab bar in both modes. **All five failed.** The surface looked finished and
+almost nothing it claimed to do worked. Six root causes; four are fixed here and
+two are recorded.
+
+### The tab was 32px inside a 26px bar, and the top 6px was thrown away
+
+Core sizes the bar and the tab to the same 26px. `tab-bar.css` raised the
+**tab** to `--d4n-tab-height` (32px) and left the bar alone. Lumino writes
+`contain: strict` on the bar, and paint containment clips to the padding box.
+
+Measured, both modes: bar `y=41 h=26`, tab `y=35 h=32`, overshoot 6px upward
+because upstream's `.lm-TabBar-content` is `align-items: flex-end`. The cost:
+
+- the 2px current-tab accent was **never painted** — zero pixels of the token
+  colour in a 970×46 scan, while `getComputedStyle` cheerfully reported a 2px
+  teal band
+- the 4px top radius and the 1px top border were never painted
+- the top 6px of every tab was **not clickable**: `elementFromPoint` returned
+  `#jp-main-dock-panel`
+
+A stock-JupyterLab control run measured `overshootTop = 0` and a painted accent,
+so this was ours, not inherited.
+
+**`bottom-dock.css:82-86` already carried the fix** for its own bar, and the
+comment at `bottom-dock.css:92-107` describes this exact silent failure —
+"the computed style still reports the right colour and the right 2px height.
+Verified by pixel, not by getComputedStyle." The main dock had never been given
+the same line. It has it now: `min-height: var(--d4n-tab-height)` on the bar.
+
+After: bar `[41, 32]`, tab `[41, 32]`, overshoot **0**, top of the tab clickable,
+and the accent photographed at 4× in both modes — teal `#167C7C` light,
+`#4FD1D1` dark, with the rounded corners and the border present.
+
+**A lesson about method.** My first check after the fix used a hand-rolled PNG
+decoder and reported one stray teal pixel, i.e. still broken. Looking at the
+screenshot showed the indicator plainly. The decoder was wrong, not the CSS.
+Where a pixel claim decides a verdict, look at the image too.
+
+### The dirty dot never existed, because our own icon deleted its hook
+
+Core reveals `.jp-icon-busy` inside the close SVG and hides `.jp-icon3`, so the
+dot **replaces** the × until hover. `tab-bar.css` mirrored that and recoloured
+the fill.
+
+`packages/icons` overrides `ui-components:close` with a single stroked path
+carrying **neither class**. So core's swap and our fill override both selected
+nothing. Measured: a dirty tab was pixel-identical to a clean one — 50 ink
+pixels with the same anti-aliasing distribution, both modes. `jp-icon-busy`
+appears in no shipped SVG; it survived only in a comment, a dead rule and a
+`selectors.json` entry that the integrity job never asserts.
+
+**The mockup never wanted the swap anyway.** `JupyterLab Theme.html` L348
+defines `.jp-tab-dot` as a separate 7px span **between the label and the ×**.
+Core's mechanism puts the dot _on_ the close button and hides it on hover.
+Adopting core's hack had been a design divergence with no record.
+
+So the dot is now drawn by this sheet, in the flow: the close affordance takes
+extra left margin and the dot is drawn into that gap, so it cannot sit on top of
+a long ellipsised label. That also un-orphans `--d4n-tab-dirty-dot-size`, which
+was referenced only from a comment. Measured after: 6×6, `border-radius: 50%`,
+`#167C7C` light and `#4FD1D1` dark, photographed between the label and the ×.
+
+### Two smaller repairs in the same pass
+
+- **The close hit target was 16×16** — the glyph size, no padding. Now
+  `--d4n-tab-close-hit` at 24px with `cursor: pointer`; the glyph is unchanged.
+  Measured 24×24 with a 26.5px hit sweep, both modes.
+- **Tabs shrank without a floor.** Past about fifteen tabs the label reached 0px
+  and every tab became an icon plus an ×, with no tooltip on most of them.
+  `--d4n-tab-min-width` is 120px. That is a judgement, not a measured constant.
+
+### Recorded and NOT fixed
+
+**The 8px split-handle hit area does not exist, and our rule is a no-op.**
+Lumino sets `contain: strict` inline on every `DockLayout` handle — and
+`contain: style` on `SplitLayout` handles, with the comment "Do not use size
+containment to allow the handle to fill the available space." The identical rule
+pair therefore measures **8.0px on `.lm-SplitPanel-handle` and 5.0px on
+`.lm-DockPanel-handle`**. Real pointer drags at ±1px outside 739–743 do not move
+the split.
+
+Worse, `tab-bar.css:130-144` restates `min-width: 8px` that
+`@lumino/widgets/style/dockpanel.css:51-59` already ships, so it changes no
+computed value and no behaviour: **our effective hit area equals stock
+JupyterLab's**, and the comment claiming the token "tracks the design rather than
+Lumino's default" is describing Lumino's default.
+
+Fixing it means overriding `contain` on a node Lumino repositions on every
+resize — weakening an upstream performance hint — or widening the handle in JS.
+Neither is a stylesheet change to make unilaterally. **Left as stock, recorded,
+and tracked as P2-17.**
+
+**The close affordance is keyboard-unreachable and has no accessible name.** It
+is upstream markup — a `<div title="Close …">` with no role and no tab stop —
+so it is a plugin's problem, not this sheet's. Also tracked in P2-17.
+
+**Revisit when** someone measures whether dropping `paint` from the dock
+handle's containment costs anything, or when the tab-bar renderer is replaced
+for other reasons.
+
+---
+
 ## Still open
 
 Tracked in `TODO.md`; listed here so the set is visible in one place.

@@ -67,8 +67,11 @@ test('the project theme is the one that is pinned', async ({
   lab,
   d4nTheme
 }) => {
+  // An explicit timeout for the same reason `settle` carries one: two browsers
+  // boot against one server, and Playwright's 5s default is short for that.
   await expect(lab.locator('body')).toHaveAttribute(
     'data-jp-theme-name',
-    d4nTheme
+    d4nTheme,
+    { timeout: 15_000 }
   );
 });

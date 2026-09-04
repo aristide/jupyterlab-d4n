@@ -397,6 +397,16 @@
       "$value": "{space.3}",
       "$type": "dimension"
     },
+    "minWidth": {
+      "$value": "120px",
+      "$type": "dimension",
+      "$description": "Floor on a dock tab, so a crowded bar degrades to truncated labels rather than to bare icons. P2-05 measured the unfloored behaviour: past about fifteen tabs the label reaches 0px and every tab is an icon plus a close X, with no tooltip on most of them, so tabs cannot be told apart at all. 120px holds the icon, roughly ten characters and the close target. It is a judgement, not a measured constant - Design may move it."
+    },
+    "closeHit": {
+      "$value": "24px",
+      "$type": "dimension",
+      "$description": "Hit target for the tab close affordance. The glyph stays at font.size-independent toolbar icon size; only the box grows. P2-05 measured the box at 16x16, which is below every published minimum for a pointer target, and closing the wrong tab is not a recoverable slip."
+    },
     "fontSize": {
       "$value": "{font.size.ui.sm}",
       "$type": "dimension"

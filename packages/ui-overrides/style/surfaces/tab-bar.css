@@ -18,8 +18,30 @@
  * rather than redefined through them.
  */
 
+/* THE BAR MUST BE AS TALL AS THE TAB, AND THIS IS NOT COSMETIC.
+ *
+ * Core sizes both the bar and the tab to
+ * `calc(--jp-private-horizontal-tab-height + 2 * --jp-border-width)` = 26px
+ * (@jupyterlab/application/style/tabs.css:28-33 and :46-52). The rule below
+ * raises the TAB to `--d4n-tab-height` (32px). Raising one of the two and not
+ * the other is what P2-05 measured, and it cost the whole top of the tab:
+ *
+ *   bar   y=41 h=26      tab  y=35 h=32      overshoot 6px, upward, because
+ *   upstream's `.lm-TabBar-content { align-items: flex-end }` bottom-aligns it
+ *
+ * Lumino writes `contain: strict` inline on the bar, and paint containment
+ * clips to the padding box — so the 4px top radius, the 1px top border and the
+ * 2px current-tab accent were all discarded before reaching the screen, and the
+ * top 6px of every tab was not clickable either (`elementFromPoint` returned
+ * `#jp-main-dock-panel`). None of it shows in `getComputedStyle`, which happily
+ * reported a 2px teal indicator that a pixel scan could not find anywhere.
+ *
+ * `bottom-dock.css:82-86` already does this for its own bar, and the comment
+ * block at `bottom-dock.css:92-107` describes the same trap. The main dock had
+ * simply never been given the same line. */
 body[data-jp-theme-name^='Data4Now'] .lm-DockPanel-tabBar,
 body[data-jp-theme-name^='Data4Now'] .lm-TabPanel-tabBar {
+  min-height: var(--d4n-tab-height);
   background: var(--d4n-color-surface-sunken);
   color: var(--d4n-tab-fg);
   font-family: var(--d4n-font-family-ui);
@@ -29,6 +51,7 @@ body[data-jp-theme-name^='Data4Now'] .lm-TabPanel-tabBar {
 body[data-jp-theme-name^='Data4Now'] .lm-DockPanel-tabBar .lm-TabBar-tab,
 body[data-jp-theme-name^='Data4Now'] .lm-TabPanel-tabBar .lm-TabBar-tab {
   min-height: var(--d4n-tab-height);
+  min-width: var(--d4n-tab-min-width);
   padding: 0 var(--d4n-tab-padding-x);
   background: var(--d4n-tab-bg);
   color: var(--d4n-tab-fg);
@@ -73,32 +96,68 @@ body[data-jp-theme-name^='Data4Now']
   background: var(--d4n-tab-indicator);
 }
 
-/* Dirty state. Core swaps the close glyph for a filled dot by hiding
- * `.jp-icon3` and revealing `.jp-icon-busy` whenever the tab is dirty and the
- * close affordance is not hovered — so hovering still offers "close", and the
- * dot is only a rest-state signal. That behaviour is kept; only the fill is
- * ours. The dot's 6px geometry (`--d4n-tab-dirty-dot-size`) lives inside the
- * busy icon's SVG and is resized with the rest of the icon set
- * (TODO.md P5-01). */
+/* Dirty state — OUR OWN DOT, not core's glyph swap. See D-026.
+ *
+ * Core hides `.jp-icon3` and reveals `.jp-icon-busy` inside the close SVG, so
+ * the dot REPLACES the × until you hover it. This sheet used to mirror that and
+ * only recolour the fill. P2-05 measured the result: nothing rendered at all,
+ * in either mode, and a dirty tab was pixel-identical to a clean one — 50 ink
+ * pixels with the same anti-aliasing distribution.
+ *
+ * The reason is ours. `packages/icons` overrides `ui-components:close` with an
+ * SVG that is a single stroked path carrying neither `.jp-icon3` nor
+ * `.jp-icon-busy`, so core's swap and our fill override both selected nothing.
+ * `jp-icon-busy` appears nowhere in any shipped SVG.
+ *
+ * The mockup does not use the swap either: `JupyterLab Theme.html` L348 defines
+ * `.jp-tab-dot` as a separate 7px span BETWEEN the label and the ×. So the dot
+ * is drawn here instead of inside an icon, which also un-orphans
+ * `--d4n-tab-dirty-dot-size` — it was referenced only from a comment.
+ *
+ * It is placed in the flow rather than over it: the close affordance takes the
+ * extra left margin, and the dot is drawn into that gap. An absolutely
+ * positioned dot would sit on top of a long ellipsised label. */
 body[data-jp-theme-name^='Data4Now']
   .lm-DockPanel-tabBar
-  .lm-TabBar-tab.lm-mod-closable.jp-mod-dirty
-  > .lm-TabBar-tabCloseIcon
-  > :not(:hover)
-  > .jp-icon-busy[fill] {
-  fill: var(--d4n-tab-dirty-dot);
+  .lm-TabBar-tab.jp-mod-dirty
+  > .lm-TabBar-tabCloseIcon {
+  margin-left: calc(var(--d4n-tab-dirty-dot-size) + 2 * var(--d4n-space-1));
 }
 
 body[data-jp-theme-name^='Data4Now']
   .lm-DockPanel-tabBar
+  .lm-TabBar-tab.jp-mod-dirty
+  > .lm-TabBar-tabCloseIcon::before {
+  content: '';
+  position: absolute;
+  right: calc(100% + var(--d4n-space-1));
+  width: var(--d4n-tab-dirty-dot-size);
+  height: var(--d4n-tab-dirty-dot-size);
+  border-radius: 50%;
+  background: var(--d4n-tab-dirty-dot);
+}
+
+/* The box is the HIT TARGET, and it is deliberately larger than the glyph.
+ *
+ * P2-05 measured the old box at 16×16 — the glyph size, with no padding. A
+ * pointer target that small is below every published minimum, and closing the
+ * wrong tab is not a recoverable slip. `--d4n-tab-close-hit` is 24px; the glyph
+ * inside is still `--d4n-toolbar-icon-size`, centred by the flex box, so
+ * nothing about the drawing changes.
+ *
+ * `position: relative` is what the dirty dot above anchors to. */
+body[data-jp-theme-name^='Data4Now']
+  .lm-DockPanel-tabBar
   .lm-TabBar-tabCloseIcon {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: var(--d4n-toolbar-icon-size);
-  height: var(--d4n-toolbar-icon-size);
+  width: var(--d4n-tab-close-hit);
+  height: var(--d4n-tab-close-hit);
   margin-left: var(--d4n-space-1);
   border-radius: var(--d4n-radius-sm);
+  cursor: pointer;
 }
 
 body[data-jp-theme-name^='Data4Now']
@@ -154,7 +213,7 @@ body[data-jp-theme-name^='Data4Now']
   bottom: 0;
   left: 50%;
   width: var(--d4n-tab-split-handle-visual);
-  background: var(--d4n-color-border-subtle);
+  background: var(--d4n-color-border-default);
   transform: translateX(-50%);
 }
 
@@ -169,7 +228,7 @@ body[data-jp-theme-name^='Data4Now']
   right: 0;
   left: 0;
   height: var(--d4n-tab-split-handle-visual);
-  background: var(--d4n-color-border-subtle);
+  background: var(--d4n-color-border-default);
   transform: translateY(-50%);
 }
 

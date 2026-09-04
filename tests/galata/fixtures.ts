@@ -140,11 +140,43 @@ export const test = base.extend<{ lab: Page }, D4nWorkerFixtures>({
  * approved as a set.
  */
 export async function settle(page: Page, expectedTheme: string): Promise<void> {
+  // 60s, not 30s, and the reason is contention rather than caution. The suite
+  // runs one worker per project, so two browsers boot JupyterLab against one
+  // server at once. Under that load the attribute took longer than 30s often
+  // enough to fail a run, while the same test passed alone in 10.6s.
   await page.waitForFunction(
     theme => document.body.dataset.jpThemeName === theme,
     expectedTheme,
-    { timeout: 30_000 }
+    { timeout: 60_000 }
   );
+
+  // THE ATTRIBUTE IS NOT THE THEME. It is set when the theme manager STARTS
+  // applying; the stylesheet carrying the values loads after it. A snapshot
+  // taken in that window catches a half-styled frame, and because the window
+  // varies with load, a DIFFERENT surface fails on each run — status bar on one,
+  // left rail on the next. P2-05 spent a run diagnosing exactly that.
+  //
+  // The fix is a plain wait, deliberately. A first attempt polled computed
+  // colours until they repeated and also gated on the menu-bar overflow
+  // plugin's attribute; both turned intermittent snapshot mismatches into
+  // intermittent 60s TIMEOUTS inside this helper, which is worse — the failure
+  // moved from a diffable image to a stack trace. A fixed beat that is longer
+  // than the theme swap costs a second per test and fails visibly when it is
+  // wrong.
+  await page.waitForTimeout(1500);
+
+  // The menu-bar overflow plugin (D-017) measures and re-lays the bar after
+  // `app.restored` AND after its own font wait, so it settles later than
+  // anything else on screen. It announces itself with this attribute, and the
+  // two snapshots that kept flaking after the theme wait — `application frame`
+  // and `top panel` — are exactly the two that contain the menu bar.
+  await page.waitForSelector('body[data-d4n-menubar-overflow]', {
+    timeout: 60_000,
+    state: 'attached'
+  });
+
+  // Montserrat resolves late and moves every text run, so a snapshot taken
+  // before `document.fonts.ready` measures a fallback face.
   await page.evaluate(() => document.fonts.ready);
   // The shell lays out once more after the fonts land.
   await page.waitForTimeout(600);
