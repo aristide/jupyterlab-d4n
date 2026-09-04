@@ -48,17 +48,6 @@
     },
     {
       "order": 5,
-      "id": "P3-01",
-      "title": "Cell container, active-cell indicator, prompts, 24px collapser hit area",
-      "runnable": true,
-      "risk": "low",
-      "dependsOn": [],
-      "blockerKind": "none",
-      "reason": "Pure CSS extension of the existing surfaces/notebook.css (102 lines already covers the container, prompts, collapser and .jp-mod-active) plus browser measurement in both modes; nothing here needs a person.",
-      "riskReason": "Additive rules in one already theme-gated stylesheet; the worst outcome is a 24px collapser hit area that swallows clicks near the prompt, which is visually obvious and revertable, and cannot affect boot."
-    },
-    {
-      "order": 6,
       "id": "P3-02",
       "title": "Output area, stream output, error output, 2px danger left border",
       "runnable": true,
@@ -69,7 +58,7 @@
       "riskReason": "Additive rules in a single shipped stylesheet on tokens that already exist; no plugin, no token source and no boot path is touched."
     },
     {
-      "order": 7,
+      "order": 6,
       "id": "P3-03",
       "title": "Rendered markdown (.jp-RenderedHTMLCommon) type ramp, tables, code, lists",
       "runnable": true,
@@ -80,7 +69,7 @@
       "riskReason": "The largest single CSS surface in scope, but it no longer moves a token: the ramp is font.size.content.* as it already stands, so the blast radius is .jp-RenderedHTMLCommon rather than every rendered output."
     },
     {
-      "order": 8,
+      "order": 7,
       "id": "P3-04",
       "title": "Wire the generated ANSI block into rendermime and verify T2",
       "runnable": true,
@@ -91,7 +80,7 @@
       "riskReason": "Mostly verification; any code change is an import or a selector in generated-adjacent CSS, and the generated file itself is rebuilt by the freshness gate rather than hand-edited."
     },
     {
-      "order": 9,
+      "order": 8,
       "id": "P3-05",
       "title": "CodeMirror 6 theme and HighlightStyle across eleven languages",
       "runnable": true,
@@ -102,7 +91,7 @@
       "riskReason": "It rewrites the HighlightStyle and theme object that every editor and every notebook cell mounts; a malformed extension or a bad tag list makes editors render unstyled or throw on open, and the design lints do not inspect a JS theme object."
     },
     {
-      "order": 10,
+      "order": 9,
       "id": "P3-06",
       "title": "Terminal bridge — all four triggers, T1 to T10",
       "runnable": true,
@@ -113,7 +102,7 @@
       "riskReason": "Contained to xterm options for terminal widgets; a regression hands the palette back to core's `inherit` object per D-004 but touches no other surface and cannot stop the app starting."
     },
     {
-      "order": 11,
+      "order": 10,
       "id": "P3-07",
       "title": "Autocomplete popup, inline signature, tooltip, console panel",
       "runnable": true,
@@ -124,7 +113,7 @@
       "riskReason": "The completer and the tooltip portal outside the shell into body, so a wrong position, size or stacking rule can cover the editor and block typing — a failure the contrast and selector gates would pass."
     },
     {
-      "order": 12,
+      "order": 11,
       "id": "P3-08",
       "title": "Wire CM6 breakpoint gutter and execution-line decorations to the debugger",
       "runnable": true,
@@ -135,7 +124,7 @@
       "riskReason": "It activates a gutter and a StateField inside every editor the debugger attaches to; a faulty effect or range set throws inside CodeMirror at stop time, and D4's contrast gate against every syntax token is easy to regress silently."
     },
     {
-      "order": 13,
+      "order": 12,
       "id": "P3-09",
       "title": "Debugger panel shell, callstack, breakpoints, sources, empty states",
       "runnable": true,
@@ -146,7 +135,7 @@
       "riskReason": "A new panel-scoped stylesheet plus generated empty-state content; confined to the debugger sidebar and revertable, though the empty states put English strings into CSS content, which a reviewer may want to relocate."
     },
     {
-      "order": 14,
+      "order": 13,
       "id": "P3-10",
       "title": "Debugger variables tree view",
       "runnable": true,
@@ -157,7 +146,7 @@
       "riskReason": "Additive CSS on one sidebar section using tokens that already exist and are already audited; no JS, no plugin and no token source involved."
     },
     {
-      "order": 15,
+      "order": 14,
       "id": "P3-11",
       "title": "T3/T4: DataGrid — apply buildGridStyle and buildTextRenderer to both grids",
       "runnable": true,
@@ -168,7 +157,7 @@
       "riskReason": "It disables a core plugin (@jupyterlab/csvviewer-extension:csv) in page_config.json in the same change; if the replacement misses the document-widget factory or the file-type registration, CSV and TSV files stop opening for every user, and the same D-015/D-016 trap applies where the disabled plugin's schema survives."
     },
     {
-      "order": 16,
+      "order": 15,
       "id": "P3-12",
       "title": "Notebook search overlay and the other five search mounts",
       "runnable": true,
@@ -179,7 +168,7 @@
       "riskReason": "S1 forces the change into the shared inputs.css that all six mounts consume, so one regression hits the command palette, file-browser filter, settings search and extension-manager search at once; the overlay also floats over the document where a bad offset can occlude the first cell."
     },
     {
-      "order": 17,
+      "order": 16,
       "id": "P3-13",
       "title": "ipywidgets — variables in compat-shim, sliders, file upload, repaint",
       "runnable": true,
@@ -190,7 +179,7 @@
       "riskReason": "It edits compat-shim's vendored ipywidgets stylesheet and the --jp-widgets-* mapping, which repaint every widget in every output area, and those variables sit deliberately outside the audited adapter so the token lints give less cover than elsewhere."
     },
     {
-      "order": 18,
+      "order": 17,
       "id": "P3-14",
       "title": "Decide the opt-in helper for matplotlib and Vega (Q5)",
       "runnable": false,
@@ -199,6 +188,17 @@
       "blockerKind": "human_decision",
       "reason": "The task word is \"Decide\" and decisions.md lists Q5 as owned by PM and needed by P3 exit, so an agent producing a helper would be manufacturing a scope decision that content is an explicit non-goal.",
       "riskReason": "Whatever is produced is a decision record or an opt-in package that ships nothing into the interface; the danger is scope creep and a fabricated PM decision in docs/decisions.md, not a broken build."
+    },
+    {
+      "order": 18,
+      "id": "P3-15",
+      "title": "Running-cell prompt state - needs a class JupyterLab does not emit",
+      "runnable": true,
+      "risk": "low",
+      "dependsOn": [],
+      "blockerKind": "none",
+      "reason": "P3-01 verified in the 4.6.3 source that _updatePrompt sets the prompt TEXT to * when executionState is running and adds no class or attribute, so CSS has nothing to select. A small plugin watching model.executionState and toggling a class is machine work over a public signal, the same shape as D-017, and the token already exists.",
+      "riskReason": "Touches every cell render path, and an animated treatment must respect prefers-reduced-motion."
     },
     {
       "order": 19,

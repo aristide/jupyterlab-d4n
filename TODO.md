@@ -847,12 +847,49 @@ Critical path (PRD §11 — staff this first). Exit: syntax validation in 11
 languages, the terminal and both DataGrids repaint on a theme switch, and A4 is
 green including D4.
 
-- [ ] **P3-01** Cell container, active-cell indicator, prompts, and a 24px hit
-      area for the collapser. The indicator is a full-height 2px bar and a
-      surface change, not only the left bar that core draws.
-      _Partly on disk:_ `surfaces/notebook.css` (102 lines) covers the cell
-      container, `.jp-InputPrompt`, `.jp-OutputPrompt`, `.jp-Collapser`,
-      `.jp-mod-active` and `.jp-mod-dirty`. Its own comments send two pieces back here. The first is the **24px collapser hit area**, which core still draws at 4px. The second is the dirty prompt treatment.
+- [x] **P3-01** Cell container, active-cell indicator, prompts, and a 24px hit
+      area for the collapser.
+      _Done on 2026-09-04._ Two pieces the file's own comments sent back here,
+      plus a defect the verification found.
+      _The 24px collapser hit area needed no markup change._ The comment claimed
+      it did. Measured instead: the collapser is already `position: relative`,
+      its `overflow` is `visible`, it has no containment, and neither does
+      `.jp-Cell-inputWrapper`. A pseudo-element widens the target without
+      touching the 4px line. Measured after: visual 4px, hit **24px** (x 648 to
+      671), both modes.
+      The extra 20px goes **entirely to the left**, and that is measured rather
+      than tidy: an `elementFromPoint` sweep shows `.jp-InputPrompt` starting
+      2px to the collapser's RIGHT and the editor beyond it, so growing
+      symmetrically would have made a click on the prompt collapse the cell.
+      _The active-cell treatment was not rendering at all._ Both halves were
+      overridden in the state a user is actually in — command mode, selected,
+      focused. Read with CDP `getMatchedStylesForNode`, because a
+      `document.styleSheets` scan does not rank the cascade:
+      `.jp-Notebook.jp-mod-commandMode .jp-Cell.jp-mod-active.jp-mod-selected:not(…)`
+      forces `background: transparent` at (0,6,0), and
+      `.jp-Cell.jp-mod-active:focus-visible` replaces the indicator with a 1px
+      ring on all four sides at (0,5,0). Ours was (0,4,1). Restated at (0,6,1),
+      no `!important`. Measured after: surface `#FFFFFF` light and `#122A47`
+      dark, indicator `2px 0 0 0 inset` in `#167C7C` / `#4FD1D1`.
+      Taking the focus ring's `box-shadow` is safe: `focus.css` gives every
+      `:focus-visible` element an `outline` from the one focus spec, so core's
+      shadow was a second ring for the same state.
+      _Split out, and confirmed from source rather than inherited:_ the
+      running-cell prompt pulse. Read P3-15.
+- [ ] **P3-15** Running-cell prompt state (split out of P3-01). PRD §8.2 wants a
+      distinct treatment while a cell is executing, and
+      `--d4n-notebook-prompt-running-fg` exists for it. **There is no CSS hook,
+      and that is verified in the 4.6.3 source rather than assumed.**
+      `@jupyterlab/cells/lib/widget.js` `_updatePrompt()` reads
+      `this.model.executionState == 'running'` and sets the prompt **text** to
+      `'*'`. It adds no class and no attribute, so nothing selectable changes.
+      `.jp-mod-dirty` is a different state — stale output, not execution.
+      _So it needs a plugin,_ watching `model.executionState` and toggling a
+      class the stylesheet can reach. That is notebook behaviour over a public
+      model signal, the same shape as D-017, and it provides no token.
+      _Done when:_ a running cell is distinguishable from an idle one without
+      reading the prompt text, in both modes, and the treatment respects
+      `prefers-reduced-motion` (A8) if it animates.
 - [ ] **P3-02** Output area, stream output, error output, and the 2px danger left
       border.
       _Partly on disk:_ the same file styles `.jp-OutputArea-output`,

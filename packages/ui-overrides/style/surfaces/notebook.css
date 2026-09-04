@@ -43,14 +43,75 @@ body[data-jp-theme-name^='Data4Now'] .jp-Notebook .jp-Cell.jp-mod-active {
     var(--d4n-notebook-active-cell-indicator);
 }
 
+/* THE RULE ABOVE LOSES IN THE DEFAULT STATE, WHICH IS WHY THESE TWO EXIST.
+ *
+ * Open a notebook and the active cell is command-mode, selected and focused.
+ * Two upstream rules then outrank the (0,4,1) above, measured with CDP
+ * `getMatchedStylesForNode` rather than inferred:
+ *
+ *   .jp-Notebook.jp-mod-commandMode .jp-Cell.jp-mod-active.jp-mod-selected:not(…)
+ *     background: transparent                                        (0,6,0)
+ *   .jp-Notebook.jp-mod-commandMode .jp-Cell.jp-mod-active:focus-visible
+ *     box-shadow: 0 0 0 1px var(--jp-focus-outline-color)            (0,5,0)
+ *
+ * So both halves of the treatment were gone exactly when a user looks at a
+ * notebook: the surface read transparent and the indicator was replaced by a
+ * 1px ring on all four sides. Restated below at (0,6,1), which is one unit
+ * more than each and needs no `!important`.
+ *
+ * Taking the focus ring's box-shadow is safe rather than careless: `focus.css`
+ * gives every `:focus-visible` element an `outline` from the one focus spec, so
+ * core's shadow here is a second ring for the same state — and it was costing
+ * the active-cell indicator to draw it. */
+body[data-jp-theme-name^='Data4Now']
+  .jp-Notebook.jp-mod-commandMode
+  .jp-Cell.jp-mod-active.jp-mod-selected {
+  background: var(--d4n-notebook-active-cell-bg);
+}
+
+body[data-jp-theme-name^='Data4Now']
+  .jp-Notebook.jp-mod-commandMode
+  .jp-Cell.jp-mod-active:focus-visible {
+  box-shadow: inset var(--d4n-notebook-active-cell-indicator-width) 0 0 0
+    var(--d4n-notebook-active-cell-indicator);
+}
+
 /* Core uses the collapser itself as the active-cell bar, painting it with the
  * brand colour. With the indicator above, that would be two bars in two
  * colours a few pixels apart, so the collapser goes back to being purely an
- * affordance: invisible at rest, revealed on hover (PRD §8.2). Its 24px hit
- * area needs the collapser to become wider than its visual line, which is a
- * markup change and belongs to the notebook phase
- * (TODO.md P3-01); until then the hit area is the 4px
- * `--jp-cell-collapser-width` the adapter already supplies. */
+ * affordance: invisible at rest, revealed on hover (PRD §8.2).
+ *
+ * THE 24px HIT AREA, AND IT NEEDED NO MARKUP CHANGE. This comment used to say
+ * the hit area "needs the collapser to become wider than its visual line, which
+ * is a markup change". P3-01 measured the element instead: it is already
+ * `position: relative`, its `overflow` is `visible`, it has no containment, and
+ * neither does `.jp-Cell-inputWrapper` above it. A pseudo-element therefore
+ * widens the target without touching the 4px line.
+ *
+ * The extra 20px is taken ENTIRELY TO THE LEFT, and that is measured rather
+ * than tidy. `elementFromPoint` swept across the collapser shows
+ * `.jp-InputPrompt` beginning 2px to its RIGHT and the editor beyond that,
+ * while everything to its left is cell padding. Growing symmetrically would
+ * have made a click on the prompt collapse the cell.
+ *
+ * `content` is the empty string and there is no background: this element exists
+ * only to be hit. */
+body[data-jp-theme-name^='Data4Now']
+  .jp-Notebook
+  .jp-Cell
+  .jp-Collapser::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 0
+    calc(
+      -1 *
+        (
+          var(--d4n-notebook-collapser-hit-width) -
+            var(--d4n-notebook-collapser-visual-width)
+        )
+    );
+}
+
 body[data-jp-theme-name^='Data4Now']
   .jp-Notebook
   .jp-Cell.jp-mod-active
