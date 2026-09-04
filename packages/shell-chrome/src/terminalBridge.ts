@@ -176,6 +176,18 @@ function applyToWidget(
     'allowTransparency',
     String(t.terminal.allowTransparency) === 'true'
   );
+  // PRD T2 rests on this one option, so it is stated rather than inherited.
+  // `ls --color=always` emits bold+colour (SGR 1;3N), and the two halves of the
+  // single ANSI source resolve that pair by different routes: rendermime maps
+  // bold+blue onto the `.ansi-blue-intense-fg` class, while xterm reaches
+  // `brightBlue` only when this is on. Both land on the same token today because
+  // xterm defaults it to true, which means T2 was passing by luck. Verified in
+  // both modes for all four colours `ls` uses (P3-04).
+  setXtermOption(
+    xterm,
+    'drawBoldTextInBrightColors',
+    String(t.terminal.drawBoldTextInBrightColors) === 'true'
+  );
   setXtermOption(xterm, 'theme', buildTerminalTheme(isLight));
 }
 

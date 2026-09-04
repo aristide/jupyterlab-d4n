@@ -48,6 +48,19 @@ them:
 - Give every `:hover` rule on a Lumino menu a matching `.lm-mod-active` rule
   (PRD M1, R12). `jlpm lint:menus` enforces this.
 - Test both modes every time. A task that you tested in one mode is not done.
+- **Clean up after a browser probe, and check the server, not the disk.** A
+  probe that opens a terminal or a notebook leaves a live session behind. The
+  server keeps it after the browser closes, and deleting the notebook file does
+  **not** end its kernel. The status-bar snapshot counts live kernels and
+  terminals, so the debris makes `test:galata` flaky instead of failing, which
+  is harder to notice. Check with `curl -s .../api/terminals` and
+  `.../api/kernels`. The DELETE endpoints need an auth token, so the reliable
+  cleanup is `docker compose restart jupyter`. This has now cost two sessions.
+- **Let the server warm up before you trust `test:galata`.** The status-bar
+  snapshot is the smallest region in the suite, so it is the first to fail on a
+  slow frame. It failed once on the run straight after a container restart and
+  passed on every later run, alone and in the full suite. If it fails, re-run
+  it before you read it as a regression.
 
 ---
 
@@ -952,9 +965,34 @@ green including D4.
       They went into `notebooks/fixture.ipynb` rather than a second file: the
       server root is that directory, so a new file would move the
       `file-browser` snapshot.
-- [ ] **P3-04** Wire the generated ANSI block into rendermime. Then make sure
-      that PRD T2 holds: `ls --color=always` renders identically in a terminal
-      and in a notebook cell, in both modes.
+- [x] **P3-04** Wire the generated ANSI block into rendermime, and check PRD T2.
+      _Done 2026-09-04. The wiring already existed_ — `generated/ansi.css` is
+      imported at `packages/tokens/style/index.css:27`, and the xterm half is
+      registered as `@d4n/shell-chrome:terminal`. So the task was the check it
+      names, and the check found something.
+      _T2 holds, measured in both modes, two independent halves compared._ - **rendermime** — a notebook fixture carrying **stored** ANSI output, so
+      no kernel and no timing. All 16 computed colours equal the `color.ansi`
+      tokens exactly. - **terminal** — a real terminal session, `printf` over all 16 background
+      codes, screenshotted and decoded pixel by pixel **through the browser's
+      own PNG decoder**, not a hand-rolled one. All 16 appear as real pixels.
+      The terminal image holds exactly **17 distinct colour blocks** — the 16
+      plus the background — so nothing falls back to an xterm default. Each
+      block is exactly 1440px. In dark mode cyan reads 1455: the extra 15 pixels
+      are the cursor, which confirms `cursor` resolves from the same group.
+      _T2 was passing by luck, and now is not (D-030)._ `ls --color=always` does
+      not emit a plain colour. It emits **bold plus colour**, and the two halves
+      resolve that pair by unrelated routes: rendermime maps bold+blue onto
+      `.ansi-blue-intense-fg`, while xterm reaches `brightBlue` only if
+      `drawBoldTextInBrightColors` is on. The bridge set nine terminal options
+      and not that one, so the agreement was an xterm default nobody had written
+      down. It is now a token, set explicitly.
+      _Proved by breaking it._ With the token at `false`, all four `ls` colours
+      diverge in both modes — eight mismatches out of eight. So the option
+      really does reach xterm rather than being swallowed by the try/catch in
+      `setXtermOption`, and T2 really does rest on it.
+      _T2 is not automated._ It needs a live terminal session, a canvas
+      screenshot and a pixel decode. The next person to touch xterm must re-run
+      it by hand; D-030 records exactly how.
 - [ ] **P3-05** CodeMirror 6 theme and `HighlightStyle`. It is scaffolded in
       `packages/editor-theme/` with 78 distinct Lezer tags. This covers the whole
       tag set, not the 13-item sample in the PRD. **Test it against all eleven

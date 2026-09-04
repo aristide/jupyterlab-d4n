@@ -1546,6 +1546,47 @@ audit rather than trusting the ramp.
 
 ---
 
+## D-030 — T2 was passing by luck: xterm bold-to-bright is now stated, not inherited
+
+**Found and fixed during P3-04, 2026-09-04.** `terminal.drawBoldTextInBrightColors`
+becomes a token, and `terminalBridge.ts` sets it explicitly on every terminal.
+
+### The two halves of the ANSI source agreed by different routes
+
+PRD T2 asks that `ls --color=always` render identically in a terminal and in a
+notebook cell. `ls` does not emit a plain colour. It emits **bold plus colour** —
+SGR `1;3N`, for example `ESC[01;34m` for a directory — and the two halves
+resolve that pair by paths that have nothing in common:
+
+| half       | route                                                           |
+| ---------- | --------------------------------------------------------------- |
+| rendermime | JupyterLab maps bold+blue to the `.ansi-blue-intense-fg` class  |
+| xterm      | reaches `brightBlue` only if `drawBoldTextInBrightColors` is on |
+
+The bridge sets nine terminal options. That was not one of them. The two halves
+landed on the same token purely because xterm defaults the option to true.
+
+### Proved by breaking it
+
+Set the token to `false`, rebuild, and all four `ls` colours diverge in both
+modes — the terminal stops using the colour rendermime uses, eight mismatches
+out of eight. So the option is genuinely applied through the bridge rather than
+swallowed by the try/catch in `setXtermOption`, and T2 genuinely rests on it.
+Restored afterwards.
+
+### The general lesson
+
+An acceptance criterion that two independent subsystems agree is only as strong
+as the assumptions they do not share. Here both halves were correct, both were
+token-driven, and the agreement between them was still an upstream default that
+nobody had written down.
+
+**Revisit when** xterm is upgraded. The check is the one above: emit
+`ESC[01;3Nm` in both halves and compare, rather than trusting that the default
+has held.
+
+---
+
 ## Still open
 
 Tracked in `TODO.md`; listed here so the set is visible in one place.

@@ -845,6 +845,11 @@
       "$value": "false",
       "$type": "other"
     },
+    "drawBoldTextInBrightColors": {
+      "$value": "true",
+      "$type": "other",
+      "$description": "ON, and stated rather than inherited. This is the one option PRD T2 depends on. `ls --color=always` emits bold+colour (SGR 1;3N - for example ESC[01;34m for a directory), and the two halves of the single ANSI source resolve that pair by different routes: rendermime maps bold+blue onto the .ansi-blue-intense-fg class, while xterm reaches brightBlue only when this option is on. xterm defaults it to true, so T2 was passing by luck rather than by construction. Written down so that an xterm release changing its default cannot silently split the terminal from the notebook (P3-04)."
+    },
     "padding": {
       "$value": "{space.2}",
       "$type": "dimension"

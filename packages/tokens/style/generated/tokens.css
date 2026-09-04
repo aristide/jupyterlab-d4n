@@ -663,6 +663,7 @@ body[data-jp-theme-name^='Data4Now'] {
   --d4n-terminal-scrollback: 10000;
   --d4n-terminal-minimum-contrast-ratio: 1;
   --d4n-terminal-allow-transparency: false;
+  --d4n-terminal-draw-bold-text-in-bright-colors: true;
   --d4n-terminal-padding: var(--d4n-space-2);
   --d4n-notebook-cell-gap: var(--d4n-space-2);
   --d4n-notebook-active-cell-bg: var(--d4n-color-surface-raised);

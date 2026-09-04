@@ -547,6 +547,7 @@ export const d4n = {
       "scrollback": "10000",
       "minimumContrastRatio": "1",
       "allowTransparency": "false",
+      "drawBoldTextInBrightColors": "true",
       "padding": "8px"
     },
     "notebook": {
@@ -1263,6 +1264,7 @@ export const d4n = {
       "scrollback": "10000",
       "minimumContrastRatio": "1",
       "allowTransparency": "false",
+      "drawBoldTextInBrightColors": "true",
       "padding": "8px"
     },
     "notebook": {
