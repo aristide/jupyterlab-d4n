@@ -56,11 +56,25 @@ them:
   is harder to notice. Check with `curl -s .../api/terminals` and
   `.../api/kernels`. The DELETE endpoints need an auth token, so the reliable
   cleanup is `docker compose restart jupyter`. This has now cost two sessions.
-- **Let the server warm up before you trust `test:galata`.** The status-bar
-  snapshot is the smallest region in the suite, so it is the first to fail on a
-  slow frame. It failed once on the run straight after a container restart and
-  passed on every later run, alone and in the full suite. If it fails, re-run
-  it before you read it as a regression.
+- **Never run a browser probe while `test:galata` is running.** This is the same
+  hazard as the one above and it is the one that actually bit. A probe that
+  opens a terminal changes the status bar, which the suite screenshots, so the
+  suite fails on a surface the probe never touched. Measured: three runs at
+  `--workers=1` while probes were running gave 14 passed, then 3 failed, then
+  2 failed, on different surfaces each time. The same suite on a quiet server
+  passes 14 of 14. An earlier note here blamed a cold server and worker
+  contention. Both were wrong. Treat the suite as needing exclusive use.
+- **Galata itself flakes, and it does not look like a snapshot failure.** On a
+  clean, exclusive server the theme-pin test failed with
+  `apiResponse.json: Response has been disposed` at
+  `node_modules/@jupyterlab/galata/src/galata.ts:675`. That is Galata reading an
+  API response after the context began closing. It is not an assertion, not a
+  picture, and no CSS change can cause it. `retries` is 0, so it is reported as
+  a hard failure. Read the error before you read a failure as a regression.
+- **`test:selectors` drops one entry on a cold server.** The
+  `notebook-error-output` state needs a kernel to execute a traceback, and the
+  first run after `docker compose restart` is slow enough to miss it: 102
+  matched instead of 103, `0 broken` either way. It comes back on the next run.
 
 ---
 
@@ -1025,12 +1039,36 @@ green including D4.
       directory, because it generates its CSS through `EditorView.theme()`.
       So `test:selectors` cannot see that it depends on `.cm-matchingBracket`,
       `.cm-focused` and the rest. If upstream renames one, nothing fails.
-- [ ] **P3-06** Terminal bridge. It is scaffolded. **Test all four triggers**
-      (PRD §8.7.4). Trigger (b) matters most: terminals that you open _after_ a
-      theme switch. This is the most common shipped bug in this class of work,
-      and it appears only in the order theme-then-open.
-      _Done when:_ T1 to T10 hold, including T8, which is 20 switches one after
-      the other.
+- [x] **P3-06** Terminal bridge, all four triggers and T1 to T10.
+      _Done 2026-09-04. Nine of ten hold. T3 does not, and the reason is not
+      ours to fix alone (D-032, Still-open Q9)._
+      _The trigger the entry warned about does not reproduce._ **T6**, the
+      theme-then-open order, was checked by switching to dark through the
+      command palette and only then opening a terminal: dominant background
+      `#0E2542`, our dark ANSI background, not core's inherited one.
+      _Criterion by criterion:_ - **T1** one generated source for both halves — held, `lint:tokens` and
+      the clean-tree job enforce it. - **T2** `ls --color=always` identical — done in P3-04, both modes. - **T3** **FAILS.** IPython 9.16.1 paints tracebacks with **256-colour**
+      codes, `38;5;28` and `38;5;167`, which a sixteen-slot theme does not
+      reach. They are `#008700` and `#D75F5F`, and three of the four
+      mode pairings fall below 4.5:1 — worst `3.28:1`. See D-032. - **T4** all 16 against both backgrounds — settled in P0. The audit covers
+      it and the PRD text is the thing that is wrong. - **T5** box drawing — 30 `│` glyphs measured at **one** distinct pitch of
+      12px, spread 0. No shear. - **T6** terminal opened after a switch — held, see above. - **T7** blink off under reduced motion — **not observable in this
+      harness.** A stock theme behaves identically, so the cursor does not
+      blink headless at all and no pixel test can separate the two states. The
+      option path is proven live by other means: the terminal renders at the
+      JetBrains Mono pitch, and `fontFamily` reaches xterm through the same
+      `setJupyterOption` that carries `cursorBlink`. Needs a human with a real
+      browser. - **T8** twenty consecutive switches — held. Ends on dark with our
+      `#0E2542`, not core's inherited palette. - **T9** viewport scrollbar matches the app spec — **held after a fix.** - **T10** `FitAddon` at any width — held at 800, 1024, 1280 and 1600. The
+      screen never overflows the panel.
+      _The T9 fix, and the comment that was wrong._ `scrollbars.css` said that
+      `scrollbar-color` and `scrollbar-width` both inherit, so one declaration on
+      `<body>` reaches every scroller. Only the first does. Measured: with
+      `body` at `thin`, `.xterm-viewport` computed the body `scrollbar-color`
+      and `scrollbar-width: auto`. On Firefox, which has no
+      `::-webkit-scrollbar` fallback, every inner scroller kept the default
+      width. The width now uses the same descendant form the WebKit rules use,
+      and `.xterm-viewport` computes `thin`.
 - [ ] **P3-07** Autocomplete popup, inline signature and tooltip, and console
       panel.
 - [ ] **P3-08** Wire the CM6 breakpoint gutter and the execution-line decorations

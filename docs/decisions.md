@@ -1632,16 +1632,74 @@ whether it replaces the highlight span, and the way to answer it is to look.
 
 ---
 
+## D-032 — T3 fails: IPython paints tracebacks with 256-colour codes our palette does not reach
+
+**Found during P3-06, 2026-09-04. Not fixed — the fix is a scope decision, so it
+goes to a human rather than being chosen quietly.**
+
+### What T3 asks and what actually happens
+
+T3 asks that an IPython traceback be fully legible in both modes and pass 4.5:1
+on every ANSI colour used. IPython 9.16.1 does not use only the sixteen ANSI
+slots. Captured from the container, raw:
+
+```
+^[[31mValueError^[[39m     Traceback (most recent call last)
+^[[36mCell^[[39m ^[[32mIn[1]^[[39m
+^[[32m----> ^[[39m^[[38;5;28;01mraise^[[39;00m ^[[38;5;167;01mValueError^[[39;00m(...)
+```
+
+`31`, `36`, `32` and `39` are basic SGR and resolve through our palette. But
+`38;5;28` and `38;5;167` are **256-colour** codes. Those come from xterm's
+built-in colour cube, which our sixteen-slot theme does not touch.
+
+### The two colours, and they are not legible
+
+Cube index to RGB is `16 + 36r + 6g + b` over the levels
+`0, 95, 135, 175, 215, 255`:
+
+| code       | colour    | used for       | on `#FFFFFF` | on `#0E2542` |
+| ---------- | --------- | -------------- | ------------ | ------------ |
+| `38;5;28`  | `#008700` | the `raise` kw | 4.70:1 pass  | **3.28:1**   |
+| `38;5;167` | `#D75F5F` | exception name | **3.69:1**   | **4.18:1**   |
+
+Three of four pairings are below 4.5:1. So T3 is not met, and it never was —
+nothing in the audit covers indices 16 to 255, because nothing in the design
+system describes them.
+
+### Three ways out, and the choice is not an engineering one
+
+1. **Own the cube.** xterm's `ITheme` takes `extendedAnsi`, an array for indices
+   16 to 255. That is 240 designed colours, and the audit would grow by the same
+   order. It is the only option that makes the guarantee true for any tool, not
+   just IPython.
+2. **Fix it at the source.** The codes come from IPython's Pygments style. A
+   deployment that pins a 16-colour-safe style gets a compliant traceback
+   without the theme changing at all. It fixes IPython and nothing else.
+3. **Revise T3** to say "every colour the theme controls", which is honest about
+   what a sixteen-slot palette can promise.
+
+**This is the same shape as T4** — an acceptance criterion written as though the
+palette controlled more than it does. T4 was found unsatisfiable as written and
+carried forward for a PRD revision. T3 should be decided at the same time.
+
+**The general lesson.** "Every ANSI colour used" is a bigger set than "every
+ANSI colour we define". A terminal renders whatever the program emits, and a
+sixteen-colour theme is not a guarantee about a 256-colour stream.
+
+---
+
 ## Still open
 
 Tracked in `TODO.md`; listed here so the set is visible in one place.
 
-| PRD Q | Question                                                      | Blocked on   | TODO  |
-| ----- | ------------------------------------------------------------- | ------------ | ----- |
-| Q1    | Monospace ramp — authored or supplied?                        | Design       | P0-05 |
-| Q3    | Does the launch-target readout ship in v1?                    | Design + PM  | P2-08 |
-| Q4    | How much of the icon set exists vs needs authoring?           | Design       | P0-04 |
-| Q5    | matplotlib/Vega opt-in helper in v1 or deferred?              | PM           | P3-14 |
-| Q8    | Upstream the a11y contrast fixes to core?                     | Eng Lead     | P6-08 |
-| —     | 20px-native rail icon export — the set is 24px scaled (D-018) | Design       | P2-04 |
-| —     | Rail tooltip: replace the renderer, or accept native (D-019)  | Design + Eng | P2-04 |
+| PRD Q | Question                                                        | Blocked on   | TODO  |
+| ----- | --------------------------------------------------------------- | ------------ | ----- |
+| Q1    | Monospace ramp — authored or supplied?                          | Design       | P0-05 |
+| Q3    | Does the launch-target readout ship in v1?                      | Design + PM  | P2-08 |
+| Q4    | How much of the icon set exists vs needs authoring?             | Design       | P0-04 |
+| Q5    | matplotlib/Vega opt-in helper in v1 or deferred?                | PM           | P3-14 |
+| Q8    | Upstream the a11y contrast fixes to core?                       | Eng Lead     | P6-08 |
+| Q9    | T3: own the 256-colour cube, pin IPython, or revise T3 (D-032)? | PM + Design  | P3-06 |
+| —     | 20px-native rail icon export — the set is 24px scaled (D-018)   | Design       | P2-04 |
+| —     | Rail tooltip: replace the renderer, or accept native (D-019)    | Design + Eng | P2-04 |

@@ -8,11 +8,19 @@
  *
  * Two engines, two mechanisms, one design:
  *
- *   Firefox gets `scrollbar-color` / `scrollbar-width`, which inherit — so one
- *   declaration on <body> reaches every scroller in the application. Core sets
- *   the same property on `[data-jp-theme-scrollbars='true']`; the rule below
- *   beats it on specificity, which matters because the two themes are
- *   registered with `themeScrollbars: true` and both rules will be live.
+ *   Firefox gets `scrollbar-color` and `scrollbar-width`. ONLY THE FIRST OF
+ *   THOSE INHERITS, which this comment used to get wrong. Measured on the
+ *   running instance: with `body` set to `thin`, `.xterm-viewport` computes
+ *   `scrollbar-color` to the body value and `scrollbar-width` to `auto`. So a
+ *   single declaration on <body> reaches every scroller for the colour and
+ *   reaches nothing but <body> itself for the width — and on Firefox, where
+ *   there is no `::-webkit-scrollbar` fallback, every inner scroller kept the
+ *   default width (P3-06, checking T9).
+ *
+ *   The width therefore uses the same descendant form the WebKit rules use.
+ *   Core sets the colour property on `[data-jp-theme-scrollbars='true']`; the
+ *   rule below beats it on specificity, which matters because the two themes
+ *   are registered with `themeScrollbars: true` and both rules will be live.
  *
  *   WebKit/Blink get `::-webkit-scrollbar`, which does NOT inherit and has to
  *   be matched against the scrolling element itself — hence the descendant
@@ -26,6 +34,13 @@
 
 body[data-jp-theme-name^='Data4Now'] {
   scrollbar-color: var(--d4n-scrollbar-thumb) var(--d4n-scrollbar-track);
+  scrollbar-width: thin;
+}
+
+/* The width does not inherit, so it is stated on the descendants as well. The
+ * `:not()` is the same exclusion the WebKit rules make, and for the same
+ * reason: core's 4px variant has no room for this spec. */
+body[data-jp-theme-name^='Data4Now'] :not(.jp-scrollbar-tiny) {
   scrollbar-width: thin;
 }
 
