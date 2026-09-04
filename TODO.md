@@ -674,19 +674,41 @@ Galata is green.
       tabular figures, separators, and the passive/interactive split measured
       item by item in both modes.
       **Core's plugin stays enabled** — nothing added to `page_config.json`.
-- [ ] **P2-14** Status bar overflow. This is the one part of P2-07 that needs
-      JavaScript. Core hides `priority: 0` items below **630px** with a private
-      `_isWindowNarrow`. §8.5.2 asks for **1024px** and a `⋯` trigger that
-      collapses items from right to left into a popover.
-      Decide this task on its own merits. To override a private field is fragile
-      across minor versions. A real `⋯` trigger needs measurement and a popover,
-      which is most of a plugin replacement.
-      **P2-02 is the precedent for a third option.** It is a plugin that provides
-      no token, replaces nothing, and does the missing work over the public API
-      (`docs/decisions.md` D-017). `IStatusBar` exposes the items it holds, so
-      the same shape can apply. D-015 already decided that the swap does not
-      happen, so `packages/shell-chrome/src/statusBar.ts` is the stub for this
-      task, not for a T3 replacement.
+- [ ] **P2-14** Status bar overflow — BLOCKED, and the stub's premise is
+      disproven. This entry used to say the shape was "settled by precedent":
+      follow D-017 and drive `IStatusBar` the way P2-02 drives the menu bar.
+      **Measured on 2026-09-04: that API does not exist.**
+      _`IStatusBar` exposes exactly one method_, `registerStatusItem(id, item)`.
+      It does not expose the items it holds. `StatusBar` keeps `_leftRankItems`
+      and `_rightRankItems` **private**. D-017 worked because Lumino's `MenuBar`
+      has public `menus`, `addMenu`, `clearMenus` and `overflowMenu`. There is
+      no equivalent here, so "add the missing behaviour over the public API" is
+      not available.
+      _What core actually does._ `_refreshItem` shows an item when
+      `isActive() && !(priority === 0 && _isWindowNarrow())`, else hides it.
+      `_isWindowNarrow` is `window.innerWidth <= 630`, with core's own comment:
+      "The value for 630px was chosen by trial and error." So only `priority: 0`
+      items participate, the threshold is private, and the drop has no
+      affordance — a hidden item is simply gone.
+      _1024px is the wrong number, as the stub predicted._ Measured with
+      `fixture.ipynb` open: 8 of 14 items render, totalling **708px**. The bar
+      fits at 800px and overflows at 700px. At 1024px there is 316px to spare,
+      so collapsing there would hide items with plenty of room — the same lesson
+      the menu bar taught, and by a similar factor.
+      _The concrete harm, and it is narrow._ Between **630px and ~708px** the
+      content exceeds the bar and is clipped, because core's drop has not fired
+      yet. Below 630px core hides four items and the rest fit.
+      _Why it is blocked rather than done._ Every route contradicts something
+      already decided: 1. **Own `IStatusBar`** — a T3 swap. **D-015 decided against exactly
+      this**, and `statusBar.ts` says in as many words: do not register a
+      plugin that provides `IStatusBar`. 2. **Move core's item nodes into a popover** — real DOM manipulation of
+      another plugin's widgets, and the only way to keep them interactive.
+      Several status items are controls, not readouts: a popover that merely
+      lists their text loses the kernel picker. 3. **Reach into `_leftRankItems` / `_isWindowNarrow`** — private fields,
+      the same class §7.4(3) forbids for variables. 4. **Accept core's behaviour** and refuse §8.5.2's ⋯ trigger in writing,
+      optionally fixing only the 630–708px clipping in CSS.
+      _Done when:_ a person picks one of those four, or §8.5.2 is rewritten. If
+      the answer is 4, the CSS half is small and this becomes a one-hour task.
       Expect this breakpoint to move as the menu bar breakpoint did. 1024px is a viewport
       number for a bar whose room depends on what is registered in it.
       _Done when:_ items collapse at 1024px and the trigger opens a popover on

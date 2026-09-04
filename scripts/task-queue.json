@@ -6,12 +6,12 @@
       "order": 1,
       "id": "P2-14",
       "title": "Status bar overflow — collapse at 1024px into a ⋯ popover",
-      "runnable": true,
+      "runnable": false,
       "risk": "medium",
       "dependsOn": [],
-      "blockerKind": "none",
-      "reason": "Both branches of the Done when are inside an agent's reach — a public-API plugin on the P2-02 precedent, or dropping the task with a written reason — and D-015 already closed off the swap option, so no tier decision is left for a person.",
-      "riskReason": "New shell plugin acting on IStatusBar: statusBar.ts explicitly forbids registering it as an IStatusBar provider, and doing so would shadow core's working bar; the 1024px viewport number is also expected to move the way the menu bar's did."
+      "blockerKind": "human_decision",
+      "reason": "P2-14 assumed IStatusBar exposes its items so the D-017 pattern would apply. Measured 2026-09-04: it exposes only registerStatusItem, and StatusBar keeps its item lists private, so there is no public API to drive. Every remaining route contradicts a recorded decision - owning IStatusBar is the T3 swap D-015 refused, moving core item nodes into a popover is DOM manipulation of another plugin widgets, and reading _leftRankItems or _isWindowNarrow is the private-field equivalent of what 7.4(3) forbids. A person must pick one, or accept core behaviour and refuse 8.5.2 in writing.",
+      "riskReason": "Whichever route is chosen changes a bar every user looks at constantly, and one of the four reverses a decision already taken."
     },
     {
       "order": 2,
