@@ -1069,8 +1069,29 @@ green including D4.
       `::-webkit-scrollbar` fallback, every inner scroller kept the default
       width. The width now uses the same descendant form the WebKit rules use,
       and `.xterm-viewport` computes `thin`.
-- [ ] **P3-07** Autocomplete popup, inline signature and tooltip, and console
-      panel.
+- [x] **P3-07** Autocomplete popup, inline signature, tooltip and console panel.
+      _Done 2026-09-04._ Three new files — `completer.css`, `console.css`,
+      `tooltip.css` — plus 17 selector registrations and 26 new contrast
+      pairings. The audit goes from 483 to 509, 0 failing.
+      _Measured in both modes, with a live kernel:_ - **completer popup** radius 6px, 1px border, elevation shadow, plate
+      `#FFFFFF` / `rgb(18,42,71)`. - **items, 5 of them** — at rest transparent, active
+      `rgb(214,239,239)` / `rgb(18,55,69)`. - **matched substring** the `<mark>` renders at weight **700** in the
+      strong text colour, so the match reads without relying on hue. - **monogram** an inverse plate, navy on white in light and near-white on
+      navy in dark, weight 600. - **type badge** secondary colour, so it recedes behind the name. - **tooltip** radius 6px, max-width 750px, `pre` in JetBrains Mono. - **console** input on the raised plate with a 1px top border and
+      `8px 12px` padding, content on canvas.
+      _Two selectors are registered but were never on screen._
+      `.jp-CodeConsole-banner` and `.jp-Completer-docpanel` both exist in the
+      served bundle — checked there rather than in `node_modules`, because
+      **`@jupyterlab/completer` is not in `node_modules` at all** and a search
+      there returns zero for classes that plainly exist. JupyterLab 4 does not
+      render the banner by default, and the doc panel needs a completion that
+      carries documentation.
+      _All 17 new selectors are SKIPPED by `test:selectors`, not matched._ The
+      harness has no automation for the completer, tooltip or console states, so
+      nothing guards them. 0 broken, but that number means less than it looks
+      here. Driving them needs a kernel: open a console, run `import os`, type
+      `os.pa` and press Tab. A first attempt with `pri` returned an empty
+      completer ten times in a row — the namespace was too thin, not the styling.
 - [ ] **P3-08** Wire the CM6 breakpoint gutter and the execution-line decorations
       to the debugger. They are already built in
       `packages/editor-theme/src/debugDecorations.ts`. They live in the editor

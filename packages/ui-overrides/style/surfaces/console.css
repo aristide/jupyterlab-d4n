@@ -1,0 +1,90 @@
+/* SURFACE: console panel (PRD §6.4, T2 — prompt cell, banner, history separators)
+ *
+ * Upstream selectors verified against:
+ *   @jupyterlab/console  4.6.3  style/base.css
+ *   @jupyterlab/cells    4.6.3  style/base.css
+ *   (declared range: @jupyterlab/* ^4.5.0)
+ *
+ * Every selector is mirrored in ../selectors.json (PRD §7.4(5)).
+ *
+ * THE TWO HALVES OF A CONSOLE WERE THE SAME COLOUR
+ *
+ * A console is a transcript above an input. Core paints both `.jp-CodeConsole-
+ * content` and `.jp-CodeConsole-input` with `--jp-layout-color0`, and separates
+ * them with one hardcoded declaration:
+ *
+ *     box-shadow: 0 0.4px 6px 0 rgba(0, 0, 0, 0.1);
+ *
+ * carrying an upstream comment that says a variable should exist for it. So the
+ * boundary was a black shadow, which is invisible on a dark panel, over two
+ * identical fills. Measured, both modes, before this file existed: history and
+ * prompt backgrounds at **1.00:1** — `#FFFFFF` on `#FFFFFF` in light and
+ * `#0E2542` on `#0E2542` in dark. The `.lm-SplitPanel-handle` between them
+ * measures 0px tall, so it draws nothing either.
+ *
+ * This is the same shape as the rendered-table defect in D-029: two identical
+ * colours where the design intends separation, surviving because nobody
+ * measured the pair.
+ *
+ * The prompt region now takes `surface.raised` and a `border.default` hairline
+ * on top, which is the device every other docked region in this package uses
+ * (`toolbar.css` bottom border, `bottom-dock.css` top border) rather than a
+ * shadow — shadows here belong to floating layers. That gives separation in both
+ * modes and does not depend on either one alone: in DARK the fill carries it
+ * (raised vs canvas 1.06:1) and the line reinforces it (1.30:1); in LIGHT raised
+ * and canvas are both white by design, so the line carries it alone (1.54:1).
+ *
+ * THREE STRENGTHS, IN ORDER
+ *
+ * The console needs three separations that must not look alike, so they are one
+ * step apart on the decorative border ramp (D-008 — all three are decoration and
+ * none is gated at 3:1):
+ *
+ *   region boundary   history | prompt      border.default   1.54 / 1.30
+ *   entry separator   one entry | the next  border.subtle    1.22 / 1.13
+ *   banner            plate, not a line     surface.sunken   1.08 / 1.07
+ *
+ * THE BANNER IS MACHINE PREAMBLE, NOT TRANSCRIPT
+ *
+ * `.jp-CodeConsole-banner` holds the interpreter's greeting. Core hides its
+ * prompt gutter and does nothing else, so it arrived in the same font and the
+ * same `text.primary` as the user's own executed code — measured identical,
+ * both modes. It now sits on `surface.sunken` with secondary text, the same
+ * device rendered markdown gives a fenced block (P3-03): a plate that says
+ * "machine output" before a word of it is read. The plate makes the entry
+ * separator below it redundant, so the separator rule skips that one edge.
+ */
+
+/* --- The region boundary ---------------------------------------------------- */
+
+body[data-jp-theme-name^='Data4Now'] .jp-CodeConsole-input {
+  background: var(--d4n-color-surface-raised);
+  border-top: var(--d4n-border-width-thin) solid var(--d4n-color-border-default);
+  box-shadow: none;
+}
+
+/* --- History separators ----------------------------------------------------- */
+
+/* One hairline between consecutive entries. `:not(.jp-CodeConsole-banner)` names
+ * the PRECEDING sibling, so the edge this skips is the banner-to-first-entry one
+ * — the banner's own plate already draws that boundary. */
+body[data-jp-theme-name^='Data4Now']
+  .jp-CodeConsole-content
+  > .jp-Cell:not(.jp-CodeConsole-banner)
+  + .jp-Cell {
+  border-top: var(--d4n-border-width-thin) solid var(--d4n-color-border-subtle);
+}
+
+/* --- The banner ------------------------------------------------------------- */
+
+body[data-jp-theme-name^='Data4Now'] .jp-CodeConsole-banner {
+  background: var(--d4n-color-surface-sunken);
+  border-radius: var(--d4n-radius-sm);
+  margin-bottom: var(--d4n-space-2);
+}
+
+/* The greeting text. CodeMirror renders it, so the colour has to be restated on
+ * `.cm-content` rather than inherited — the editor theme sets it there. */
+body[data-jp-theme-name^='Data4Now'] .jp-CodeConsole-banner .cm-content {
+  color: var(--d4n-color-text-secondary);
+}

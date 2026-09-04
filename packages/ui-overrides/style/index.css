@@ -40,6 +40,15 @@
 @import url('./surfaces/dialog.css');
 @import url('./surfaces/notebook.css');
 @import url('./surfaces/markdown.css');
+
+/* console.css follows notebook.css because a console entry IS a `.jp-Cell` and
+ * inherits every rule that file writes; the console-specific rules have to be
+ * able to answer them. The two popovers follow it for the same reason in the
+ * other direction: both are invoked from an editor, and both are read against
+ * whatever surface the editor sits on. */
+@import url('./surfaces/console.css');
+@import url('./surfaces/completer.css');
+@import url('./surfaces/tooltip.css');
 @import url('./surfaces/inputs.css');
 @import url('./surfaces/buttons.css');
 

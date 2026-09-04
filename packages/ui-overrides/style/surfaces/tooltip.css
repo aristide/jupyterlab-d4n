@@ -1,0 +1,78 @@
+/* SURFACE: inline signature popover (PRD §6.4, T2 — `.jp-Tooltip`)
+ *
+ * Upstream selectors verified against:
+ *   @jupyterlab/tooltip     4.6.3  style/base.css, lib/tooltip.js
+ *   @jupyterlab/rendermime  4.6.3  style/base.css
+ *   (declared range: @jupyterlab/* ^4.5.0)
+ *
+ * Every selector is mirrored in ../selectors.json (PRD §7.4(5)).
+ *
+ * THIS IS NOT THE `--d4n-tooltip-*` TOOLTIP
+ *
+ * Two different things share the word. `--d4n-tooltip-bg` and its siblings
+ * describe the small dark hover label from PRD §6.5 — inverse surface, 280px
+ * cap, 500ms delay. `.jp-Tooltip` is the Shift+Tab signature popover from PRD
+ * §6.4: a 750x350 panel of kernel-rendered code that the user reads and scrolls.
+ *
+ * It therefore takes the POPOVER chrome, the same one `.jp-Completer` takes, and
+ * not the hover-label tokens. Measured after: both popovers render on
+ * `surface.raised` behind a `border.default` hairline at `elevation.4`, with the
+ * same radius. That was already true of everything except the radius, which core
+ * sets on neither.
+ *
+ * THE SIGNATURE WAS NOT IN OUR CODE FONT
+ *
+ * The only content is a `<pre>`, and it rendered in the browser's default
+ * monospace. Measured, both modes, before this file existed:
+ *
+ *     .jp-Tooltip-content   "JetBrains Mono", "SF Mono", Menlo, ... / 11px
+ *     .jp-Tooltip pre       monospace / 13px
+ *
+ * The cause is not a missing declaration on the tooltip. It is the cascade:
+ * `.jp-RenderedText` sets `font-family` on the CONTAINER, and the user-agent
+ * rule `pre { font-family: monospace }` beats inheritance on the child. Core's
+ * one `pre` rule — `.jp-ThemedContainer .jp-RenderedText pre` — sets `font-size`
+ * and stops there, which is why the SIZE was right and the FAMILY was not.
+ *
+ * SO THE SAME DEFECT REACHES EVERY `.jp-RenderedText pre`, and that includes the
+ * notebook output area. Measured on a live stdout stream: container JetBrains
+ * Mono 13px, `pre` monospace 13px. That surface belongs to P3-02 and its Galata
+ * baseline, so it is recorded in TODO.md rather than changed from here. Fixed
+ * here for the two popovers this task owns, and identically in completer.css so
+ * they cannot drift.
+ *
+ * WHY THERE IS NO FOCUS RULE, THOUGH CORE WRITES `outline: 0`
+ *
+ * `.jp-Tooltip:focus { outline: 0 }` looks like the bare suppression A6 forbids.
+ * It is not reachable as one. Read from 4.6.3 `lib/tooltip.js`: `tabIndex` is 0
+ * only from `onActivateRequest`, and the sole caller is the `mousedown` branch
+ * of `handleEvent`. So the node takes focus from a pointer press and never from
+ * the keyboard — `:focus-visible` does not match, and the ring core suppresses
+ * is one the browser would not have drawn. Same case focus.css already documents
+ * for dialog buttons. Verified live: after Shift+Tab the active element is
+ * `cm-content`, not the tooltip.
+ */
+
+/* The popover frame. Background, border and elevation already arrive from core's
+ * variables through the Tier-4 adapter, so only the radius and the padding are
+ * written here.
+ *
+ * The padding is not cosmetic tidying. Core pads the frame by 4px and then
+ * indents the rendered text by another 4px, so the signature sat 8px from the
+ * left edge and 4px from the other three — an asymmetry that reads as a
+ * misalignment on a panel this size. It moves onto one owner below: the frame
+ * carries the inset, the content carries none. */
+body[data-jp-theme-name^='Data4Now'] .jp-Tooltip {
+  border-radius: var(--d4n-radius-md);
+  padding: var(--d4n-space-2);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-Tooltip .jp-Tooltip-content {
+  padding: 0;
+}
+
+/* The signature itself. See the header note. */
+body[data-jp-theme-name^='Data4Now'] .jp-Tooltip pre {
+  font-family: var(--d4n-font-family-mono);
+  font-size: var(--d4n-font-size-code);
+}

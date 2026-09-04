@@ -1,0 +1,148 @@
+/* SURFACE: autocomplete popup (PRD §6.4, T2 — `.jp-Completer`)
+ *
+ * Upstream selectors verified against:
+ *   @jupyterlab/completer  4.6.3  style/base.css
+ *   (declared range: @jupyterlab/* ^4.5.0)
+ *
+ * Every selector is mirrored in ../selectors.json (PRD §7.4(5)).
+ *
+ * THE TYPE BADGE CARRIES A LETTER, AND CORE PAINTS THAT LETTER WHITE
+ *
+ * `.jp-Completer-monogram` is a hardcoded `color: white` in core. The badge
+ * behind it is `--jp-completer-type-background0..10`, which the Tier-4 adapter
+ * points at the ten `color.syntax.*` hues so the swatch beside `def` is the
+ * colour the editor paints a function name with.
+ *
+ * That ramp is dark-on-light in LIGHT mode and light-on-dark in DARK mode. So
+ * core's white letter is correct in one mode and invisible in the other.
+ * Measured on a live completion list, dark mode, before this file existed:
+ *
+ *     ci=2  syntax.name      #F4F6FA   white on it   1.08:1
+ *     ci=1  syntax.function  #9CD4D4   white on it   1.64:1
+ *     ci=4  syntax.meta      #FF6B86   white on it   2.73:1
+ *
+ * The letter is `color.text.inverse0` here instead, which is white in light and
+ * near-black in dark — the one token defined to invert with the mode. Every one
+ * of the ten pairings then clears 4.5:1; the tightest are light `syntax.comment`
+ * at 5.44:1 and dark `syntax.meta` at 6.08:1 (docs/decisions.md D-033).
+ *
+ * WHY THE ACTIVE ROW LOSES CORE'S BRAND FILL
+ *
+ * Core fills the keyboard-active row with `--jp-brand-color1` and sets the row
+ * text to `white`, then restates the type NAME at `--jp-ui-font-color0`. That
+ * last rule is the defect: on our brand navy the type name measured 1.51:1 in
+ * light mode — near-black on navy, effectively unreadable.
+ *
+ * The row now takes the treatment every other selected row in this application
+ * uses — `selection.active` plate, text from the normal ramp — so the whole row
+ * reads without any per-child restatement fighting the fill. Same tokens as
+ * `command-palette.css` and `file-browser.css`.
+ *
+ * The accent is a full inset ring rather than the leading bar those two use, and
+ * that is forced rather than chosen. `.jp-Completer-item` is a three-column grid
+ * whose FIRST column is the opaque 24px type badge, so an `inset` box-shadow on
+ * the row is painted under that badge and never appears. An `outline` is painted
+ * after descendants, so it survives. `running.css` already carries this variant
+ * for the same reason.
+ */
+
+/* The popover. Background, border and elevation already arrive from core's own
+ * variables through the Tier-4 adapter; the radius does not, because core sets
+ * none at all.
+ *
+ * A radius needs clipping or the first and last rows paint square corners over
+ * the rounded frame, and the clipping is already there: `.jp-Completer` carries
+ * `jp-ThemedContainer`, and `.jp-ThemedContainer` is `overflow: hidden`. Read
+ * off the live cascade rather than assumed, and restating it here would be the
+ * same declaration twice. It is a real dependency though, so the class pair is
+ * registered in ../selectors.json — if it goes, the corners go with it. */
+body[data-jp-theme-name^='Data4Now'] .jp-Completer {
+  border-radius: var(--d4n-radius-md);
+}
+
+/* Row hover. Core uses `--jp-layout-color2`, which the adapter points at
+ * `surface.sunken` — an inset-well colour, not a hover colour. The adapter's own
+ * note on that variable says structural CSS re-points hover explicitly rather
+ * than letting one variable carry two meanings; this is that re-pointing.
+ *
+ * `opacity` is set back to 1 in its own rule, deliberately unfiltered by
+ * `:not(.jp-mod-active)`. Core dims the WHOLE row to 0.8 on hover, which
+ * composites the text and the badge along with the plate, and it applies to the
+ * active row too when the pointer happens to rest on it. Measured: the match
+ * text fell from 10.90:1 to 10.07:1 for no gain in signal. */
+body[data-jp-theme-name^='Data4Now'] .jp-Completer-item:hover {
+  opacity: 1;
+}
+
+body[data-jp-theme-name^='Data4Now']
+  .jp-Completer-item:hover:not(.jp-mod-active) {
+  background: var(--d4n-color-surface-hover);
+}
+
+/* The row Enter will accept. Stronger than hover, and distinct from it in hue
+ * as well as lightness, because the pointer and the keyboard address different
+ * rows at the same time in this list (the same argument as the palette's). */
+body[data-jp-theme-name^='Data4Now'] .jp-Completer-item.jp-mod-active,
+body[data-jp-theme-name^='Data4Now'] .jp-Completer-item.jp-mod-active:hover {
+  background: var(--d4n-color-selection-active);
+  color: var(--d4n-color-text-primary);
+  outline: var(--d4n-border-width-thick) solid var(--d4n-color-action-default);
+  outline-offset: calc(-1 * var(--d4n-border-width-thick));
+}
+
+/* The completion text. Core gives it the code family and size already; only the
+ * colour needs restating, and only so the active row stops inheriting `white`. */
+body[data-jp-theme-name^='Data4Now'] .jp-Completer-item .jp-Completer-match {
+  color: var(--d4n-color-text-primary);
+}
+
+/* The matched substring. Weight-led, not tinted — the same treatment the command
+ * palette gives its own `mark`, and for the same reason: a tint would have to
+ * survive both the plain plate and the selection plate. */
+body[data-jp-theme-name^='Data4Now'] .jp-Completer-match mark,
+body[data-jp-theme-name^='Data4Now']
+  .jp-Completer-item.jp-mod-active
+  .jp-Completer-match
+  mark {
+  background: transparent;
+  color: var(--d4n-color-text-strong);
+  font-weight: var(--d4n-font-weight-bold);
+}
+
+/* The type NAME at the row's trailing edge. Metadata, so it stays secondary in
+ * BOTH states — the active-row restatement is the rule that measured 1.51:1. */
+body[data-jp-theme-name^='Data4Now']
+  .jp-Completer-item
+  .jp-Completer-typeExtended,
+body[data-jp-theme-name^='Data4Now']
+  .jp-Completer-item.jp-mod-active
+  .jp-Completer-typeExtended {
+  color: var(--d4n-color-text-secondary);
+}
+
+/* The badge letter. See the header note. */
+body[data-jp-theme-name^='Data4Now'] .jp-Completer-item .jp-Completer-monogram {
+  color: var(--d4n-color-text-inverse0);
+  font-family: var(--d4n-font-family-ui);
+  font-weight: var(--d4n-font-weight-semibold);
+}
+
+/* The documentation panel. Its `<pre>` is the same browser-default-monospace
+ * defect the tooltip has — see the header of tooltip.css, which carries the
+ * measurement. Fixed identically so the two popovers render code the same way. */
+body[data-jp-theme-name^='Data4Now'] .jp-Completer-docpanel pre {
+  font-family: var(--d4n-font-family-mono);
+  font-size: var(--d4n-font-size-code);
+}
+
+/* The indeterminate loading bar shown while a provider is still answering.
+ * `--jp-accent-color2` already resolves to `action.subtle` through the adapter,
+ * so only the track needs a colour: core gives the container none, which leaves
+ * a 2px sliver of bare popover where the bar is not.
+ *
+ * A8 needs no media query here. `motion.css` zeroes every animation under this
+ * scope when the user asks for reduced motion, core's `jp-Completer-loading`
+ * keyframes included. */
+body[data-jp-theme-name^='Data4Now'] .jp-Completer-loading-bar-container {
+  background: var(--d4n-color-surface-sunken);
+}

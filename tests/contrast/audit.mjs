@@ -370,6 +370,55 @@ function buildChecks(mode, t) {
     'text.primary on danger.faint (error output)'
   );
 
+  // --- A1: the completer type badge monogram (PRD §6.4) ------------------
+  // `.jp-Completer-monogram` is a LETTER printed on the type badge, and the
+  // badge takes one of ten `color.syntax.*` hues so the swatch beside a
+  // completion is the colour the editor will paint it (mapping/jp-adapter.yaml).
+  //
+  // That ramp inverts with the mode, so the letter has to invert with it too.
+  // Core hardcodes `color: white`, which measured 1.08:1 on the dark-mode badge
+  // — see docs/decisions.md D-033. `text.inverse0` is the one token defined to
+  // flip, and these ten pairings are what make that claim checkable rather than
+  // asserted: nothing else in this audit puts inverse0 on a syntax hue.
+  const COMPLETER_BADGE_HUES = [
+    'function',
+    'name',
+    'type',
+    'meta',
+    'keyword',
+    'string',
+    'number',
+    'property',
+    'regexp',
+    'comment'
+  ];
+  for (const hue of COMPLETER_BADGE_HUES) {
+    add(
+      'A1',
+      4.5,
+      t['color.text.inverse0'],
+      t[`color.syntax.${hue}`],
+      `text.inverse0 on syntax.${hue} (completer type badge monogram)`
+    );
+  }
+
+  // --- A1: text on the selection plate -----------------------------------
+  // `selection.active` is audited as a code BACKDROP further down, for the
+  // syntax ramp sitting on a selected line. It is also a ROW plate — the
+  // command palette, the file browser listing and now the completer all put UI
+  // text on it — and that half was never gated. Three roles land there: the row
+  // label (primary), its trailing metadata (secondary) and the matched
+  // substring (strong).
+  for (const role of ['primary', 'secondary', 'strong']) {
+    add(
+      'A1',
+      4.5,
+      t[`color.text.${role}`],
+      t['color.selection.active'],
+      `text.${role} on selection.active (selected row)`
+    );
+  }
+
   // --- A3: boundaries and state indicators -------------------------------
   // WCAG 1.4.11 gates the boundary that IDENTIFIES a component at 3:1. It does
   // not gate decoration, and a "subtle" separator that clears 3:1 is not

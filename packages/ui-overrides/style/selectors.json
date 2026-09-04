@@ -75,7 +75,10 @@
     "running-panel-open": "The Running Terminals and Kernels panel open in the left sidebar with at least one live kernel.",
     "log-console-open": "The Log Console open in the down area with at least one logged message.",
     "bottom-dock-open": "Any widget open in the '#jp-down-stack' down area, so its TabPanel tab bar and the vsplit handle exist.",
-    "toast-visible": "A notification toast on screen. JupyterLab raises the Jupyter-news prompt on a first boot with a fresh profile, so this is reachable but not deterministic; the entries are optional until the harness can raise one on demand."
+    "toast-visible": "A notification toast on screen. JupyterLab raises the Jupyter-news prompt on a first boot with a fresh profile, so this is reachable but not deterministic; the entries are optional until the harness can raise one on demand.",
+    "console-open": "A code console open in the dock with a connected kernel, so the banner is filled, and at least two executed entries above the prompt.",
+    "completer-open": "The autocomplete popup showing at least two matches. Needs a LIVE KERNEL: the completions come back over the kernel's complete_request, so this state cannot be driven from stored state the way notebook-open can. Verified by hand for P3-07 with `os.pa` + Tab in the fixture notebook.",
+    "tooltip-open": "The inline signature popover showing, from Shift+Tab on a resolvable name. Needs a live kernel for the same reason as completer-open. Verified by hand for P3-07 with `print` + Shift+Tab."
   },
   "surfaces": [
     {
@@ -568,6 +571,113 @@
           "selector": ".jp-RenderedHTMLCommon kbd",
           "state": "notebook-open",
           "note": "Core draws it with a hardcoded rgba(0,0,0,.25) inset shadow that reads as a smudge on the dark plate."
+        }
+      ]
+    },
+    {
+      "file": "style/surfaces/console.css",
+      "upstream": [
+        "@jupyterlab/console 4.6.3 style/base.css",
+        "@jupyterlab/cells 4.6.3 style/base.css"
+      ],
+      "selectors": [
+        {
+          "selector": ".jp-CodeConsole-input",
+          "state": "console-open",
+          "note": "The prompt region. Core paints it the same colour as the transcript above it and separates the two with a hardcoded rgba(0,0,0,.1) shadow. If this stops matching, the two halves become one flat field again."
+        },
+        {
+          "selector": ".jp-CodeConsole-content > .jp-Cell",
+          "state": "console-open",
+          "note": "The entry separator is written as `:not(.jp-CodeConsole-banner) + .jp-Cell` on this child list. A direct-child match is asserted here because the sibling form needs two entries to exist."
+        },
+        {
+          "selector": ".jp-CodeConsole-banner",
+          "state": "console-open",
+          "note": "The interpreter greeting. Carries `jp-RawCell`, so it is a `.jp-Cell` and picks up notebook.css unless this rule answers."
+        },
+        {
+          "selector": ".jp-CodeConsole-banner .cm-content",
+          "state": "console-open",
+          "note": "CodeMirror renders the greeting, so the muted colour has to land here rather than on the cell."
+        }
+      ]
+    },
+    {
+      "file": "style/surfaces/completer.css",
+      "upstream": ["@jupyterlab/completer 4.6.3 style/base.css"],
+      "selectors": [
+        {
+          "selector": ".jp-Completer",
+          "state": "completer-open",
+          "note": "The popover frame. Core sets no radius at all."
+        },
+        {
+          "selector": ".jp-Completer.jp-ThemedContainer",
+          "state": "completer-open",
+          "note": "Not styled here — depended on. `.jp-ThemedContainer` is `overflow: hidden`, which is what clips the rows to the radius this file adds. If the completer stops carrying that class, the corners stop clipping and nothing else fails."
+        },
+        {
+          "selector": ".jp-Completer-item",
+          "state": "completer-open"
+        },
+        {
+          "selector": ".jp-Completer-item.jp-mod-active",
+          "state": "completer-open",
+          "note": "Core fills this with --jp-brand-color1 and sets the row text to a literal `white`. The replacement is the selection plate every other selected row uses."
+        },
+        {
+          "selector": ".jp-Completer-item .jp-Completer-match",
+          "state": "completer-open"
+        },
+        {
+          "selector": ".jp-Completer-match mark",
+          "state": "completer-open",
+          "note": "The matched substring. Weight-led here, as in the command palette."
+        },
+        {
+          "selector": ".jp-Completer-item .jp-Completer-typeExtended",
+          "state": "completer-open",
+          "note": "The type NAME. Core restates it at --jp-ui-font-color0 on the active row, which measured 1.51:1 on our brand fill."
+        },
+        {
+          "selector": ".jp-Completer-item .jp-Completer-monogram",
+          "state": "completer-open",
+          "note": "The badge letter. Core hardcodes `color: white`, which is invisible on the light-in-dark-mode syntax hues the badge takes (1.08:1 measured). See docs/decisions.md D-033."
+        },
+        {
+          "selector": ".jp-Completer-loading-bar-container",
+          "state": "completer-open",
+          "optional": true,
+          "note": "Transient. Present only while a completion provider has not yet answered, so a fast local kernel usually never renders it."
+        },
+        {
+          "selector": ".jp-Completer-docpanel pre",
+          "state": "completer-open",
+          "optional": true,
+          "note": "Present only when `showDocumentationPanel` is on, which is off by default. Verified for P3-07 by turning the setting on through the settings REST API and off again."
+        }
+      ]
+    },
+    {
+      "file": "style/surfaces/tooltip.css",
+      "upstream": [
+        "@jupyterlab/tooltip 4.6.3 style/base.css",
+        "@jupyterlab/rendermime 4.6.3 style/base.css"
+      ],
+      "selectors": [
+        {
+          "selector": ".jp-Tooltip",
+          "state": "tooltip-open"
+        },
+        {
+          "selector": ".jp-Tooltip .jp-Tooltip-content",
+          "state": "tooltip-open"
+        },
+        {
+          "selector": ".jp-Tooltip pre",
+          "state": "tooltip-open",
+          "note": "The signature. Rendered in the browser's default monospace until this rule, because the user-agent `pre` rule beats the family `.jp-RenderedText` sets on the container."
         }
       ]
     },
