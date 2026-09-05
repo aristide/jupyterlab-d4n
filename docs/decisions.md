@@ -2070,6 +2070,114 @@ diagnosed.
 `pytest` 5 passed, `test:galata` 14 of 14. The execution line is **P3-16** and is
 not covered here: it needs the program to stop.
 
+### P3-16 verification, 2026-09-05 — the execution line, in both modes
+
+**Done.** Running a cell to a breakpoint highlights the stopped line in both
+modes, and upstream's highlight does not also draw. Driven with a five-statement
+cell, a breakpoint on `b = a + 1`, and then a step over so the stopped line moved
+to a line carrying no breakpoint.
+
+| Measured                    | Light               | Dark                |
+| --------------------------- | ------------------- | ------------------- |
+| line background             | `#FBEFD8`           | `#3D2E10`           |
+| left bar (inset box-shadow) | `2px 0 0 0 #8C5807` | `2px 0 0 0 #E0A04A` |
+| gutter cell tint            | `#FBEFD8`           | `#3D2E10`           |
+| arrow glyph                 | `#8C5807`, 12px     | `#E0A04A`, 12px     |
+| upstream `outline`          | `none`              | `none`              |
+| upstream `text-shadow`      | `none`              | `none`              |
+
+**Both gutter markers were reached, and they are different on purpose.** Stopped
+ON the breakpointed line, the cell is tinted and the **breakpoint glyph stays** —
+`EXECUTION_TINT`, so the user is not left with an arrow they cannot dismiss.
+After a step over onto `c = b + 1`, which has no breakpoint, the same cell
+renders the **arrow**, path `M3.5 2 L9.5 6 L3.5 10 Z`. Continuing cleared both:
+zero `.cm-d4n-executionLine` and zero `.cm-d4n-executionGutter`.
+
+**The four tokens that had never been on screen are now on screen.** P3-16's own
+note said nobody had ever seen these decorations in their designed colours,
+because `--d4n-color-debug-executionLineBg` and `-executionLineBorder` kept
+camelCase through the kebab-case rename and resolved to `--jp-*` fallbacks. The
+measured values above are the Data4Now tokens, not the fallbacks: `#FBEFD8` and
+`#3D2E10` are `debug.executionLineBg`, and `#8C5807` / `#E0A04A` are
+`amber.400` / `amber.200`.
+
+**Upstream's class is present and beaten, which is the designed outcome.**
+`.jp-DebuggerEditor-highlight` sits on the same line as
+`.cm-d4n-executionLine` — measured `bothOnSameLine: true` — and only its
+`outline` and `text-shadow` are suppressed. Its `background-color` needs no
+answer, and the measured background is ours in both modes, so the (0,3,0)
+against (0,2,1) arithmetic in `debugDecorations.ts` holds in the browser.
+
+**Not changed, and therefore not re-audited.** `color.debug.executionLineBg` is
+one of the six `CODE_BACKDROPS` the A4 block gates at 4.5:1 against all fifteen
+syntax tokens. This task moved no token, so those 15 pairings per mode are
+unchanged and the audit still reports 529 pairings, 0 failing.
+
+#### Three defects an adversarial review found, and what happened to each
+
+The verification above passed on the code as committed. A review of the same
+path then produced nineteen candidate findings; a refutation pass killed seven
+and twelve survived, two of which were confirmations rather than defects. Every
+survivor below was re-measured by hand before it was acted on.
+
+**Fixed here — the decoration set was never recomputed on a document change.**
+`EditorView.decorations.compute` listed only `executionLineField`. A
+facet-provided `DecorationSet` is used by the view verbatim, so nothing mapped
+the range through a transaction's changes, and the `Decoration.line` kept the
+absolute offset `doc.line(line).from` had when the field last changed. The
+failure was silent and asymmetric: an edit above the stopped line left the
+offset mid-line, `ContentBuilder` then dropped the line attributes rather than
+throwing, and the tint and left bar disappeared — while the gutter arrow, which
+the gutter re-evaluates from the raw line number on every document change,
+stayed correct. Listing `'doc'` fixes it. Measured twice on a clean session:
+stopped on `b = a + 1`, typed `Z` at the start of line 1, and the band stayed
+put at `#FBEFD8` with its `2px #8C5807` bar. This also makes the comment on
+`setExecutionLineEffect` true for the first time.
+
+**Fixed here — the hover ghost fired on the stopped line.**
+`:not(.cm-d4n-hasBreakpoint)` keeps the preview off a line that already has a
+breakpoint, but the stopped line without one carries `cm-d4n-executionGutter`
+instead, so hovering it added an 8px red ghost beside the 12px amber arrow
+inside a 16px flex cell. Isolated and measured: after a step onto `b = a + 1`
+the cell's classes were exactly `cm-gutterElement cm-d4n-executionGutter`, and
+after adding `:not(.cm-d4n-executionGutter)` the hover gives
+`content: none` with one child and the arrow at its full 12px, while an ordinary
+empty cell still gets the 8px `#C4274A` ghost.
+
+**Fixed here — a comment claimed something that does not render.** It said the
+stopped line "reads as one band". `elementClass` lands on cells of our gutter
+only, and `Prec.high` puts that gutter left of `lineNumbers`, so with line
+numbers on the order is tinted cell, untinted line number, tinted line. The
+comment now says that, and names what tinting the number would cost.
+
+**Measured, real, and NOT fixed here — the selection is invisible on the stopped
+line.** Photographed at 3x: with a line selected the band is
+`#D6EFEF` `selection.active`; add `cm-d4n-executionLine` to the same line and
+nothing else, and the selection is gone under `#FBEFD8`. The mechanism is
+CodeMirror's, not ours: `.cm-selectionLayer` is `z-index: -2` and `.cm-line` is
+`position: static`, so any opaque line background paints over it. **Stock
+JupyterLab does exactly the same** — `.jp-DebuggerEditor-highlight` sets
+`background-color: var(--md-brown-100)` on the same element. Fixing it means a
+semi-transparent tint, which diverges from §8.6.4's `color.warning.faint`
+background and moves the A4 gate onto a blend. Recorded as a known limitation
+shared with upstream rather than fixed by inventing a different design.
+
+**Carried forward as tasks, not dropped.** Two survivors are real gaps in our
+own behaviour with clean done-when clauses, and both cost more to verify than
+they cost to find: **P3-17**, the decorations do not honour AC10 — the six
+`--jp-*` fallbacks are not mode-relative, so a stock DARK theme gets a near-white
+band; and **P3-18**, `executionLineFor()` matches on a content hash while the
+Sources panel matches by path, so stepping into library code never gets our
+decoration.
+
+**One divergence from the PRD, recorded and not changed.** §8.6.4 specifies the
+disabled breakpoint as `color.text.muted`. In dark mode
+`color.debug.breakpointDisabled` is `#8A99AE` (`neutral.400`) while
+`color.text.muted` is `#A6B2C4` (`neutral.300`); light mode agrees at `#5A6B82`.
+The glyph is unreachable against debugpy (D-035, P3-08), so nothing renders the
+difference today. Left as authored rather than re-pointed on a surface nobody
+can see.
+
 ### The `D-033` collision, and the lint that now prevents it
 
 Three separate pieces of work each cited `D-033` for a decision none of them

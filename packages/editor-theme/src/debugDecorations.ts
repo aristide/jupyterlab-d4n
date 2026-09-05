@@ -282,8 +282,29 @@ const executionLineDecoration = Decoration.line({
   class: 'cm-d4n-executionLine'
 });
 
+/**
+ * `'doc'` IS LOAD-BEARING, AND IT WAS MISSING.
+ *
+ * `EditorView.decorations.compute` re-runs its getter only when one of the
+ * listed dependencies changes, and a facet-provided `DecorationSet` is used by
+ * the view verbatim — nothing maps it through a transaction's changes. With the
+ * field alone in the list, the `Decoration.line` range kept the absolute offset
+ * `doc.line(line).from` had when the field last changed.
+ *
+ * The failure was silent and asymmetric. Type one character above the stopped
+ * line and the stale offset no longer sits at a line start; `ContentBuilder`
+ * then drops the line attributes rather than throwing, so the tint and the left
+ * bar disappear — while the gutter arrow, which the gutter re-evaluates from the
+ * raw line number on every document change, stays where it belongs. If the
+ * stale offset happens to land on a different line's start, the band moves onto
+ * that unrelated line.
+ *
+ * Listing `'doc'` recomputes the range from the line NUMBER after every edit,
+ * which is also what makes the comment on `setExecutionLineEffect` true: the
+ * highlight stays on the line it was told about instead of drifting.
+ */
 const executionLineDecorations = EditorView.decorations.compute(
-  [executionLineField],
+  [executionLineField, 'doc'],
   state => {
     const line = state.field(executionLineField);
     if (line === null || line < 1 || line > state.doc.lines) {
@@ -310,7 +331,13 @@ const decorationTheme = EditorView.baseTheme({
   // PRD §8.6.4: at rest the gutter is empty, and hovering an empty cell previews
   // the breakpoint a click would set. `:not(.cm-d4n-hasBreakpoint)` keeps the
   // ghost off lines that already have one.
-  '.cm-d4n-breakpointGutter .cm-gutterElement:hover:not(.cm-d4n-hasBreakpoint)::after':
+  //
+  // `:not(.cm-d4n-executionGutter)` keeps it off the STOPPED line, and that was
+  // missing. The stopped line carries a breakpoint glyph only when it has a
+  // breakpoint; when it does not, the cell holds the execution ARROW and no
+  // `cm-d4n-hasBreakpoint`, so hovering it added a second 8px item to a
+  // 16px-wide flex cell — a red ghost beside an amber arrow, both squashed.
+  '.cm-d4n-breakpointGutter .cm-gutterElement:hover:not(.cm-d4n-hasBreakpoint):not(.cm-d4n-executionGutter)::after':
     {
       content: '""',
       width: metrics.space['2'],
@@ -322,9 +349,16 @@ const decorationTheme = EditorView.baseTheme({
   '.cm-d4n-breakpoint-set': { color: COLOR_BREAKPOINT },
   '.cm-d4n-breakpoint-disabled': { color: COLOR_BREAKPOINT_DISABLED },
   '.cm-d4n-breakpoint-conditional': { color: COLOR_BREAKPOINT_CONDITIONAL },
-  // The tint runs into the gutter so the stopped line reads as one band. It is
-  // also the only signal left when the stopped line already has a breakpoint and
-  // the glyph slot is taken.
+  // The tint runs into OUR gutter cell, and it is the only signal left when the
+  // stopped line already has a breakpoint and the glyph slot is taken.
+  //
+  // It does not reach the line-number column, and an earlier version of this
+  // comment claimed the stopped line "reads as one band", which is not what
+  // renders. `elementClass` lands on cells of this gutter only, and `Prec.high`
+  // puts this gutter to the LEFT of `lineNumbers`, so with line numbers on the
+  // order is: tinted cell, untinted line number, tinted line. Tinting the number
+  // too would need a `gutterLineClass` facet and a decision about whether the
+  // stopped line's NUMBER should be highlighted, which §8.6.4 does not ask for.
   //
   // `.cm-gutterElement` is here for the same reason `.cm-line` is below: the
   // stopped line is usually the active line, and `highlightActiveLineGutter()`

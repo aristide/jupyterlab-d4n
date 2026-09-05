@@ -56,11 +56,41 @@ them:
   is harder to notice. Check with `curl -s .../api/terminals` and
   `.../api/kernels`. The DELETE endpoints need an auth token, so the reliable
   cleanup is `docker compose restart jupyter`. This has now cost two sessions.
+- **The container needs GitHub to START, and fails hard without it.** The
+  entrypoint runs `pip install -e .`, whose isolated build environment runs
+  `jupyter labextension build`; that resolves `@jupyterlab/core-meta` on the
+  network — npm answers "no published versions match '4.5.x'", so it falls back
+  to the `jupyterlab/jupyterlab` GitHub repository. With GitHub unreachable the
+  install aborts and `set -euo pipefail` takes the container with it. A plain
+  `jlpm build` in the workspace needs no network, because it uses the workspace's
+  own `@jupyterlab/builder`. The escape is
+  `docker compose run -d --service-ports -e SKIP_JUPYTER_BUILDER=1 jupyter`,
+  which skips only the JavaScript build that has already been done on disk.
+- **The Playwright browsers live in the container LAYER, not a volume.** Recreate
+  the container and they are gone. Restoring them needs BOTH
+  `npx playwright install chromium` and `npx playwright install-deps chromium` —
+  without the second, Chromium dies on `libnspr4.so: cannot open shared object
+file` and Playwright reports it as "browser has been closed", which does not
+  look like a missing package.
 - **A probe that types into a notebook gets autosaved.** JupyterLab's autosave
   wrote a probe's typing into `notebooks/fixture.ipynb` and it appeared in
   `git status`. The file is committed, so this dirties the tree rather than
   losing anything, but it is silent. Check the notebook and `git checkout` it
   after any probe that edits a cell.
+- **Never run `jlpm build` while `test:galata` is running either, and this is
+  the one that produced the confusing failures.** The build rewrites
+  `jupyterlab_d4n/labextensions/@d4n/theme-light/themes/@d4n/theme-light/index.css`
+  in place, which is the exact file the browser fetches, so a page loading in
+  that window gets a 404 and JupyterLab raises **"Neither theme Data4Now Light
+  nor default Data4Now Light loaded"**. Every test that waits for a themed body
+  then times out, and the status bar never settles long enough to screenshot.
+  Measured on 2026-09-05: two runs with a background build failed on
+  `application frame` and `status bar`; the same suite, same tree, nothing else
+  running, passed 14 of 14. An earlier note blamed a cold server and worker
+  contention, then a startup race. All three were wrong. `jlpm watch` is NOT the
+  culprit — its log showed no rebuild for eleven minutes before a failing run.
+  Treat the suite as needing exclusive use of the WORKING TREE, not just of the
+  server.
 - **Never run a browser probe while `test:galata` is running.** This is the same
   hazard as the one above and it is the one that actually bit. A probe that
   opens a terminal changes the status bar, which the suite screenshots, so the
@@ -1204,30 +1234,75 @@ green including D4.
 
 ## P4 — Forms, settings, dialogs
 
-- [ ] **P3-16** Execution-line decoration, wired to the debugger (split out of
-      P3-08 on 2026-09-05). The line the program is stopped on, plus upstream's
-      own `jp-DebuggerEditor-highlight` suppressed so there is one highlight
-      rather than two.
-      _The code is committed and inert_ — `src/debugBridge.ts` turns the DAP
-      stop event into the effect, and `src/debugDecorations.ts` owns the state
-      field and the base theme that hides upstream's class.
-      _It is a separate task because it costs more to verify than the gutter._
-      A breakpoint can be set as soon as a debug-capable kernel is up. An
-      execution line needs the program to run and **stop**, which means a
-      breakpoint that actually binds, a cell that reaches it, and a session that
-      holds there while the measurement is taken.
-      _Done when:_ running a cell to a breakpoint highlights the stopped line in
-      both modes, and upstream's highlight does not also draw.
-      _Watch the contrast gate._ The execution-line plate sits under live syntax
-      tokens, and `color.debug.executionLineBg` is already one of the
-      `CODE_BACKDROPS` the A4 block audits at 4.5:1 against every syntax colour.
-      A change to that token moves 15 pairings at once.
-      _Two of its four tokens were dead until 2026-09-04._
-      `--d4n-color-debug-executionLineBg` and `-executionLineBorder` kept
-      camelCase through the kebab-case rename and silently resolved to their
-      `--jp-*` fallbacks. `lint:vars` now reads `.ts` and no longer lets a
-      fallback excuse an unresolvable name, so this cannot recur — but it means
-      **nobody has ever seen these decorations in their designed colours.**
+- [x] **P3-16** Execution-line decoration, wired to the debugger (split out of
+      P3-08). The line the program is stopped on, plus upstream's own
+      `jp-DebuggerEditor-highlight` suppressed so there is one highlight rather
+      than two.
+      _Done on 2026-09-05._ Full record and every measurement in **D-035**.
+      _Measured in both modes,_ with a five-statement cell, a breakpoint on
+      `b = a + 1`, and a step over afterwards: line background `#FBEFD8` light
+      and `#3D2E10` dark, left bar an inset `2px 0 0 0` box-shadow in `#8C5807`
+      and `#E0A04A`, gutter cell tinted to match, arrow glyph 12px in the same
+      amber. Upstream's `outline` and `text-shadow` both compute `none` while its
+      class sits on the very same line. Continuing cleared both.
+      **Both gutter markers were reached, and they differ on purpose.** Stopped
+      ON the breakpointed line the cell is tinted and the breakpoint glyph stays.
+      Stepped onto a line with no breakpoint, the same cell draws the arrow.
+      **The four tokens that had never been on screen are now on screen.** The
+      measured values are the Data4Now tokens, not the `--jp-*` fallbacks.
+      **Three defects came from an adversarial review of the same path, and two
+      are fixed here.** `EditorView.decorations.compute` listed only the state
+      field, so the decoration kept a stale character offset and an edit above
+      the stopped line dropped the band while the arrow stayed — `'doc'` is now
+      in the dependency list, verified by typing above a stopped line twice. And
+      the hover ghost fired on the stopped line's own cell, putting an 8px red
+      dot beside the 12px arrow in a 16px cell — now excluded, isolated and
+      measured on a cell whose classes were exactly
+      `cm-gutterElement cm-d4n-executionGutter`.
+      **One limitation measured and deliberately not fixed: the selection is
+      invisible on the stopped line.** Photographed at 3x. The mechanism is
+      CodeMirror's `.cm-selectionLayer { z-index: -2 }` under an opaque
+      `.cm-line` background, and **stock JupyterLab does the same** — its own
+      highlight sets `background-color: var(--md-brown-100)` on that element.
+      A fix means a semi-transparent tint, which diverges from §8.6.4 and moves
+      the A4 gate onto a blend. Not invented here.
+      _Two survivors became tasks:_ **P3-17** (AC10) and **P3-18** (Sources).
+      _Nothing was re-audited, because nothing moved._
+      `color.debug.executionLineBg` is still one of the six `CODE_BACKDROPS` the
+      A4 block gates at 4.5:1 against all fifteen syntax tokens.
+- [ ] **P3-17** The debugger decorations do not honour AC10 (found by the P3-16
+      review). Every colour in `debugDecorations.ts` is
+      `var(--d4n-…, var(--jp-…))`, and on a stock theme the `--d4n-*` layer is
+      out of scope, so the fallback is what paints.
+      **The fallbacks are not mode-relative.** Measured in the 4.6.3 container:
+      `theme-light-extension` and `theme-dark-extension` BOTH declare
+      `--jp-warn-color3: var(--md-orange-100, #ffe0b2)`. So on stock **dark** the
+      execution line is a near-white band under a light syntax ramp. The 2px bar
+      falls back to `--jp-warn-color1` — `#f57c00` light, `#ff9800` dark — which
+      measures 2.13:1 and 1.70:1 on that tint, both under the 3:1 the Data4Now
+      path is held to by `audit.mjs`.
+      **No gate can see this.** `tests/contrast/audit.mjs` reads
+      `packages/tokens/dist/tokens.json` only, so it measures our token values
+      and never a `--jp-*` fallback.
+      _Done when:_ either the decorations go inert outside a Data4Now theme —
+      the AC10-true answer, and the one D-003 implies — or the fallbacks are
+      chosen deliberately and gated. Either way the choice is recorded.
+- [ ] **P3-18** The Sources panel never gets our execution line (found by the
+      P3-16 review).
+      `executionLineFor()` compares `frame.source?.path` with
+      `service.getCodeId(doc)`, a content hash. That is right for a dumped cell
+      and wrong everywhere else: upstream matches with
+      `this._path || getCodeId(…)`, and `SourcesBody._showSource` builds its
+      handler with `path: currentFrame?.source?.path` — by path, never by hash.
+      So stepping into library code shows upstream's own highlight, rendered
+      whole, because our suppression only applies where OUR class is present.
+      _The same mismatch has a second symptom._ `codeId` is recomputed from the
+      LIVE document on every sweep, so editing a paused cell makes
+      `frame.source.path !== codeId` and the next debugger signal clears the
+      execution line for the rest of the stop.
+      _Done when:_ an execution line renders in the Sources panel in both modes,
+      and an edit to a paused cell does not silently clear it — or each is
+      refused in writing.
 - [ ] **P4-01** RJSF global CSS pass against the stable class names. PRD §7.7
       estimates about 85% coverage. It is scaffolded in
       `packages/settings-forms/`.
