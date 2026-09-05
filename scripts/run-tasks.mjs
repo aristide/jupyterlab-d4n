@@ -514,6 +514,28 @@ function treeIsClean() {
   return git(['status', '--porcelain']).out === '';
 }
 
+/**
+ * Park whatever is in the tree under a named stash and return its label.
+ *
+ * A task that dies mid-flight — at the turn ceiling, at the 90-minute wall, or
+ * because somebody killed it — leaves its edits behind. The guard below is
+ * right to refuse to start the NEXT task on a dirty tree, because a commit has
+ * to belong to one task. But refusing was ALL it did, so one dead task blocked
+ * every task after it: a real run ended 0 done, 1 failed, 21 blocked, out of a
+ * queue of 22 runnable tasks.
+ *
+ * Discarding the mess would unblock the queue and is the wrong trade. The two
+ * dead tasks in that run left 316 lines of working CSS and a genuine bug fix
+ * between them; both were recovered from a stash by hand and shipped. So the
+ * leftovers are STASHED, labelled with the task that produced them, and named
+ * in the log. The tree ends clean, the queue continues, and nothing is lost.
+ */
+function parkLeftovers(label) {
+  const name = 'runner/' + label;
+  const r = git(['stash', 'push', '-u', '-m', name]);
+  return r.code === 0 ? name : null;
+}
+
 function head() {
   return git(['rev-parse', 'HEAD']).out;
 }
@@ -640,12 +662,30 @@ async function runTask(task) {
   setStatus({ phase: 'task', task: task.id, startedAt: record.start });
 
   if (!treeIsClean()) {
-    record.status = 'blocked';
-    record.error =
-      'the working tree was dirty before the task started, so a commit could not be attributed to it';
-    record.duration = fmtDuration(Date.now() - started);
-    publish({ type: 'task-end', ...record });
-    return record;
+    // Left by whichever task died before this one. Park it rather than block
+    // on it, so the queue survives one bad task, and name the stash so the
+    // work can be recovered.
+    const parked = parkLeftovers('before-' + task.id);
+    publish({
+      type: 'note',
+      text: parked
+        ? 'the tree was dirty before ' +
+          task.id +
+          '; parked those changes in stash "' +
+          parked +
+          '" and carried on'
+        : 'the tree was dirty before ' +
+          task.id +
+          ' and it could not be stashed'
+    });
+    if (!treeIsClean()) {
+      record.status = 'blocked';
+      record.error =
+        'the working tree was dirty before the task started and could not be stashed, so a commit could not be attributed to it';
+      record.duration = fmtDuration(Date.now() - started);
+      publish({ type: 'task-end', ...record });
+      return record;
+    }
   }
 
   const headBefore = head();
