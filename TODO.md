@@ -1305,9 +1305,51 @@ green including D4.
       spec. `SourcesBody` is one read-only CodeMirror widget, so there are no
       rows, and the section is absent unless a setting turns it on.
       _Done when:_ each of the four is built or refused in writing.
-- [ ] **P3-10** Debugger variables **tree** view. The value colors must match the
-      CM6 `HighlightStyle` for the same types (D5). They already share the
-      `color.syntax.*` tokens, so use those tokens instead of new choices.
+- [x] **P3-10** Debugger variables **tree** view.
+      _Done on 2026-09-05_ as `ui-overrides/style/surfaces/debugger-variables.css`.
+      **D5 is not reachable from CSS, and that is the headline** — full record and
+      the measurement in **D-037**.
+      _The note in this task was right and incomplete._ It said the value colours
+      "already share the `color.syntax.*` tokens, so use those tokens instead of
+      new choices". They do share them, and they share exactly **one**:
+      `variables.css` paints every value `--jp-mirror-editor-string-color` with no
+      per-type branch, which the adapter routes to `syntax.string`. Measured with
+      a kernel stopped over seven variables — `42`, `3.5`, `True`, `None`, `list`
+      and `dict` all computed `#145C3F`, the string colour.
+      **And there is nothing to select on.** A row's whole attribute set is
+      `class="jp-TreeItem nested"`, `role="treeitem"`, `tabindex="-1"` and, with
+      children, `aria-expanded`. No `data-type`, no variant class, no per-kind
+      element. Reaching D5 needs a renderer that emits the type — **P3-20**.
+      **So the value ships on §8.6.2's BASE treatment, `text.secondary`.** Keeping
+      upstream's single syntax colour would be worse than dropping it: it does not
+      merely fail to distinguish kinds, it asserts the wrong one.
+      _Measured in both modes:_ row `::part(positioning-region)` padding `0 8px`,
+      radius 4px, transparent at rest; chevron **12×12** in `#5A6B82` light and
+      `#A6B2C4` dark; name JetBrains Mono 13px in `#2C3E55` / `#E4E9F0`; value
+      JetBrains Mono 13px in `#46566D` / `#C8D1DD`. Rows measure 25px against a
+      24px floor — the toolkit's own line box adds the extra pixel.
+      _Two deliberate divergences, both in D-037._ Row height is the shared 24px
+      rather than §8.6.2's 22px, because D-009 makes the list surfaces move
+      together under compact density and there is no 22px token. And the NAME
+      moves off `syntax.property` onto `text.primary`, because it is a label in a
+      panel rather than a token in a document.
+- [ ] **P3-20** Variables tree: the type has to reach the DOM (split out of
+      P3-10, **D-037**). Three §8.6.2 items that a stylesheet cannot have.
+      **Value colour by kind (D5).** string → `color.syntax.string`, number →
+      `color.syntax.number`, bool and None → `color.syntax.keyword`. Upstream
+      emits one colour for all of them and puts no type on the row.
+      **The type badge.** §8.6.2 wants a chip carrying the type name beside the
+      value — `font.size.ui.xs`, `color.text.muted`, on a `color.surface.sunken`
+      plate at `radius.sm`. There is no element: upstream renders a name span and
+      a detail span and nothing else.
+      **The full value in `title`.** §8.6.2 asks for it; upstream sets no `title`
+      on the detail span at all, so a truncated value cannot be read.
+      All three are the same change — a variables-body renderer that emits the
+      type and the title. `IDebugger.IVariable` carries `type`, so the data is
+      there; only the markup is missing.
+      _Done when:_ a number, a string and a bool render in three different syntax
+      colours in both modes, the badge is on screen, and a truncated value shows
+      its full text on hover. Or each is refused in writing.
 - [ ] **P3-11** **T3/T4: DataGrid.** Apply the shared `buildGridStyle()` and
       `buildTextRenderer()` from `packages/shell-chrome/src/gridStyle.ts` to BOTH
       the CSV/TSV viewer and the debugger variables grid.

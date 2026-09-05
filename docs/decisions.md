@@ -2377,6 +2377,80 @@ Both are `AccordionLayout` geometry driven from JavaScript sizing, so a CSS
 height here would be overwritten on the next resize. Upstream's `overflow: auto`
 stays and this file sets only the plate and the type.
 
+## D-037 — D5 is unreachable from CSS: every variable value is one colour
+
+**Decided.** `packages/ui-overrides/style/surfaces/debugger-variables.css`
+styles the debugger's variables **tree** as a T2 surface. §8.6.5 **D5** — "value
+colors in the variables tree match the CM6 `HighlightStyle` for the same types"
+— cannot be met from a stylesheet, and this entry records the measurement rather
+than leaving the criterion looking achievable. TODO.md **P3-10**; the part that
+needs a plugin is **P3-20**.
+
+**The task note was right and incomplete.** P3-10 said the two sides "already
+share the `color.syntax.*` tokens, so use those tokens instead of new choices".
+They do share them — and they share exactly **one**. `variables.css` sets
+`.jp-DebuggerVariables-detail { color: var(--jp-mirror-editor-string-color) }`
+with no per-type branch, and the Tier-4 adapter routes that to
+`--d4n-color-syntax-string`. So the match holds for strings and for nothing else.
+
+**Measured on 2026-09-05**, with a kernel stopped over seven variables of
+different kinds:
+
+| Variable   | Value shown | §8.6.2 asks for        | Actually computed       |
+| ---------- | ----------- | ---------------------- | ----------------------- |
+| `s_val`    | `'hello'`   | `color.syntax.string`  | `#145C3F` syntax.string |
+| `n_val`    | `42`        | `color.syntax.number`  | `#145C3F` syntax.string |
+| `f_val`    | `3.5`       | `color.syntax.number`  | `#145C3F` syntax.string |
+| `b_val`    | `True`      | `color.syntax.keyword` | `#145C3F` syntax.string |
+| `none_val` | `None`      | `color.syntax.keyword` | `#145C3F` syntax.string |
+| `list_val` | `list`      | (a type name)          | `#145C3F` syntax.string |
+| `d_val`    | `dict`      | (a type name)          | `#145C3F` syntax.string |
+
+**So what ships is the PRD's base treatment, not upstream's syntax colour.**
+§8.6.2 gives the value both a base style (`color.text.secondary`) and a per-kind
+override. The per-kind half is unreachable, and keeping upstream's single
+`syntax.string` in its place would be worse than dropping it: it does not merely
+fail to distinguish the kinds, it asserts the wrong one — `42`, `True` and `dict`
+all rendered in the colour the editor uses for a string literal. A neutral
+`text.secondary` says nothing false. Measured after the change: `#46566D` light.
+
+**And there is nothing to select on.** A row's complete attribute set is
+`class="jp-TreeItem nested"`, `role="treeitem"`, `tabindex="-1"` and, when it has
+children, `aria-expanded`. No `data-type`, no variant class, no per-kind element.
+CSS cannot distinguish a number from a string here even in principle. Reaching
+D5 means a variables-body renderer that emits the type — a plugin, not a
+stylesheet. That is **P3-20**.
+
+**Two more §8.6.2 items have the same shape.** The **type badge** — a chip
+carrying the type name beside the value — has no element: upstream renders a
+name span and a detail span and nothing else. And §8.6.2 asks for the full value
+in `title`; upstream sets no `title` on the detail span at all. Both are renderer
+work and go with P3-20.
+
+### Two deliberate divergences
+
+**Row height is the shared 24px, not §8.6.2's 22px.** D-009 makes the file
+browser, the running panel and the command palette one row height so a
+compact-density switch moves them together. A fourth list surface 2px shorter
+than the other three reads as a mistake rather than as a specification, and
+there is no 22px token to reach for. Stated here rather than followed silently
+in either direction.
+
+**The variable NAME moves off the syntax ramp.** Upstream paints it
+`--jp-mirror-editor-attribute-color`, which the adapter routes to
+`syntax.property`, so a name in the panel reads as though it were a property
+token in code. §8.6.2 puts it on `color.text.primary`, and the PRD is right: it
+is a label in a panel, not a token in a document. The value keeps a distinct
+ramp — `text.secondary` — so name and value still separate.
+
+**A row is a shadow root.** The tree is `<jp-tree-view>` of `<jp-tree-item>`, so
+every geometry and surface rule is written against `::part(positioning-region)`.
+`running.css` carries the full explanation of that pattern and its two
+consequences — `::part()` beats the toolkit's own rules for normal declarations,
+and it cannot take a descendant on its right-hand side, so state goes on the
+host. Both hold here unchanged, which is why this file is separate from
+`debugger.css`, whose rows are plain DOM.
+
 ---
 
 ## Still open

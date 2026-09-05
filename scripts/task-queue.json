@@ -59,17 +59,6 @@
     },
     {
       "order": 6,
-      "id": "P3-10",
-      "title": "Debugger variables tree view",
-      "runnable": true,
-      "risk": "low",
-      "dependsOn": [],
-      "blockerKind": "none",
-      "reason": "The task removes the only judgement call itself — value colours must reuse the existing color.syntax.* tokens rather than new choices — leaving row geometry and states an agent can measure.",
-      "riskReason": "Additive CSS on one sidebar section using tokens that already exist and are already audited; no JS, no plugin and no token source involved."
-    },
-    {
-      "order": 7,
       "id": "P3-19",
       "title": "The debugger panel's remainder: D6 for three sections, the control row, the missing hooks",
       "runnable": false,
@@ -78,6 +67,17 @@
       "blockerKind": "design_work",
       "reason": "P3-09 built everything reachable and measured why the rest is not. Two of the five empty states have no copy anywhere and writing it is design work that P5-05 already owns; the debug-control row is a plugin change to a surface 8.6.1 and upstream disagree about; and the selected, disabled and conditional breakpoint states have no DOM hook at all, so there is nothing for CSS to select.",
       "riskReason": "The control-row half means re-parenting another plugin's toolbar or replacing the sidebar, on the panel a user watches while debugging; the empty-state half puts two invented English strings into shipped CSS content, which is neither translatable nor reviewable by a designer after the fact."
+    },
+    {
+      "order": 7,
+      "id": "P3-20",
+      "title": "Variables tree: the type has to reach the DOM (D5, the type badge, the value title)",
+      "runnable": true,
+      "risk": "medium",
+      "dependsOn": [],
+      "blockerKind": "none",
+      "reason": "No human blocker and nothing to invent: 8.6.2 names the three syntax tokens for the three kinds, the badge is fully specified, and IDebugger.IVariable already carries `type`, so only the markup is missing. P3-10 measured that CSS cannot do it because upstream emits one colour and puts no type on the row.",
+      "riskReason": "It replaces the variables body renderer, which is the surface a user reads while paused; a fault there shows wrong values rather than no values, and the per-kind colours land on tokens the A4 block already audits against the editor backdrops."
     },
     {
       "order": 8,

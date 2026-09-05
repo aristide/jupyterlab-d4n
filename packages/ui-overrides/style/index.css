@@ -72,6 +72,12 @@
  * wrong-end truncation), so it has to come after the debugger's own sheet in
  * source order — which it does, because core's styles load first. */
 @import url('./surfaces/debugger.css');
+
+/* The variables TREE. Split from debugger.css because it is the one part of
+ * the panel whose rows are a web component with a shadow root, so every rule
+ * in it is written against `::part()` — the same shape as running.css, and a
+ * different set of hazards from the plain-DOM rows next door. */
+@import url('./surfaces/debugger-variables.css');
 @import url('./surfaces/launcher.css');
 @import url('./surfaces/status-bar.css');
 @import url('./surfaces/notifications.css');

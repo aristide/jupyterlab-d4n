@@ -2001,6 +2001,47 @@
         "li.jp-DebuggerCallstackFrame:hover:not(.selected)",
         ".jp-DebuggerKernelSource-source:hover"
       ]
+    },
+    {
+      "file": "style/surfaces/debugger-variables.css",
+      "upstream": [
+        "@jupyterlab/debugger 4.6.3 style/variables.css, lib/panels/variables/**",
+        "@jupyter/web-components 0.16.6 jp-tree-item (shadow parts)"
+      ],
+      "note": "The debugger variables TREE (P3-10, docs/decisions.md D-037). The GRID is P3-11. Every row is a <jp-tree-item> web component, so the geometry and surface rules are ::part() and are recorded under nonQueryable -- querySelectorAll cannot evaluate a shadow part. Every state needs a live debugpy session, so all entries are optional and report as skipped; they were measured by hand on 2026-09-05 in both modes.",
+      "selectors": [
+        {
+          "selector": ".jp-DebuggerVariables .jp-TreeView",
+          "state": "debugger-stopped",
+          "optional": true,
+          "note": "The tree host. Same component as the running panel's list."
+        },
+        {
+          "selector": ".jp-DebuggerVariables .jp-TreeItem",
+          "state": "debugger-stopped",
+          "optional": true,
+          "note": "The queryable host of every ::part() rule below. Its complete attribute set is class, role, tabindex and (with children) aria-expanded -- there is no type information on it, which is why D5 is unreachable from CSS."
+        },
+        {
+          "selector": ".jp-DebuggerVariables-name",
+          "state": "debugger-stopped",
+          "optional": true,
+          "note": "In the LIGHT dom, so reachable without ::part(). Moved off upstream's syntax.property onto text.primary per 8.6.2."
+        },
+        {
+          "selector": ".jp-DebuggerVariables-detail",
+          "state": "debugger-stopped",
+          "optional": true,
+          "note": "The value, or the type name for a non-primitive. Upstream paints every one syntax.string; replaced with text.secondary because a single syntax colour asserts the wrong type rather than merely failing to distinguish them."
+        }
+      ],
+      "nonQueryable": [
+        ".jp-DebuggerVariables .jp-TreeItem::part(positioning-region)",
+        ".jp-DebuggerVariables .jp-TreeItem:hover::part(positioning-region)",
+        ".jp-DebuggerVariables .jp-TreeItem[aria-selected='true']::part(positioning-region)",
+        ".jp-DebuggerVariables .jp-TreeItem::part(expand-collapse-button)",
+        ".jp-DebuggerVariables-name::after"
+      ]
     }
   ]
 }

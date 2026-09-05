@@ -1,0 +1,136 @@
+/* SURFACE: debugger variables — TREE view (PRD §8.6.2, TODO.md P3-10)
+ *
+ * Upstream selectors verified against:
+ *   @jupyterlab/debugger    4.6.3  style/variables.css, lib/panels/variables/**
+ *   @jupyter/web-components 0.16.6 jp-tree-item (shadow parts)
+ *   (declared range: @jupyterlab/* ^4.5.0)
+ *
+ * Every selector is mirrored in ../selectors.json (PRD §7.4(5)).
+ *
+ * The GRID view is a Lumino DataGrid and is P3-11. The section's plate, header
+ * and toolbar belong to `debugger.css` and `sidebar.css`. This file is the tree.
+ *
+ * A ROW HERE IS A SHADOW ROOT, exactly as in the running panel. The tree is a
+ * `<jp-tree-view class="jp-TreeView">` of `<jp-tree-item class="jp-TreeItem">`,
+ * and the box a user perceives as the row — the thing that takes the hover wash
+ * and the height — is `part="positioning-region"` inside the shadow tree. A
+ * descendant selector compiles, ships and paints nothing. `running.css` carries
+ * the full explanation and the two consequences; they hold here unchanged.
+ *
+ * D5 IS NOT REACHABLE FROM CSS, AND THIS IS WHERE THAT WAS MEASURED.
+ * §8.6.5 D5 asks that "value colors in the variables tree match the CM6
+ * `HighlightStyle` for the same types", and §8.6.2 spells it out: string →
+ * `color.syntax.string`, number → `color.syntax.number`, bool and None →
+ * `color.syntax.keyword`.
+ *
+ * Upstream paints EVERY value with one variable. `variables.css` sets
+ * `.jp-DebuggerVariables-detail { color: var(--jp-mirror-editor-string-color) }`
+ * with no per-type branch, and the Tier-4 adapter already routes that to
+ * `--d4n-color-syntax-string`. So the P3-10 task note is right that the two
+ * sides already share the syntax tokens — but they share ONE, and the match
+ * therefore holds for strings only.
+ *
+ * Measured on 2026-09-05 with a kernel stopped over `s_val`, `n_val`, `f_val`,
+ * `b_val`, `none_val`, `list_val` and `d_val`: every `-detail` computed
+ * `#145C3F` — `syntax.string` — including `True` and `dict`. And the row carries
+ * NO type information to select on: a `jp-tree-item`'s whole attribute set is
+ * `class="jp-TreeItem nested"`, `role="treeitem"`, `tabindex="-1"` and, when it
+ * has children, `aria-expanded`. There is no `data-type`, no variant class and
+ * no per-kind element.
+ *
+ * So a stylesheet cannot colour a number differently from a string here. Doing
+ * it needs a variable-body renderer that emits the type — a plugin. That is
+ * **P3-20**, and D-037 records the measurement.
+ */
+
+/* --- Rows ----------------------------------------------------------------- */
+
+/* The shared list-row height, not §8.6.2's 22px. D-009 makes the file browser,
+ * the running panel and the palette one height so a compact-density switch moves
+ * them together, and a fourth list surface that is 2px shorter than the other
+ * three reads as a mistake rather than as a spec. Recorded in D-037 rather than
+ * silently followed either way.
+ *
+ * Transparent at rest: these rows sit on the section canvas, and a second
+ * surface here would band the panel. */
+body[data-jp-theme-name^='Data4Now']
+  .jp-DebuggerVariables
+  .jp-TreeItem::part(positioning-region) {
+  min-height: var(--d4n-density-comfortable-row-height);
+  padding: var(--d4n-space-0) var(--d4n-space-2);
+  background: transparent;
+  border-radius: var(--d4n-radius-sm);
+}
+
+body[data-jp-theme-name^='Data4Now']
+  .jp-DebuggerVariables
+  .jp-TreeItem:hover::part(positioning-region) {
+  background: var(--d4n-color-surface-hover);
+}
+
+/* Selection is the same plate-plus-accent treatment the file browser and the
+ * running panel use, so "this is the row you are on" reads identically in every
+ * list in the product. */
+body[data-jp-theme-name^='Data4Now']
+  .jp-DebuggerVariables
+  .jp-TreeItem[aria-selected='true']::part(positioning-region) {
+  background: var(--d4n-color-selection-active);
+  box-shadow: inset var(--d4n-border-width-thick) 0 0 0
+    var(--d4n-color-action-default);
+}
+
+/* --- Expand chevron ------------------------------------------------------- */
+
+/* §8.6.2: 12px, `color.text.muted`. The glyph is slotted into the component's
+ * `expand-collapse-button` part, so the size goes on the part and the colour on
+ * the host — `::part()` cannot take a descendant on its right-hand side. */
+body[data-jp-theme-name^='Data4Now']
+  .jp-DebuggerVariables
+  .jp-TreeItem::part(expand-collapse-button) {
+  width: var(--d4n-space-3);
+  height: var(--d4n-space-3);
+  color: var(--d4n-color-text-muted);
+}
+
+/* --- Name and value ------------------------------------------------------- */
+
+/* Both spans are in the LIGHT dom — upstream slots them into the item — so they
+ * are reachable without `::part()`.
+ *
+ * §8.6.2 puts the name on `color.text.primary`, not on a syntax colour. Upstream
+ * paints it `--jp-mirror-editor-attribute-color`, which the adapter routes to
+ * `syntax.property`, so the name currently reads as though it were a property
+ * token in code. It is a label in a panel; the PRD is right. */
+body[data-jp-theme-name^='Data4Now'] .jp-DebuggerVariables-name {
+  color: var(--d4n-color-text-primary);
+  font-family: var(--d4n-font-family-mono);
+  font-size: var(--d4n-font-size-ui-sm);
+}
+
+/* The value, or the type name for a non-primitive.
+ *
+ * THIS REPLACES A SYNTAX COLOUR WITH A NEUTRAL ONE, ON PURPOSE. Upstream paints
+ * every value `--jp-mirror-editor-string-color`, which the adapter routes to
+ * `syntax.string` — so a number, a bool and the word `dict` all render in the
+ * colour the editor uses for a string literal. §8.6.2 gives the value a base
+ * treatment (`text.secondary`) AND a per-kind override, and the per-kind half is
+ * unreachable (D-037). Shipping the base alone is honest; shipping upstream's
+ * single syntax colour actively misinforms, because it says "string" about
+ * values that are not strings.
+ *
+ * The truncation is upstream's and is kept; what §8.6.2 also asks for is the
+ * full text in `title`, and upstream sets no `title` on this span at all. That
+ * needs a renderer change, so it is P3-20 with the rest of the type work. */
+body[data-jp-theme-name^='Data4Now'] .jp-DebuggerVariables-detail {
+  color: var(--d4n-color-text-secondary);
+  font-family: var(--d4n-font-family-mono);
+  font-size: var(--d4n-font-size-ui-sm);
+}
+
+/* Upstream's `::after { content: ':' }` on the name is the only separator
+ * between the two spans, and it carries a 5px right margin. Re-spaced onto the
+ * scale so the colon sits with the name rather than floating between them. */
+body[data-jp-theme-name^='Data4Now'] .jp-DebuggerVariables-name::after {
+  margin-right: var(--d4n-space-1);
+  color: var(--d4n-color-text-muted);
+}
