@@ -1,0 +1,36 @@
+{
+  "title": "Launcher",
+  "description": "Data4Now launcher. Replaces @jupyterlab/launcher-extension:plugin (PRD 8.11, TODO P2-15, docs/decisions.md D-033). This schema re-declares the three affordances core's schema declared, because a disabled plugin's schema is NOT served: measured on 2026-09-05, disabling the core plugin removed File > New Launcher, the Accel Shift L shortcut and the file browser + button, and left the command itself working.",
+  "jupyter.lab.menus": {
+    "main": [
+      {
+        "id": "jp-mainmenu-file",
+        "items": [
+          {
+            "command": "launcher:create",
+            "rank": 0.99
+          }
+        ]
+      }
+    ]
+  },
+  "jupyter.lab.shortcuts": [
+    {
+      "command": "launcher:create",
+      "keys": ["Accel Shift L"],
+      "selector": "body"
+    }
+  ],
+  "jupyter.lab.toolbars": {
+    "FileBrowser": [
+      {
+        "name": "new-launcher",
+        "command": "launcher:create",
+        "rank": 1
+      }
+    ]
+  },
+  "properties": {},
+  "additionalProperties": false,
+  "type": "object"
+}

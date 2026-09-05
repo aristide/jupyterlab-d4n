@@ -401,8 +401,13 @@ __metadata:
     "@jupyterlab/application": ^4.5.0
     "@jupyterlab/apputils": ^4.5.0
     "@jupyterlab/builder": ^4.5.0
+    "@jupyterlab/filebrowser": ^4.5.0
+    "@jupyterlab/launcher": ^4.5.0
+    "@jupyterlab/services": ^7.5.0
     "@jupyterlab/settingregistry": ^4.5.0
     "@jupyterlab/terminal": ^4.5.0
+    "@jupyterlab/translation": ^4.5.0
+    "@jupyterlab/ui-components": ^4.5.0
     "@lumino/coreutils": ^2.0.0
     "@lumino/datagrid": ^2.0.0
     "@lumino/disposable": ^2.0.0
@@ -1028,7 +1033,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jupyterlab/filebrowser@npm:^4.6.3":
+"@jupyterlab/filebrowser@npm:^4.5.0, @jupyterlab/filebrowser@npm:^4.6.3":
   version: 4.6.3
   resolution: "@jupyterlab/filebrowser@npm:4.6.3"
   dependencies:
@@ -1106,6 +1111,24 @@ __metadata:
     vega-lite: ^5.6.1
     vega-statistics: ^1.7.9
   checksum: 6cac50706264c66df1d2d807aa167c1ad3d49d1dee1fc846f1c4a71c0ebb560554b7fd6246d7dc9bb4faa24fcb11a977964d510e2687e7ecc506110b65559cbd
+  languageName: node
+  linkType: hard
+
+"@jupyterlab/launcher@npm:^4.5.0":
+  version: 4.6.3
+  resolution: "@jupyterlab/launcher@npm:4.6.3"
+  dependencies:
+    "@jupyterlab/apputils": ^4.7.3
+    "@jupyterlab/translation": ^4.6.3
+    "@jupyterlab/ui-components": ^4.6.3
+    "@lumino/algorithm": ^2.0.4
+    "@lumino/commands": ^2.3.3
+    "@lumino/coreutils": ^2.2.2
+    "@lumino/disposable": ^2.1.5
+    "@lumino/properties": ^2.0.4
+    "@lumino/widgets": ^2.8.0
+    react: ^18.2.0
+  checksum: 9d629d51051607fbc60a22f53ebf348c7002914427b4879f7246105fd6d1c05016ce59d73687d052113e0861aa92ee520681fb74e9d993776eb296909205c081
   languageName: node
   linkType: hard
 
@@ -1278,7 +1301,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jupyterlab/services@npm:^7.6.3":
+"@jupyterlab/services@npm:^7.5.0, @jupyterlab/services@npm:^7.6.3":
   version: 7.6.3
   resolution: "@jupyterlab/services@npm:7.6.3"
   dependencies:

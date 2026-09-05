@@ -370,6 +370,51 @@ function buildChecks(mode, t) {
     'text.primary on danger.faint (error output)'
   );
 
+  // The launcher's "No kernels found" block (PRD 8.11.5, TODO P2-15) is the
+  // only surface that prints three kinds of text on `warning.faint`: a title,
+  // a hint and a documentation link. None of the three is covered by the
+  // TEXT_ROLE_SURFACES loop above, because `warning.faint` is an intent tint
+  // and not a `surface.*`. The glyph beside them is non-text, so it takes A3.
+  add(
+    'A1',
+    4.5,
+    t['color.text.primary'],
+    t['color.warning.faint'],
+    'text.primary on warning.faint (launcher no-kernels title)'
+  );
+  add(
+    'A1',
+    4.5,
+    t['color.text.muted'],
+    t['color.warning.faint'],
+    'text.muted on warning.faint (launcher no-kernels hint)'
+  );
+  add(
+    'A1',
+    4.5,
+    t['color.text.link'],
+    t['color.warning.faint'],
+    'text.link on warning.faint (launcher no-kernels link)'
+  );
+  add(
+    'A3',
+    3,
+    t['color.warning.default'],
+    t['color.warning.faint'],
+    'warning.default on warning.faint (launcher no-kernels glyph)'
+  );
+  // VIS, not A3, and the reason is the one stated at the A3 block below: 1.4.11
+  // gates the boundary that IDENTIFIES a component. The no-kernels block is
+  // identified by its tint, its glyph and its title, all three of which carry a
+  // real gate above. The border only has to be separable from the canvas.
+  add(
+    'VIS',
+    1.04,
+    t['color.warning.subtle'],
+    t['color.surface.canvas'],
+    'warning.subtle border vs surface.canvas (launcher no-kernels block)'
+  );
+
   // --- A1: the completer type badge monogram (PRD §6.4) ------------------
   // `.jp-Completer-monogram` is a LETTER printed on the type badge, and the
   // badge takes one of ten `color.syntax.*` hues so the swatch beside a

@@ -385,11 +385,17 @@ its passive/interactive split.
 
 ## D-016 — The launcher splits: presentation is T2 now, behaviour is T3 later
 
-**Decided.** `packages/ui-overrides/style/surfaces/launcher.css` styles core's
-launcher. `@jupyterlab/launcher-extension:plugin` stays **enabled**. The four
-behavioural requirements of §8.11 that CSS genuinely cannot reach are TODO.md
-**P2-15**, and they are the only thing that would justify re-providing
-`ILauncher`.
+**Superseded in part by D-033 on 2026-09-05.** The "later" arrived: P2-15
+landed, `@d4n/shell-chrome:launcher` provides `ILauncher` and core's plugin is
+disabled. Everything below about the T2/T3 split and the measurements behind the
+stylesheet is still true and is why the split was drawn where it was. Only the
+sentences saying core's plugin stays enabled are out of date.
+
+**Decided.** `packages/ui-overrides/style/surfaces/launcher.css` styles the
+launcher. `@jupyterlab/launcher-extension:plugin` stayed **enabled** under this
+decision. The four behavioural requirements of §8.11 that CSS genuinely cannot
+reach were TODO.md **P2-15**, and they were the only thing that would justify
+re-providing `ILauncher`.
 
 This lands the opposite way from D-015, and the difference is the point: for the
 status bar, all four of §8.5.1's "impossible in CSS" claims turned out to be
@@ -1686,6 +1692,139 @@ carried forward for a PRD revision. T3 should be decided at the same time.
 **The general lesson.** "Every ANSI colour used" is a bigger set than "every
 ANSI colour we define". A terminal renders whatever the program emits, and a
 sixteen-colour theme is not a guarantee about a 256-colour stream.
+
+## D-033 — The launcher is ours, and a disabled plugin's schema does not survive
+
+**Decided.** `@d4n/shell-chrome:launcher` provides `ILauncher`.
+`@jupyterlab/launcher-extension:plugin` is disabled in
+`jupyter-config/labconfig/page_config.json` in the same change. This closes the
+second half of D-016 and TODO **P2-15**.
+
+The widget keeps **core's class names**, so the whole T2 stylesheet from P2-08
+still applies and every measurement behind it stays true. It is plain DOM rather
+than a `VDomRenderer`: nothing else in this package uses React, and a filter
+input inside a re-rendered tree loses focus on every keystroke.
+
+**The finding that cost the most, and it contradicts D-015.** D-015 said core's
+settings schema **survives** the plugin being disabled, and warned that a swap
+missing the command id would leave a View ▸ Appearance item pointing at nothing.
+Measured on 2026-09-05, the opposite is true for the launcher: with
+`@jupyterlab/launcher-extension:plugin` disabled, its schema is not served, and
+all three declarations in it go with it —
+
+| Declaration                              | Affordance it provides      | After the disable |
+| ---------------------------------------- | --------------------------- | ----------------- |
+| `jupyter.lab.menus` → `jp-mainmenu-file` | File ▸ New Launcher         | **gone**          |
+| `jupyter.lab.shortcuts`                  | `Accel Shift L`             | **gone**          |
+| `jupyter.lab.toolbars` → `FileBrowser`   | the file browser `+` button | **gone**          |
+
+The command itself kept working, so nothing threw and nothing logged. Three
+affordances in three other surfaces simply stopped existing. The first probe
+measured `fileMenuHasNewLauncher: false`, `fbPlusCount: 0`, and a
+`Control+Shift+L` that added no tab.
+
+The fix is `packages/shell-chrome/schema/launcher.json`, which re-declares the
+same three blocks against the same command id, plus `"schemaDir": "schema"` in
+the package's `jupyterlab` block. After it: the File item is back, the shortcut
+adds a launcher, the toolbar button is back and the palette shows **New
+Launcher** under a **Launcher** header with **Ctrl+Shift+L** beside it.
+
+**So D-015's warning was right and its premise was wrong.** A disabled plugin
+does leave a trap, but the trap is the reverse of the one it described: not a
+surviving schema pointing at a missing command, but a **missing schema** that
+takes working affordances down with it. Both failures are silent. Whichever way
+a future swap lands, the rule is the same — **enumerate what the disabled
+plugin's schema declared, and re-declare it.**
+
+**JupyterLab cannot say "zero kernels", and this shapes §8.11.5.**
+`validateSpecModels` in `@jupyterlab/services` 7.6.3 throws
+`No valid kernelspecs found` on an empty map. So `requestSpecs` rejects,
+`KernelSpecManager._specs` stays **null**, and `specs` never becomes an empty
+object. Measured against a second server started with
+`--KernelSpecManager.ensure_native_kernel=False` and the `python3` kernelspec
+moved aside: `/api/kernelspecs` answered
+`{"default":"python3","kernelspecs":{}}` and `manager.specs` was still null
+after `ready` resolved. `ready` never rejects either — 4.6.3 writes
+`.catch(_ => undefined)` into the promise. And `connectionFailure` is a signal
+that nothing in `manager.js` emits.
+
+So the no-kernels test is **a null `specs` after `isReady`**, not a zero-length
+map. The zero-length branch is kept because it becomes the correct one the day
+upstream stops treating an empty list as a validation error, and the
+`connectionFailure` branch is kept for the same reason. Both are stated in the
+code rather than assumed.
+
+**Four decisions worth naming.**
+
+1. **Section order ignores `categoryRank` entirely.** L4 asks for an order that
+   third-party rank cannot change. Core takes the smallest `categoryRank` in a
+   category and sorts sections by it, so any extension reaches the top of the
+   launcher by passing 0. Ours is Notebook, Console, every other category by
+   name, "Other" last. Item order **inside** a section still honours `rank`,
+   which L4 does not cover and users have learnt.
+2. **The filter is built only above 12 cards.** §8.11.5 allows search "only if
+   the P0 audit shows deployments routinely exceeding 12 kernels — otherwise it
+   is chrome for a case that does not occur". No such deployment was found, so
+   the input is not shipped unconditionally and there is no setting: the markup
+   exists when a session actually has more cards than the threshold. A stock
+   boot renders 7 and the input is absent.
+3. **The root case drops the path element, it does not blank it.** At the root
+   the heading reads "New files will be created in the root directory" with no
+   `.jp-Launcher-cwdPath` span. The sentence is translated whole, with `%1`
+   substituted by a marker and split on it, so a translation can put the path
+   anywhere in the sentence.
+4. **`direction: rtl` moved off the heading and onto the path.** P2-08 put it on
+   `.jp-Launcher-cwd > h3`, which was right while core rendered a bare path
+   there. The moment the plugin wraps the path in a sentence, an rtl heading
+   reorders the sentence around it. Left truncation now lives on the span alone.
+
+**Skeleton cards are not built.** §8.11.5's "slow kernel discovery" row asks for
+skeletons rather than a spinner. The launcher opens after `app.restored`, by
+which time the specs are already loaded, so a skeleton would be a flash on a
+path that does not wait. Loading states for panels are **P5-05**, which is
+flagged as design work, and this belongs with them rather than alone here.
+
+**AC10 changes shape for this surface, and it must be said plainly.**
+Presentation reverts completely. Measured with _JupyterLab Light_ selected:
+cards go from 112px `border-box`, 6px radius, a `grid` of 6 columns and a
+`#F4F6FA` kernel plate, to core's 100px `content-box`, 2px radius, `flex` and no
+plate, in system-ui. **Behaviour does not revert**, because behaviour is a
+plugin and not a theme: the section order stays ours and the root-directory copy
+stays on screen. That is the same as the splash (P2-09) and is inherent to every
+T3 swap. AC10 promises a stock **look**, not a stock plugin set.
+
+**Measured in a running 4.6.3, both modes.**
+
+- Section order **Notebook, Console, Other**, with 7 cards; the readout reads
+  "New files will be created in the root directory".
+- Non-root readout, driven by moving the file browser into a directory:
+  "New files will be created in probe-cwd-a-rather-long-directory-name", the
+  path in JetBrains Mono at `text.secondary` (`#46566D` light), truncated from
+  the left in a 266px box, full path in `title`.
+- Cards 112px `border-box`, 164.45px wide, 6px radius, 6 columns at 1600px with
+  the file browser open, 12px gap. Light: `#FFFFFF` on `#E4E9F0`. Dark:
+  `#122A47` on `#142E50` with the launcher on `#0E2542`.
+- Kernel plate `#F4F6FA` in **both** modes, so no halo (L3). Vector icons 32px
+  inside the LabIcon wrapper `div`; kernel icons are `img`.
+- Every card `role="button"`, `tabindex=0`, `aria-label` set; 7 of 7. The focus
+  ring measured `2px solid #167C7C` light and `#4FD1D1` dark at a 2px offset,
+  with `:focus-visible` matching. **Enter** on _Show Contextual Help_ opened the
+  Contextual Help tab (L9).
+- No-kernels state: `role="alert"`, "No kernels found", the one-line hint and a
+  link to `docs.jupyter.org`. Light plate `#FBEFD8` with a `#E0A04A` border and
+  a `#8C5807` glyph; dark `#3D2E10` / `#C97C0A` / `#E0A04A`.
+- Filter, with the threshold temporarily lowered to 3: a 28px input, its label
+  bound by `for`/`id`, typing `term` left one card and one section visible with
+  the caret still in the input, and hidden cards computed `display: none` —
+  which needs the explicit `[hidden]` rules, because `.jp-LauncherCard` sets
+  `display: flex` and outranks the user-agent rule.
+- The solo launcher has no close icon; a second launcher makes both closable and
+  closing it takes the icon away again.
+- `jlpm test:galata` 14 of 14 after regenerating the four launcher-bearing
+  baselines. `test:selectors` 102 matched, 0 broken. `test:contrast` 529
+  pairings, 0 failing — five are new, and the block's border is gated **VIS**
+  rather than A3, because 1.4.11 gates the boundary that identifies a component
+  and this block is identified by its tint, its glyph and its title.
 
 ---
 

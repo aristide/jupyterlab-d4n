@@ -1,25 +1,27 @@
-/* SURFACE: launcher (PRD §6.2, §8.11, TODO.md P2-08)
+/* SURFACE: launcher (PRD §6.2, §8.11, TODO.md P2-08 and P2-15)
  *
- * Upstream selectors verified against:
- *   @jupyterlab/launcher            4.6.3  style/base.css, lib/index.js
- *   @jupyterlab/launcher-extension  4.6.3  lib/index.js
+ * Class names verified against:
+ *   @jupyterlab/launcher            4.6.3  style/base.css, src/widget.tsx
+ *   @jupyterlab/launcher-extension  4.6.3  src/index.ts
  *   (declared range: @jupyterlab/* ^4.5.0)
  *
  * Every selector is mirrored in ../selectors.json (PRD §7.4(5)).
  *
- * SCOPE: this file is the PRESENTATION half of §8.11. The behavioural half —
- * fixed section order, the root-directory copy, the no-kernels error state, the
- * >12-kernel search — is TODO.md P2-15 and needs a plugin. The audit behind that
- * split is in docs/decisions.md D-016; the short version is that card geometry,
- * the responsive grid, the kernel plate and every state treatment ARE reachable
- * here, and `launcher:create` is wired to every "+" affordance in the
- * application, so re-providing the token is not something to do casually.
+ * WHO RENDERS THIS SURFACE CHANGED ON 2026-09-05, AND THE FILE DID NOT.
  *
- * One correction to §8.11.4 while implementing: it says the launch directory is
- * "invisible in stock" and calls the readout net-new. Not on 4.6 — core renders
- * a `.jp-Launcher-cwd` heading and puts the path in it. What is actually missing
- * is the ROOT case, where the path is empty and the heading renders blank. That
- * is the P2-15 part.
+ * P2-08 wrote this sheet against CORE's launcher. P2-15 replaced that launcher
+ * with `@d4n/shell-chrome:launcher` (docs/decisions.md D-033), and the
+ * replacement emits the SAME class names on purpose — so every measurement
+ * behind the rules below stays true and `selectors.json` keeps asserting
+ * something real. Three groups of rules are new and belong to the replacement
+ * rather than to core: the launch-target path, the no-kernels error state and
+ * the filter. Each one says so where it starts.
+ *
+ * One correction to §8.11.4, made under P2-08 and still true: it says the launch
+ * directory is "invisible in stock" and calls the readout net-new. Not on 4.6 —
+ * core renders a `.jp-Launcher-cwd` heading and puts the path in it. What was
+ * missing is the ROOT case, where the path is empty and the heading renders
+ * blank. P2-15 fixed that in the plugin, not here.
  */
 
 /* --- Container ------------------------------------------------------------ */
@@ -43,10 +45,14 @@ body[data-jp-theme-name^='Data4Now'] .jp-Launcher-section {
 
 /* --- Launch target readout ------------------------------------------------ */
 
-/* The heading core puts the cwd into. Quiet by design: it is orientation, not a
- * title — the user came here to launch something, not to read a path. Truncated
- * from the LEFT because the leaf directory is what identifies the location and
- * the mount prefix is noise. */
+/* The heading the launch target goes into. Quiet by design: it is orientation,
+ * not a title — the user came here to launch something, not to read a path.
+ *
+ * The sentence reads left to right, and only the PATH is truncated from the
+ * left. `direction: rtl` used to sit on this heading, which was right while core
+ * rendered the bare path here and wrong the moment the plugin wrapped it in
+ * "New files will be created in %1" — an rtl heading reorders the sentence
+ * around the path. It now sits on the path alone, below. */
 body[data-jp-theme-name^='Data4Now'] .jp-Launcher-cwd > h3 {
   overflow: hidden;
   margin: 0 0 var(--d4n-space-4);
@@ -54,6 +60,22 @@ body[data-jp-theme-name^='Data4Now'] .jp-Launcher-cwd > h3 {
   font-family: var(--d4n-font-family-ui);
   font-size: var(--d4n-font-size-ui-xs);
   font-weight: var(--d4n-font-weight-regular);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* NEW WITH P2-15. The path itself: mono, because it is a literal the user may
+ * have to type, and truncated from the LEFT because the leaf directory
+ * identifies the location while the mount prefix is noise. At the root the
+ * plugin emits no such span at all — it writes "in the root directory" in place
+ * of an empty path, which is the whole of §8.11.4's root case. */
+body[data-jp-theme-name^='Data4Now'] .jp-Launcher-cwdPath {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--d4n-color-text-secondary);
+  font-family: var(--d4n-font-family-mono);
+  vertical-align: bottom;
   white-space: nowrap;
   text-overflow: ellipsis;
   direction: rtl;
@@ -223,6 +245,133 @@ body[data-jp-theme-name^='Data4Now'] .jp-LauncherCard-label {
   text-align: center;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
+}
+
+/* --- No kernels, and kernel discovery failed (NEW WITH P2-15) -------------- */
+
+/* §8.11.5 is explicit that this is an ERROR state, not an empty one: with no
+ * kernel the user cannot work at all. Core renders an empty section instead,
+ * which reads as "nothing here" rather than "your environment is broken". The
+ * plugin decides which of the two messages to write; this file only paints them.
+ *
+ * `warning`, not `danger`: the user has broken nothing, and the block carries a
+ * remediation link. The plate is `warning.faint`, so the copy keeps the
+ * body-text contrast the audit already gates. */
+body[data-jp-theme-name^='Data4Now'] .jp-Launcher-errorState {
+  display: flex;
+  gap: var(--d4n-space-3);
+  align-items: flex-start;
+  margin-bottom: var(--d4n-launcher-section-gap);
+  padding: var(--d4n-space-4);
+  background: var(--d4n-color-warning-faint);
+  border: var(--d4n-border-width-thin) solid var(--d4n-color-warning-subtle);
+  border-radius: var(--d4n-launcher-card-radius);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-Launcher-errorIcon {
+  display: flex;
+  flex: 0 0 auto;
+  width: var(--d4n-space-5);
+  height: var(--d4n-space-5);
+  color: var(--d4n-color-warning-default);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-Launcher-errorIcon svg {
+  width: 100%;
+  height: 100%;
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-Launcher-errorText {
+  display: flex;
+  flex-direction: column;
+  gap: var(--d4n-space-1);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-Launcher-errorTitle {
+  margin: 0;
+  color: var(--d4n-color-text-primary);
+  font-family: var(--d4n-font-family-ui);
+  font-size: var(--d4n-font-size-ui-sm);
+  font-weight: var(--d4n-font-weight-semibold);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-Launcher-errorHint {
+  margin: 0;
+  color: var(--d4n-color-text-muted);
+  font-family: var(--d4n-font-family-ui);
+  font-size: var(--d4n-font-size-ui-xs);
+  line-height: var(--d4n-font-line-height-normal);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-Launcher-errorLink {
+  align-self: flex-start;
+  color: var(--d4n-color-text-link);
+  font-family: var(--d4n-font-family-ui);
+  font-size: var(--d4n-font-size-ui-xs);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-Launcher-errorLink:focus-visible {
+  outline: var(--d4n-focus-ring-width) var(--d4n-focus-ring-style)
+    var(--d4n-focus-ring-color);
+  outline-offset: var(--d4n-focus-ring-offset);
+}
+
+/* --- Filter (NEW WITH P2-15) ---------------------------------------------- */
+
+/* §8.11.5 allows a search above about 12 kernels, and says plainly that below
+ * that it is "chrome for a case that does not occur". So the plugin builds this
+ * markup only when a session really holds more cards than that, and these rules
+ * paint nothing on an ordinary boot. */
+body[data-jp-theme-name^='Data4Now'] .jp-Launcher-filter {
+  display: flex;
+  gap: var(--d4n-space-2);
+  align-items: center;
+  margin-bottom: var(--d4n-launcher-section-gap);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-Launcher-filterLabel {
+  color: var(--d4n-color-text-muted);
+  font-family: var(--d4n-font-family-ui);
+  font-size: var(--d4n-font-size-ui-xs);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-Launcher-filterInput {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: var(--d4n-launcher-card-width);
+  height: var(--d4n-input-height);
+  padding: 0 var(--d4n-input-padding-x);
+  color: var(--d4n-input-fg);
+  font-family: var(--d4n-font-family-ui);
+  font-size: var(--d4n-input-font-size);
+  background: var(--d4n-input-bg);
+  border: var(--d4n-border-width-thin) solid var(--d4n-input-border);
+  border-radius: var(--d4n-input-radius);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-Launcher-filterInput::placeholder {
+  color: var(--d4n-input-placeholder);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-Launcher-filterInput:hover {
+  background: var(--d4n-input-bg-hover);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-Launcher-filterInput:focus-visible {
+  background: var(--d4n-input-bg-active);
+  border-color: var(--d4n-input-border-active);
+  outline: var(--d4n-focus-ring-width) var(--d4n-focus-ring-style)
+    var(--d4n-focus-ring-color);
+  outline-offset: var(--d4n-focus-ring-offset);
+}
+
+/* The filter hides cards with the `hidden` attribute, and the attribute needs
+ * help here. The UA rule is `[hidden] { display: none }`, which a class selector
+ * outranks — and `.jp-LauncherCard` above sets `display: flex`. Without these
+ * two rules the filter would set the attribute and change nothing on screen. */
+body[data-jp-theme-name^='Data4Now'] .jp-LauncherCard[hidden],
+body[data-jp-theme-name^='Data4Now'] .jp-Launcher-section[hidden] {
+  display: none;
 }
 
 /* --- Reduced motion ------------------------------------------------------- */

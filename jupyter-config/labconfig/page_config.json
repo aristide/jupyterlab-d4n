@@ -1,5 +1,6 @@
 {
   "disabledExtensions": {
-    "@jupyterlab/apputils-extension:splash": true
+    "@jupyterlab/apputils-extension:splash": true,
+    "@jupyterlab/launcher-extension:plugin": true
   }
 }

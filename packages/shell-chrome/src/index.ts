@@ -9,6 +9,7 @@ import { ITerminalTracker } from '@jupyterlab/terminal';
 import { activateAdaptiveTheme } from './adaptiveTheme';
 import { activateEditorThemeSync } from './editorThemeSync';
 import { faviconPlugin } from './favicon';
+import { launcherPlugin } from './launcher';
 import { menuBarOverflowPlugin } from './menuBarOverflow';
 import { splashPlugin } from './splash';
 import { activateTerminalBridge } from './terminalBridge';
@@ -96,7 +97,8 @@ const plugins: JupyterFrontEndPlugin<unknown>[] = [
   terminalBridge,
   splashPlugin,
   menuBarOverflowPlugin,
-  faviconPlugin
+  faviconPlugin,
+  launcherPlugin
 ];
 
 export default plugins;
@@ -116,9 +118,9 @@ export { buildTerminalTheme } from './terminalBridge';
 export { SPLASH_PLUGIN_ID, buildSplashNode } from './splash';
 export { MENU_BAR_OVERFLOW_PLUGIN_ID } from './menuBarOverflow';
 
-// Ids reserved for work that has not landed. Neither registers a plugin, and
-// only one of them is still a T3 replacement: P2-15 will provide `ILauncher`
-// (D-016), while the status bar's swap was decided against outright (D-015) and
-// its id now belongs to the P2-14 overflow. See each module.
 export { LAUNCHER_PLUGIN_ID } from './launcher';
+
+// An id reserved for work that has not landed. It registers no plugin, and it is
+// no longer a T3 replacement: the status bar's swap was decided against outright
+// (D-015) and the id now belongs to the P2-14 overflow. See `statusBar.ts`.
 export { STATUS_BAR_PLUGIN_ID } from './statusBar';

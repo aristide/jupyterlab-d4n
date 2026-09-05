@@ -1768,10 +1768,11 @@
     {
       "file": "style/surfaces/launcher.css",
       "upstream": [
-        "@jupyterlab/launcher 4.6.3 style/base.css, lib/index.js",
-        "@jupyterlab/launcher-extension 4.6.3 lib/index.js"
+        "@d4n/shell-chrome 0.1.0 src/launcher.ts (this surface is OURS since P2-15)",
+        "@jupyterlab/launcher 4.6.3 style/base.css (still loaded, still under us)",
+        "@jupyterlab/launcher-extension 4.6.3 (disabled in page_config.json)"
       ],
-      "note": "Presentation half of PRD 8.11. The behavioural half (fixed section order, root-directory copy, no-kernels error state, >12-kernel search) is TODO P2-15; see docs/decisions.md D-016. Note .jp-Launcher-cwd EXISTS on 4.6 -- 8.11.4 calls the readout net-new, which is wrong; only the empty-path root case is missing.",
+      "note": "OWNERSHIP CHANGED ON 2026-09-05 (P2-15, D-033). P2-08 wrote this sheet against core's launcher. The launcher is now @d4n/shell-chrome:launcher and @jupyterlab/launcher-extension:plugin is disabled in jupyter-config/labconfig/page_config.json. The replacement emits the SAME class names on purpose, so every entry below still matches and the whole T2 stylesheet still applies. What the entries assert changed with the ownership: they no longer prove that upstream markup survived an upgrade, they prove that OUR markup did. Both are worth failing the build over, and the four entries added under P2-15 are marked. Note .jp-Launcher-cwd existed on 4.6 -- 8.11.4 calls the readout net-new, which is wrong; only the empty-path root case was missing.",
       "selectors": [
         {
           "selector": ".jp-Launcher",
@@ -1816,7 +1817,7 @@
         {
           "selector": ".jp-LauncherCard-icon > img",
           "state": "boot",
-          "note": "Kernel cards only -- the raster kernelIconUrl the neutral plate exists for (D-010)."
+          "note": "Kernel cards only -- the raster kernelIconUrl the neutral plate exists for (D-010). Optional since P2-15 only in the sense that a kernel with no logo gets .jp-LauncherCard-noKernelIcon instead; the container image ships ipykernel with a logo, so it is still asserted."
         },
         {
           "selector": ".jp-LauncherCard-label",
@@ -1825,17 +1826,47 @@
         {
           "selector": ".jp-LauncherCard-icon > div",
           "state": "boot",
-          "note": "LabIcon mounts its svg inside a wrapper div, not as a direct child."
+          "note": "LabIcon mounts its svg inside a wrapper div, not as a direct child. Our plugin goes through LabIcon.resolveElement for exactly this reason -- a bare svg child measured unsized under P2-08."
         },
         {
           "selector": ".jp-LauncherCard-icon svg",
           "state": "boot"
+        },
+        {
+          "selector": ".jp-Launcher-cwdPath",
+          "state": "boot",
+          "optional": true,
+          "note": "NEW WITH P2-15. The mono, left-truncated path inside the readout. Optional because it is absent in the state the harness boots into: at the root the plugin writes \"New files will be created in the root directory\" and emits no path span at all, which IS the root case of 8.11.4. Reaching it needs the file browser moved into a subdirectory, which the harness cannot drive yet. Measured by hand in notebooks/ instead; see D-033."
+        },
+        {
+          "selector": ".jp-Launcher-errorState",
+          "state": "boot",
+          "optional": true,
+          "note": "NEW WITH P2-15. The no-kernels / discovery-failed block (8.11.5, L6). Not reachable from a scripted boot: the container ships ipykernel, so reaching it means uninstalling every kernelspec from a running server. Verified by hand with the kernelspec manager stubbed; see D-033."
+        },
+        {
+          "selector": ".jp-Launcher-filter",
+          "state": "boot",
+          "optional": true,
+          "note": "NEW WITH P2-15. The filter above the grid, built only above 12 cards (8.11.5). A stock boot renders 8, so this matches 0 and must not fail the build. Verified by hand with the threshold lowered; see D-033."
+        },
+        {
+          "selector": ".jp-LauncherCard-noKernelIcon",
+          "state": "boot",
+          "optional": true,
+          "note": "NEW WITH P2-15. The letter tile a kernel card falls back to when its kernelspec carries no logo. Core emits it too. Matches 0 in the container, where every installed kernel has a logo."
         }
       ],
       "nonQueryable": [
         ".jp-LauncherCard:hover",
         ".jp-LauncherCard:active",
-        ".jp-LauncherCard:focus-visible"
+        ".jp-LauncherCard:focus-visible",
+        ".jp-LauncherCard[hidden]",
+        ".jp-Launcher-section[hidden]",
+        ".jp-Launcher-errorLink:focus-visible",
+        ".jp-Launcher-filterInput::placeholder",
+        ".jp-Launcher-filterInput:hover",
+        ".jp-Launcher-filterInput:focus-visible"
       ]
     }
   ]

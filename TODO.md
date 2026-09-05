@@ -80,33 +80,32 @@ them:
 
 ## Status
 
-| Phase | Scope                    | State                                         |
-| ----- | ------------------------ | --------------------------------------------- |
-| P0    | Audit & contract         | **Done.** Exit gate signed 2026-09-03.        |
-| P1    | Token pipeline & themes  | **Done**                                      |
-| P2    | Chrome & navigation      | Most surfaces styled. P2-15 is the last swap. |
-| P3    | Notebook & editor        | Scaffolded                                    |
-| P4    | Forms, settings, dialogs | Scaffolded                                    |
-| P5    | Icons, motion, density   | Scaffolded                                    |
-| P6    | Hardening & release      | Not started                                   |
+| Phase | Scope                    | State                                           |
+| ----- | ------------------------ | ----------------------------------------------- |
+| P0    | Audit & contract         | **Done.** Exit gate signed 2026-09-03.          |
+| P1    | Token pipeline & themes  | **Done**                                        |
+| P2    | Chrome & navigation      | **Done except P2-14, P2-16, P2-17** (all human) |
+| P3    | Notebook & editor        | Scaffolded                                      |
+| P4    | Forms, settings, dialogs | Scaffolded                                      |
+| P5    | Icons, motion, density   | Scaffolded                                      |
+| P6    | Hardening & release      | Not started                                     |
 
 Measured in a running JupyterLab 4.6.3, in both modes:
 
-- `jlpm test:selectors` — **97 matched, 0 broken**, 168 skipped. The harness
-  cannot drive those 168 states yet. A skipped selector is reported, never
+- `jlpm test:selectors` — **102 matched, 0 broken**, 191 skipped. The harness
+  cannot drive those 191 states yet. A skipped selector is reported, never
   passed.
-- `jlpm test:contrast` — 478 pairings, 0 failures.
+- `jlpm test:contrast` — 529 pairings, 0 failures.
 - `jlpm test:galata` — **14 tests green**, 12 committed baselines over 6
   surfaces × {light, dark}. Run it from the container with
   `JUPYTER_URL=http://localhost:8888`.
 - `jlpm lint:design` — seven gates green. `jlpm lint:check` green. `pytest` 5
   passed.
 
-P2 has one **T3 plugin swap** left. It is P2-15, the behavior of the launcher.
-It must go in the same change that disables the core plugin it replaces. If it
-does not, the application loses that surface completely.
+P2 has **no engineering left**. P2-15 landed on 2026-09-05, so every T3 swap the
+phase scopes is done; P2-14, P2-16 and P2-17 all wait on a person.
 
-The splash screen (P2-09) is the only swap that is complete. The status bar and
+Two swaps are complete: the splash screen (P2-09) and the launcher (P2-15). The status bar and
 the presentation half of the launcher are both T2. Their §8.5.1 and §8.11 claims
 of "impossible in CSS" were measured against a running build and found false
 (D-015, D-016).
@@ -753,35 +752,62 @@ Galata is green.
       surface and was reinstating the dark-mode halo it exists to remove.
       Selecting a stock theme restores core's launcher (AC10).
       **Core's plugin stays enabled** — nothing added to `page_config.json`.
-- [ ] **P2-15** **T3: launcher behavior.** This is the second half of P2-08. Four
-      parts of §8.11 that CSS cannot reach.
-      **Fixed section order.** Core orders the sections by the category rank that
-      other plugins pass to `ILauncher.add`.
-      **The root-directory text.** Core renders the cwd string. At root that
-      string is empty, so the heading renders blank. §8.11.4 is wrong that the
-      readout is new work. Only this case is new.
-      **The no-kernels error state.** Core renders an empty section, not a
-      message.
-      **Search above about 12 kernels.**
-      Weigh this task honestly first. `launcher:create` is wired to four places. They are the `+` button in the file browser toolbar, File ▸ New Launcher, the `+` tab button of the dock panel, and the palette. All four resolve the command
-      **by id**. A replacement that provides `ILauncher` but has no such id leaves
-      four dead affordances in four places. None of them look like a fault of the
-      launcher.
-      _Done when:_ L1 to L9 hold with the four behaviors above, and the core
-      plugin is disabled **in the same change**. Stub:
-      `packages/shell-chrome/src/launcher.ts`.
-      _Caveat added by P1-09, and read it before you rely on the old wording._
-      This entry used to say "Two `ILauncher` providers make JupyterLab refuse
-      to start". **The source does not say that.**
-      `PluginRegistry.registerPlugin` in `@lumino/coreutils` throws on a
-      duplicate plugin **id** only; for a provided token it runs
-      `this._services.set(data.provides, data.id)`, a silent overwrite, and
-      `@jupyterlab/application` adds no guard. So two providers leave the winner
-      to registration order. That is **worse** than a refusal, because a crash
-      is visible and this is not. Not reproduced: the container locks the core
-      splash (`docker/entrypoint.sh` rewrites `page_config.json` on every start
-      and lists it under `lockedExtensions`), so the experiment could not run
-      here. Run it before treating "it would crash" as a safety net. See D-024.
+- [x] **P2-15** **T3: launcher behavior.** The second half of P2-08. Four parts
+      of §8.11 that CSS cannot reach: a fixed section order, the root-directory
+      text, the no-kernels state, and search above about 12 kernels.
+      _Done on 2026-09-05._ `@d4n/shell-chrome:launcher` provides `ILauncher`
+      and `@jupyterlab/launcher-extension:plugin` is disabled in the same
+      change. Full reasoning and every measurement in **D-033**.
+      **The headline, and it reverses D-015.** D-015 said a disabled plugin's
+      settings schema SURVIVES, and warned that a swap missing the command id
+      would leave an affordance pointing at nothing. The opposite happened here.
+      The command id was kept, and disabling the core plugin took its SCHEMA
+      away — so `File ▸ New Launcher`, the `Accel Shift L` shortcut and the file
+      browser `+` button all disappeared, while the command itself kept working.
+      Nothing threw and nothing logged. Measured on the first probe:
+      `fileMenuHasNewLauncher: false`, `fbPlusCount: 0`, and `Control+Shift+L`
+      adding no tab. `packages/shell-chrome/schema/launcher.json` re-declares
+      the same three blocks and all four affordances came back. **The rule for
+      the next swap: enumerate what the disabled plugin's schema declared.**
+      **JupyterLab cannot report zero kernels.** `validateSpecModels` in
+      `@jupyterlab/services` 7.6.3 throws `No valid kernelspecs found` on an
+      empty map, so `KernelSpecManager.specs` stays NULL and never becomes an
+      empty object. Measured against a second server on :8899 with
+      `--KernelSpecManager.ensure_native_kernel=False` and the kernelspec moved
+      aside: the API answered `{"default":"python3","kernelspecs":{}}` and
+      `specs` was still null after `ready`. `ready` never rejects, and
+      `connectionFailure` is a signal nothing emits. So the empty test is a null
+      `specs` after `isReady`.
+      **The markup keeps core's class names**, so the whole P2-08 stylesheet
+      applies unchanged and `selectors.json` keeps asserting something real.
+      What that manifest asserts changed with the ownership: it now proves OUR
+      markup survives, not upstream's.
+      _Measured in both modes:_ section order Notebook, Console, Other; 7 cards;
+      "New files will be created in the root directory" at the root and the leaf
+      directory in JetBrains Mono, left-truncated, elsewhere. Cards 112px
+      `border-box`, 164.45px wide, 6px radius, 6 columns at 1600px, 12px gap,
+      `#FFFFFF` on `#E4E9F0` light and `#122A47` on `#142E50` dark. Kernel plate
+      `#F4F6FA` in both modes. All 7 cards `role="button"` with `tabindex=0` and
+      a name; focus ring `2px #167C7C` light, `2px #4FD1D1` dark, both at a 2px
+      offset; Enter opened Contextual Help. No-kernels block `role="alert"` on
+      `#FBEFD8`/`#E0A04A` light and `#3D2E10`/`#C97C0A` dark. Filter verified
+      with the threshold lowered to 3: 28px input, label bound by `for`/`id`,
+      the caret stays in the input, and empty sections collapse.
+      _Two things the next person needs._ **Skeleton cards are not built** —
+      §8.11.5's "slow kernel discovery" row wants them, the launcher opens after
+      `app.restored` so there is nothing to wait for, and panel loading states
+      are P5-05. **AC10 changes shape here:** presentation reverts completely
+      under a stock theme (100px `content-box` cards, 2px radius, `flex`, no
+      plate, system-ui) but behaviour does not, because behaviour is a plugin.
+      The section order and the root copy stay. Same as the splash (P2-09), and
+      inherent to every T3 swap.
+      _P1-09's caveat, carried forward and still unreproduced._ Two `ILauncher`
+      providers do NOT make JupyterLab refuse to start.
+      `PluginRegistry.registerPlugin` throws on a duplicate plugin **id** only;
+      for a provided token it runs `this._services.set(data.provides, data.id)`,
+      a silent overwrite. So the disable in `page_config.json` is the only
+      guard, not a second one (D-024). Not reproduced here, because the
+      container locks the disabled set on every start.
 - [x] **P2-09** **T3: splash screen.** Replace it through `ISplashScreen`.
       **P0-02 does not block this.** An earlier note here said that the markup
       was lost, and that we must recover the file first. That was too strong. The
