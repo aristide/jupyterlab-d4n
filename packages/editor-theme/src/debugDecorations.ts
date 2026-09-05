@@ -1,5 +1,11 @@
 import type { Extension, Text } from '@codemirror/state';
-import { Prec, RangeSet, StateEffect, StateField } from '@codemirror/state';
+import {
+  Compartment,
+  Prec,
+  RangeSet,
+  StateEffect,
+  StateField
+} from '@codemirror/state';
 import { Decoration, EditorView, GutterMarker, gutter } from '@codemirror/view';
 import { tokensFor } from '@d4n/tokens';
 
@@ -33,11 +39,12 @@ import { tokensFor } from '@d4n/tokens';
  *
  * WIRING
  * ------
- * Nothing here imports `@jupyterlab/debugger`. Connecting these to the debugger
- * service — mapping DAP breakpoints onto `setBreakpointsEffect` and the stop
- * event onto `setExecutionLineEffect` — is TODO.md task **P3-08**. Until then
- * the extensions are inert but harmless: no breakpoints, no execution line, and
- * the gutter swallows no clicks unless an `onToggle` handler is supplied.
+ * Nothing here imports `@jupyterlab/debugger`. `debugBridge.ts` does that half
+ * (P3-08): it installs {@link debugEditorHost} on every editor, mounts the
+ * gutter where the debugger attaches, and maps DAP breakpoints and the stop
+ * event onto `setBreakpointsEffect` and `setExecutionLineEffect`. On their own
+ * the extensions here are inert: no breakpoints, no execution line, and the
+ * gutter swallows no clicks unless an `onToggle` handler is supplied.
  */
 
 /** Breakpoint states distinguishable by glyph shape alone (PRD §8.6.4, D3/A7). */
@@ -68,13 +75,13 @@ const metrics = tokensFor(true);
 const COLOR_BREAKPOINT =
   'var(--d4n-color-debug-breakpoint, var(--jp-error-color1))';
 const COLOR_BREAKPOINT_DISABLED =
-  'var(--d4n-color-debug-breakpointDisabled, var(--jp-ui-font-color2))';
+  'var(--d4n-color-debug-breakpoint-disabled, var(--jp-ui-font-color2))';
 const COLOR_BREAKPOINT_CONDITIONAL =
-  'var(--d4n-color-debug-breakpointConditional, var(--jp-warn-color1))';
+  'var(--d4n-color-debug-breakpoint-conditional, var(--jp-warn-color1))';
 const COLOR_EXECUTION_LINE_BG =
-  'var(--d4n-color-debug-executionLineBg, var(--jp-warn-color3))';
+  'var(--d4n-color-debug-execution-line-bg, var(--jp-warn-color3))';
 const COLOR_EXECUTION_LINE_BORDER =
-  'var(--d4n-color-debug-executionLineBorder, var(--jp-warn-color1))';
+  'var(--d4n-color-debug-execution-line-border, var(--jp-warn-color1))';
 /** Used to punch the notch out of the conditional-breakpoint glyph. */
 const COLOR_EDITOR_SURFACE =
   'var(--d4n-color-surface-code, var(--jp-layout-color0))';
@@ -337,8 +344,104 @@ const decorationTheme = EditorView.baseTheme({
   '.cm-line.cm-d4n-executionLine': {
     backgroundColor: COLOR_EXECUTION_LINE_BG,
     boxShadow: `inset ${metrics.border.width.thick} 0 0 0 ${COLOR_EXECUTION_LINE_BORDER}`
+  },
+
+  // ---------------------------------------------------------------------
+  // The two upstream decorations we replace (P3-08, D-033).
+  //
+  // `@jupyterlab/debugger`'s own `EditorHandler` stays attached to every editor
+  // it manages, and it injects a `cm-breakpoint-gutter` column and a
+  // `jp-DebuggerEditor-highlight` line class of its own. We keep that handler —
+  // it owns the whole DAP round trip — and hide only its two visuals, or the
+  // user sees two breakpoint columns and a brown `--md-brown-100` band under
+  // our warning-tinted one.
+  //
+  // Both rules are in this base theme rather than a stylesheet so that they
+  // live and die with the extension that replaces them. If upstream renames
+  // either class the rules stop matching, upstream repaints in stock colours
+  // and nothing breaks (AC10). `test:selectors` cannot see them, because
+  // `editor-theme` generates its CSS through `EditorView.baseTheme()` and has
+  // no `style/` directory.
+  //
+  // The `!important` beats `.cm-gutter { display: flex !important }` in
+  // `@codemirror/view`'s own base theme, which is the only reason a plain
+  // `display: none` did not work: measured, the column stayed `flex` and
+  // survived at 0px width by accident of its markers having no intrinsic size.
+  // Both declarations are in the same generated stylesheet and ours is written
+  // later, so at equal weight and equal specificity ours wins.
+  '.cm-breakpoint-gutter': { display: 'none !important' },
+  // Only `outline` and `text-shadow`, and only where OUR line decoration is
+  // also present. Upstream's `background-color` needs no answer: its rule is
+  // `body[data-jp-theme-light='…'] .jp-DebuggerEditor-highlight`, (0,2,1)
+  // against the (0,3,0) of the rule above, so ours already wins.
+  //
+  // The first version of this rule said `background: none` and blanked our own
+  // execution line, because at (0,3,0) it tied with the rule above and came
+  // later in the sheet. The left bar survived and the tint did not, which is
+  // exactly as confusing as it sounds.
+  //
+  // Restricting it to lines that carry both classes also keeps the degraded
+  // path honest: if upstream renames the gutter class we never mount, our line
+  // class is never set, and upstream's highlight renders whole rather than
+  // half-suppressed.
+  '.cm-line.cm-d4n-executionLine.jp-DebuggerEditor-highlight': {
+    outline: 'none',
+    textShadow: 'none'
   }
 });
+
+/**
+ * The gutter on its own, without the fields it reads.
+ *
+ * Split out so that {@link debugEditorHost} can mount and unmount it per editor
+ * through a compartment while the fields stay installed for the whole life of
+ * the editor.
+ */
+function breakpointGutterExtension(
+  options: IBreakpointGutterOptions
+): Extension {
+  return Prec.high(
+    gutter({
+      class: 'cm-d4n-breakpointGutter',
+      // Empty cells still have to render, or there is nothing to hover or
+      // click on a line without a breakpoint.
+      renderEmptyElements: true,
+      markers: view =>
+        view.state.field(breakpointField, false) ?? RangeSet.empty,
+      lineMarker: (view, line, otherMarkers) => {
+        const executionLine = view.state.field(executionLineField, false);
+        // Two different absences, both meaning "no arrow here": `undefined`
+        // when the field is not installed on this editor (the `false` above
+        // asks for that instead of throwing), and `null` when it is installed
+        // but no line is currently executing.
+        if (executionLine === undefined || executionLine === null) {
+          return null;
+        }
+        const doc = view.state.doc;
+        if (executionLine < 1 || executionLine > doc.lines) {
+          return null;
+        }
+        if (doc.line(executionLine).from !== line.from) {
+          return null;
+        }
+        return otherMarkers.length ? EXECUTION_TINT : EXECUTION_ARROW;
+      },
+      lineMarkerChange: update =>
+        update.startState.field(executionLineField, false) !==
+        update.state.field(executionLineField, false),
+      domEventHandlers: {
+        mousedown: (view, line, event) => {
+          const onToggle = options.onToggle;
+          if (!onToggle || (event as MouseEvent).button !== 0) {
+            return false;
+          }
+          onToggle(view.state.doc.lineAt(line.from).number, view);
+          return true;
+        }
+      }
+    })
+  );
+}
 
 /**
  * Breakpoint gutter, including the execution-line arrow that shares it.
@@ -355,47 +458,7 @@ export function breakpointGutter(
     // when `executionLineHighlight()` was not added. Extensions dedupe by
     // identity, so including it twice costs nothing.
     executionLineField,
-    Prec.high(
-      gutter({
-        class: 'cm-d4n-breakpointGutter',
-        // Empty cells still have to render, or there is nothing to hover or
-        // click on a line without a breakpoint.
-        renderEmptyElements: true,
-        markers: view =>
-          view.state.field(breakpointField, false) ?? RangeSet.empty,
-        lineMarker: (view, line, otherMarkers) => {
-          const executionLine = view.state.field(executionLineField, false);
-          // Two different absences, both meaning "no arrow here": `undefined`
-          // when the field is not installed on this editor (the `false` above
-          // asks for that instead of throwing), and `null` when it is installed
-          // but no line is currently executing.
-          if (executionLine === undefined || executionLine === null) {
-            return null;
-          }
-          const doc = view.state.doc;
-          if (executionLine < 1 || executionLine > doc.lines) {
-            return null;
-          }
-          if (doc.line(executionLine).from !== line.from) {
-            return null;
-          }
-          return otherMarkers.length ? EXECUTION_TINT : EXECUTION_ARROW;
-        },
-        lineMarkerChange: update =>
-          update.startState.field(executionLineField, false) !==
-          update.state.field(executionLineField, false),
-        domEventHandlers: {
-          mousedown: (view, line, event) => {
-            const onToggle = options.onToggle;
-            if (!onToggle || (event as MouseEvent).button !== 0) {
-              return false;
-            }
-            onToggle(view.state.doc.lineAt(line.from).number, view);
-            return true;
-          }
-        }
-      })
-    ),
+    breakpointGutterExtension(options),
     decorationTheme
   ];
 }
@@ -405,9 +468,56 @@ export function executionLineHighlight(): Extension {
   return [executionLineField, executionLineDecorations, decorationTheme];
 }
 
-/** Both §8.6.4 decorations, for the P3-08 wiring to install in one go. */
+/** Both §8.6.4 decorations, installed unconditionally. */
 export function debugDecorations(
   options: IBreakpointGutterOptions = {}
 ): Extension {
   return [breakpointGutter(options), executionLineHighlight()];
+}
+
+/**
+ * Holds the gutter half of the decorations, so that one editor can mount it
+ * while another leaves it out.
+ *
+ * A `Compartment` is a marker object, not per-editor state, so one module-level
+ * instance serves every editor: each `EditorState` applies the reconfiguration
+ * to its own copy. The rule a compartment does impose — one use per
+ * configuration — holds, because {@link debugEditorHost} is added once.
+ */
+const gutterCompartment = new Compartment();
+
+/**
+ * Everything §8.6.4 needs, in the form P3-08 installs it: on EVERY editor, with
+ * the gutter left out until the debugger attaches (`debugBridge.ts`).
+ *
+ * WHY THE GUTTER IS NOT SIMPLY ALWAYS ON
+ * --------------------------------------
+ * A CodeMirror gutter renders its column whether or not it has markers, so an
+ * always-on breakpoint gutter would put an empty 16px strip down the left of
+ * every editor in the application — including files nobody is debugging. The
+ * fields and the line decoration have no such cost: both are inert until an
+ * effect sets them, so they stay installed and only the gutter moves.
+ */
+export function debugEditorHost(): Extension {
+  return [
+    breakpointField,
+    executionLineField,
+    executionLineDecorations,
+    gutterCompartment.of([]),
+    decorationTheme
+  ];
+}
+
+/**
+ * Mount or unmount the breakpoint gutter on one editor.
+ *
+ * Pass the click handler to mount it, `null` to take it away again. Dispatch
+ * the result as a transaction effect.
+ */
+export function setBreakpointGutterEffect(
+  options: IBreakpointGutterOptions | null
+): StateEffect<unknown> {
+  return gutterCompartment.reconfigure(
+    options ? breakpointGutterExtension(options) : []
+  );
 }

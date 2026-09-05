@@ -495,6 +495,47 @@ function buildChecks(mode, t) {
     t['color.surface.code'],
     'debug.breakpoint glyph on surface.code'
   );
+  // The other five debugger glyph pairings (P3-08). They went ungated while the
+  // decorations were inert; they are on screen now. Two backdrops, because the
+  // gutter cell of the stopped line is tinted `executionLineBg` and the glyph
+  // on it is still a breakpoint whenever the stopped line has one.
+  add(
+    'A3',
+    3,
+    t['color.debug.breakpointDisabled'],
+    t['color.surface.code'],
+    'debug.breakpointDisabled glyph on surface.code'
+  );
+  add(
+    'A3',
+    3,
+    t['color.debug.breakpointConditional'],
+    t['color.surface.code'],
+    'debug.breakpointConditional glyph on surface.code'
+  );
+  add(
+    'A3',
+    3,
+    t['color.debug.breakpoint'],
+    t['color.debug.executionLineBg'],
+    'debug.breakpoint glyph on the tinted execution gutter'
+  );
+  add(
+    'A3',
+    3,
+    t['color.debug.breakpointDisabled'],
+    t['color.debug.executionLineBg'],
+    'debug.breakpointDisabled glyph on the tinted execution gutter'
+  );
+  // Carries both the arrow glyph in the gutter and the 2px bar down the left of
+  // the stopped line, and both sit on the tint.
+  add(
+    'A3',
+    3,
+    t['color.debug.executionLineBorder'],
+    t['color.debug.executionLineBg'],
+    'debug.executionLineBorder (arrow and left bar) on debug.executionLineBg'
+  );
   add(
     'A3',
     3,

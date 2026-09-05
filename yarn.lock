@@ -360,6 +360,7 @@ __metadata:
     "@jupyterlab/application": ^4.5.0
     "@jupyterlab/builder": ^4.5.0
     "@jupyterlab/codemirror": ^4.5.0
+    "@jupyterlab/debugger": ^4.5.0
     "@jupyterlab/translation": ^4.5.0
     "@lezer/highlight": ^1.2.0
     rimraf: ^5.0.1
@@ -917,7 +918,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jupyterlab/debugger@npm:^4.6.3":
+"@jupyterlab/debugger@npm:^4.5.0, @jupyterlab/debugger@npm:^4.6.3":
   version: 4.6.3
   resolution: "@jupyterlab/debugger@npm:4.6.3"
   dependencies:

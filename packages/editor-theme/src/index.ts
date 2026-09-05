@@ -4,6 +4,7 @@ import {
 } from '@jupyterlab/application';
 import { IEditorThemeRegistry } from '@jupyterlab/codemirror';
 import { ITranslator, nullTranslator } from '@jupyterlab/translation';
+import { debugDecorationsPlugin } from './debugBridge';
 import { buildEditorTheme } from './theme';
 
 /**
@@ -22,7 +23,7 @@ import { buildEditorTheme } from './theme';
  * fires, which is the §7.5 requirement that "users must never have to switch two
  * themes". Renaming either breaks that write silently.
  */
-const plugin: JupyterFrontEndPlugin<void> = {
+const themePlugin: JupyterFrontEndPlugin<void> = {
   id: '@d4n/editor-theme:plugin',
   description: 'Data4Now design system — CodeMirror 6 editor themes.',
   requires: [IEditorThemeRegistry],
@@ -58,16 +59,33 @@ const plugin: JupyterFrontEndPlugin<void> = {
   }
 };
 
-export default plugin;
+/**
+ * Two plugins, two failure modes.
+ *
+ * The theme registers itself with `IEditorThemeRegistry` at start-up and is
+ * done. The decorations follow a debugger session for the whole life of the
+ * application. Separate ids keep one from taking the other down, and let
+ * `jupyter labextension disable @d4n/editor-theme:debug-decorations` leave the
+ * editor colours alone — the same reasoning `@d4n/shell-chrome` records.
+ */
+const plugins: JupyterFrontEndPlugin<void>[] = [
+  themePlugin,
+  debugDecorationsPlugin
+];
+
+export default plugins;
 
 export { buildEditorTheme } from './theme';
 export { buildHighlightStyle } from './highlight';
+export { debugDecorationsPlugin } from './debugBridge';
 export {
   breakpointField,
   breakpointGutter,
   debugDecorations,
+  debugEditorHost,
   executionLineField,
   executionLineHighlight,
+  setBreakpointGutterEffect,
   setBreakpointsEffect,
   setExecutionLineEffect
 } from './debugDecorations';

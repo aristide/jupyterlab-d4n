@@ -29,6 +29,7 @@
         "@d4n/tokens": "^0.1.0",
         "@jupyterlab/application": "^4.5.0",
         "@jupyterlab/codemirror": "^4.5.0",
+        "@jupyterlab/debugger": "^4.5.0",
         "@jupyterlab/translation": "^4.5.0",
         "@lezer/highlight": "^1.2.0"
     },

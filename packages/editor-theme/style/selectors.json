@@ -1,0 +1,50 @@
+{
+  "$comment": [
+    "Selector ownership manifest for @d4n/editor-theme (PRD §7.4(5), §10.3).",
+    "",
+    "This package has NO stylesheet. It writes its CSS through",
+    "`EditorView.baseTheme()` and `EditorView.theme()`, so `style/surfaces/`",
+    "does not exist and the coverage check in selector-integrity.mjs has nothing",
+    "to walk. P3-05 recorded that as a gap: the package depended on",
+    "`.cm-matchingBracket` and `.cm-focused` with nothing watching them.",
+    "",
+    "P3-08 makes the gap concrete rather than theoretical, because the debugger",
+    "wiring depends on two UPSTREAM classes, not CodeMirror's own. Both are",
+    "listed below. `file` names the TypeScript module instead of a stylesheet,",
+    "which the harness treats as a label and nothing more.",
+    "",
+    "Both entries carry `state: debugger-stopped`, a precondition the harness",
+    "cannot create: it needs a notebook, a kernel with debugpy, a breakpoint and",
+    "a stopped thread. So both report as SKIPPED with that reason. That is the",
+    "point — a skip names the thing nobody is checking, where silence would not.",
+    "Driving it by hand is written up in TODO.md P3-08."
+  ],
+  "package": "@d4n/editor-theme",
+  "scope": "CodeMirror EditorView.baseTheme (no theme-name scope; see D-003 note below)",
+  "verifiedAgainst": {
+    "@codemirror/view": "6.43.9",
+    "@jupyterlab/debugger": "4.6.3"
+  },
+  "surfaces": [
+    {
+      "file": "src/debugDecorations.ts",
+      "upstream": [
+        "@jupyterlab/debugger 4.6.3 handlers/editor.ts",
+        "@jupyterlab/debugger 4.6.3 style/breakpoints.css",
+        "@jupyterlab/debugger 4.6.3 style/editor.css"
+      ],
+      "selectors": [
+        {
+          "selector": ".cm-breakpoint-gutter",
+          "state": "debugger-stopped",
+          "note": "Upstream's own breakpoint gutter column. We hide it and replace it with .cm-d4n-breakpointGutter (D-033). It is ALSO the signal debugBridge.ts uses to decide which editors the debugger drives, so a rename costs us twice: the gutter is never mounted and upstream's own renders instead. That degrades to stock JupyterLab rather than breaking, which is the AC10 answer, but it is a silent loss of the design."
+        },
+        {
+          "selector": ".jp-DebuggerEditor-highlight",
+          "state": "debugger-stopped",
+          "note": "Upstream's execution-line class. Its outline and text-shadow are suppressed where our own .cm-d4n-executionLine is present. A rename leaves upstream's brown --md-brown-100 outline drawn on top of our warning tint."
+        }
+      ]
+    }
+  ]
+}

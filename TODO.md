@@ -1096,6 +1096,39 @@ green including D4.
       to the debugger. They are already built in
       `packages/editor-theme/src/debugDecorations.ts`. They live in the editor
       theme, **not** in CSS. In CSS they break on the next CodeMirror version.
+      _Started 2026-09-04, NOT finished. The code is committed; the decorations
+      have never been seen on screen._ The autonomous runner reached a
+      90-minute wall and stopped before it verified anything, so what is on disk
+      passes every gate and proves nothing about whether a breakpoint draws.
+      _What landed._ `src/debugBridge.ts` follows an `IDebugger` session and
+      turns DAP breakpoints and the stop event into CodeMirror effects.
+      `IDebugger` is `optional`, so a deployment without the debugger extension
+      still activates the plugin and registers nothing. `index.ts` now exports
+      two plugins with separate ids, so disabling the decorations leaves the
+      editor colours alone. `style/selectors.json` is new — this package had no
+      manifest at all, which P3-05 recorded as a gap.
+      _A real bug was found on the way, and it had been shipping._ Four
+      variables in `debugDecorations.ts` kept camelCase through the project-wide
+      rename to kebab-case: `breakpointConditional`, `breakpointDisabled`,
+      `executionLineBg`, `executionLineBorder`. Each resolved to nothing and
+      silently used its `--jp-*` fallback. Nobody noticed because the
+      decorations were never wired to anything that drew them.
+      _Two lints were hardened so it cannot recur._ `lint:vars` now reads `.ts`
+      as well as `.css`, because `editor-theme` writes its CSS through
+      `EditorView.baseTheme()` and no stylesheet lint could ever see it — 70
+      files scanned now, not 44. And a fallback no longer excuses an
+      unresolvable name: a fallback answers "this layer can be out of scope",
+      which is the AC10 case, not "this name is misspelled". `lint:important`
+      gained the same `.ts` reach plus `cm-` and `@codemirror/` as upstream
+      names.
+      _What blocks verification, measured._ The notebook toolbar carries **no
+      debugger toggle** until a kernel advertises debug support, and with no
+      kernel started there are no CodeMirror gutters at all — not ours, not
+      upstream's. So the sequence has to be: open a notebook, **start the
+      kernel and wait for it**, then the bug button appears, then set a
+      breakpoint and run to it. Only then can
+      `.cm-breakpoint-gutter` being hidden and our gutter being mounted be
+      confirmed. Budget a session for it; boot alone is ~70s here.
 - [ ] **P3-09** Debugger panel shell, callstack, breakpoints and sources. Every
       section gets a designed empty state. No section body is blank (D6).
 - [ ] **P3-10** Debugger variables **tree** view. The value colors must match the
