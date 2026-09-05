@@ -1,0 +1,297 @@
+/* SURFACE: debugger panel (PRD §6.1, §8.6.1, §8.6.3, TODO.md P3-09)
+ *
+ * Upstream selectors verified against:
+ *   @jupyterlab/debugger       4.6.3  style/*.css, lib/panels/**, lib/sidebar.js
+ *   @jupyterlab/ui-components  4.6.3  style/sidepanel.css, accordiontoolbar.js
+ *   @lumino/widgets            2.x    AccordionLayout
+ *   (declared range: @jupyterlab/* ^4.5.0)
+ *
+ * Every selector is mirrored in ../selectors.json (PRD §7.4(5)).
+ *
+ * THE PANEL SHELL IS NOT HERE. `sidebar.css` already dresses
+ * `.jp-SidePanel-header > h2` and `.jp-AccordionPanel-title` for every side
+ * panel, debugger included (P2-04). This file starts below the title band, and
+ * restates nothing that file already owns.
+ *
+ * THREE SOURCES DISAGREE ABOUT THIS SURFACE, AND THE DISAGREEMENT DECIDES WHAT
+ * THIS FILE CAN BE. §8.6.1/§8.6.3, the imported design, and what JupyterLab
+ * actually renders give different numbers for nearly every row. Measured in a
+ * running 4.6.3, and recorded in docs/decisions.md D-036:
+ *
+ *   - Section header. §8.6.1 says 28px. The accordion title measures **32px**,
+ *     written INLINE by Lumino's `AccordionLayout` on every resize from a JS
+ *     `titleSpace` that JupyterLab hardcodes to 32. CSS cannot win that without
+ *     `!important` against an inline style, and the layout would still compute
+ *     against its own 32. Left at 32, which is also what
+ *     `--d4n-sidebar-header-height` already gives every other panel header, so
+ *     the two kinds of header agree.
+ *   - Callstack row. §8.6.3 says 24px. Upstream sets no height at all — it is
+ *     padding-driven and measured **26px** in Montserrat. The design draws a
+ *     two-line row of about 44px with a depth chip and an arrow, and upstream
+ *     renders neither. So this file takes the PRD's 24px onto upstream's
+ *     one-line shape, which is the only combination that has content to fill it.
+ *   - Breakpoint glyph column. §8.6.3 says 20px, the design says 12px, upstream
+ *     measured **16px** with no width at all — the span is sized by its glyph
+ *     and pushed with `margin-right: 10px`, so names do not start on one
+ *     vertical line. Fixed at the PRD's 20px, using the file browser's icon
+ *     column technique.
+ *
+ * WHAT IS NOT REACHABLE FROM HERE, and why P3-09 could not tick D6 on its own:
+ * a selected breakpoint carries no class (upstream swaps the icon COMPONENT), a
+ * disabled or conditional breakpoint has no representation in the list at all,
+ * Sources is a single read-only editor rather than a file tree, and the PRD
+ * supplies empty-state copy for three sections out of five. Those are P3-19.
+ */
+
+/* --- Section chevron (§8.6.1) --------------------------------------------- */
+
+/* Upstream already rotates this collapser on expand — `sidepanel.css` gives it
+ * `transform: rotate(-90deg)` collapsed and `rotate(0)` expanded. What it does
+ * NOT give it is a transition, so the chevron snaps. §8.6.1 asks for 12px and
+ * 120ms, and both are tokens.
+ *
+ * The reduced-motion branch is deliberately absent: `motion.css` zeroes every
+ * transition-duration in the theme under `prefers-reduced-motion`, so a local
+ * guard here would be a second answer to a question already answered. */
+body[data-jp-theme-name^='Data4Now']
+  .jp-DebuggerSidebar
+  .jp-AccordionPanel-title
+  .lm-AccordionPanel-titleCollapser {
+  width: var(--d4n-space-3);
+  height: var(--d4n-space-3);
+  transition: transform var(--d4n-motion-duration-fast)
+    var(--d4n-motion-easing-standard);
+}
+
+/* --- Section bodies (§8.6.1) ---------------------------------------------- */
+
+/* The plate. Upstream leaves these transparent, so they show whatever the
+ * stacked panel behind them is; sidebar.css paints that canvas, and stating it
+ * here keeps a body from reading as a different surface from its own header.
+ *
+ * Height and scrolling are NOT set. §8.6.1 asks for "max-height proportional,
+ * independent scroll", and both are Lumino `AccordionLayout` geometry driven
+ * from JS sizing — a CSS height here would be overwritten on the next resize.
+ * Upstream's own `overflow: auto` stays. */
+body[data-jp-theme-name^='Data4Now'] .jp-DebuggerVariables-body,
+body[data-jp-theme-name^='Data4Now'] .jp-DebuggerCallstack-body,
+body[data-jp-theme-name^='Data4Now'] .jp-DebuggerBreakpoints-body,
+body[data-jp-theme-name^='Data4Now'] .jp-DebuggerKernelSources-body,
+body[data-jp-theme-name^='Data4Now'] .jp-DebuggerSources-body {
+  background: var(--d4n-color-surface-canvas);
+  color: var(--d4n-color-text-primary);
+  font-family: var(--d4n-font-family-ui);
+  font-size: var(--d4n-font-size-ui-sm);
+}
+
+/* Upstream pads this one body by 10px while every other section body has none,
+ * so the breakpoint list starts on a different vertical line from the callstack
+ * above it. The rows carry their own inset instead. */
+body[data-jp-theme-name^='Data4Now'] .jp-DebuggerBreakpoints-body {
+  padding: 0;
+}
+
+/* --- Callstack (§8.6.3) --------------------------------------------------- */
+
+/* The frame row. `min-height` rather than `height`, because the function name
+ * can wrap in a narrow sidebar and a fixed height would clip it. */
+body[data-jp-theme-name^='Data4Now'] .jp-DebuggerCallstack-body ul {
+  background: var(--d4n-color-surface-canvas);
+  color: var(--d4n-color-text-primary);
+  font-size: var(--d4n-font-size-ui-sm);
+}
+
+body[data-jp-theme-name^='Data4Now'] li.jp-DebuggerCallstackFrame {
+  min-height: var(--d4n-density-comfortable-row-height);
+  padding: var(--d4n-space-0) var(--d4n-space-3);
+}
+
+/* Mono for the function name, because it IS an identifier — the same reason the
+ * file browser's kernel id is mono. */
+body[data-jp-theme-name^='Data4Now'] .jp-DebuggerCallstackFrame-name {
+  color: var(--d4n-color-text-primary);
+  font-family: var(--d4n-font-family-mono);
+}
+
+/* `Cell [3]:4` is a coordinate, not prose: muted, smaller, and with tabular
+ * figures so a column of line numbers lines up. */
+body[data-jp-theme-name^='Data4Now'] .jp-DebuggerCallstackFrame-location {
+  color: var(--d4n-color-text-muted);
+  font-family: var(--d4n-font-family-mono);
+  font-size: var(--d4n-font-size-ui-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+body[data-jp-theme-name^='Data4Now']
+  li.jp-DebuggerCallstackFrame:hover:not(.selected) {
+  background: var(--d4n-color-surface-hover);
+}
+
+/* THE ACTIVE FRAME, AND THE UNDO IT NEEDS.
+ *
+ * Upstream paints `li.selected` `--jp-brand-color1` and flips the text to a
+ * literal `white` — measured `rgb(15, 61, 110)` with white text. That is the
+ * same inversion the file browser needed undoing, and for the same reason: on a
+ * tinted plate a white label is unreadable and the row stops matching every
+ * other selected row in the application.
+ *
+ * The treatment is the file browser's, deliberately: tinted plate, unchanged
+ * text ramp, and a leading accent bar drawn as an inset box-shadow so it costs
+ * no layout. §8.6.3 names `color.surface.selected` for this, but both shipped
+ * list surfaces use `color.selection.active` and following the PRD here would
+ * make the debugger the only list in the product that highlights differently.
+ * Recorded in D-036 rather than silently diverging.
+ *
+ * The hook is a BARE `selected` class — not `jp-mod-selected`, not `lm-mod-*`.
+ * It is qualified with the component class so the rule cannot reach anything
+ * else that happens to use so common a word. */
+body[data-jp-theme-name^='Data4Now']
+  .jp-DebuggerCallstack-body
+  li.jp-DebuggerCallstackFrame.selected {
+  color: var(--d4n-color-text-primary);
+  background: var(--d4n-color-selection-active);
+  box-shadow: inset var(--d4n-border-width-thick) 0 0 0
+    var(--d4n-color-action-default);
+}
+
+/* --- Breakpoints (§8.6.3) ------------------------------------------------- */
+
+body[data-jp-theme-name^='Data4Now'] .jp-DebuggerBreakpoint {
+  padding: var(--d4n-space-0) var(--d4n-space-3);
+  color: var(--d4n-color-text-primary);
+  font-size: var(--d4n-font-size-ui-sm);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-DebuggerBreakpoint:hover {
+  background: var(--d4n-color-surface-hover);
+}
+
+/* The leading glyph column, fixed so paths start on one vertical line. Upstream
+ * gives this span no width and a 10px right margin, so the column is as wide as
+ * whatever icon landed in it. Same technique as the file browser's item icon:
+ * a 20px column holding a 16px glyph, the inset being what keeps a fixed column
+ * from reading as an icon strip. */
+body[data-jp-theme-name^='Data4Now'] .jp-DebuggerBreakpoint-container {
+  flex: 0 0 var(--d4n-space-5);
+  justify-content: center;
+  margin-right: var(--d4n-space-2);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-DebuggerBreakpoint-container svg {
+  width: var(--d4n-toolbar-icon-size);
+  height: var(--d4n-toolbar-icon-size);
+}
+
+/* The path, truncated from the LEFT — the filename identifies the breakpoint
+ * and the mount prefix is noise.
+ *
+ * Upstream ships a class for exactly this and it truncates the wrong end:
+ * `.jp-left-truncated` sets `direction: ltr`, which ellipsizes on the right and
+ * throws the filename away. This rule is the answer to that, not an addition to
+ * it — same trick as the launcher's cwd path (D-033). */
+body[data-jp-theme-name^='Data4Now'] .jp-DebuggerBreakpoint-source {
+  overflow: hidden;
+  min-width: 0;
+  color: var(--d4n-color-text-primary);
+  font-family: var(--d4n-font-family-mono);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  direction: rtl;
+  text-align: left;
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-DebuggerBreakpoint-line {
+  color: var(--d4n-color-text-muted);
+  font-family: var(--d4n-font-family-mono);
+  font-size: var(--d4n-font-size-ui-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- Kernel sources (§8.6.3) ---------------------------------------------- */
+
+/* THE WRAPPER CLASS IS MISSPELLED UPSTREAM and there is no second one.
+ * `lib/panels/kernelSources/index.js` calls
+ * `this.addClass('jp-DebuggerKenelSources')` — no `r` — while its own
+ * `kernelSources.css` targets `.jp-DebuggerKernelSources`, so upstream's rule
+ * matches nothing in 4.6.3. Both spellings are written here: the misspelled one
+ * is what renders today, and the correct one is what a fixed upstream will
+ * emit. Neither is load-bearing on its own, which is why writing both is cheap
+ * insurance rather than a guess. */
+body[data-jp-theme-name^='Data4Now'] .jp-DebuggerKenelSources,
+body[data-jp-theme-name^='Data4Now'] .jp-DebuggerKernelSources {
+  background: var(--d4n-color-surface-canvas);
+}
+
+/* A module row is a file row, so §8.6.3's "matching the file browser row spec"
+ * is taken literally: same height token, same inset, same hover plate. */
+body[data-jp-theme-name^='Data4Now'] .jp-DebuggerKernelSource-source {
+  min-height: var(--d4n-density-comfortable-row-height);
+  padding: var(--d4n-space-0) var(--d4n-space-3);
+  color: var(--d4n-color-text-primary);
+  font-family: var(--d4n-font-family-mono);
+  font-size: var(--d4n-font-size-ui-sm);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-DebuggerKernelSource-source:hover {
+  background: var(--d4n-color-surface-hover);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-DebuggerKernelSource-source > svg {
+  width: var(--d4n-toolbar-icon-size);
+  height: var(--d4n-toolbar-icon-size);
+  margin-right: var(--d4n-space-2);
+  color: var(--d4n-color-text-secondary);
+}
+
+/* --- Sources (§8.6.3) ----------------------------------------------------- */
+
+/* The header path. Left-truncated for the same reason as the breakpoint path,
+ * and mono because it is a file path the user may have to match by eye against
+ * a traceback. */
+body[data-jp-theme-name^='Data4Now'] .jp-DebuggerSources-header-path {
+  color: var(--d4n-color-text-muted);
+  font-family: var(--d4n-font-family-mono);
+  font-size: var(--d4n-font-size-ui-xs);
+  direction: rtl;
+  text-align: left;
+}
+
+/* --- Empty states (§8.6.3, D6) -------------------------------------------- */
+
+/* TWO OF THE FIVE SECTIONS GET ONE, AND THAT IS ALL D6 CAN HAVE TODAY.
+ *
+ * §8.6.3 supplies exactly three strings — "No breakpoints set", "Not paused",
+ * "No sources" — for five sections, and the third has nowhere to go: Sources is
+ * a single read-only editor that Lumino HIDES rather than removes, so its body
+ * always has an element child and neither `:empty` nor `:has(> :empty)` ever
+ * matches. Variables and Kernel sources have no copy at all. Inventing two
+ * strings is design work, and it is P5-05's, so P3-19 carries the rest.
+ *
+ * The condition differs per section because the markup does. Breakpoints
+ * renders a bare fragment of row divs, so an empty list really is an empty
+ * body. Callstack always renders its `<ul>`, so the empty condition is on the
+ * LIST, not the body — the same shape as the running panel's `:has()` (which is
+ * the precedent this follows rather than inventing a second pattern).
+ *
+ * The copy is in `content`, which is neither translatable nor interpolatable.
+ * That is a known cost of the pattern and is recorded with the running panel's
+ * own empty state; the accordion title directly above says which thing is
+ * empty, so the line only has to supply the "none". */
+body[data-jp-theme-name^='Data4Now'] .jp-DebuggerBreakpoints-body:empty::after {
+  display: block;
+  padding: var(--d4n-space-3);
+  color: var(--d4n-color-text-muted);
+  font-family: var(--d4n-font-family-ui);
+  font-size: var(--d4n-font-size-ui-sm);
+  content: 'No breakpoints set';
+}
+
+body[data-jp-theme-name^='Data4Now']
+  .jp-DebuggerCallstack-body:has(> ul:empty)::after {
+  display: block;
+  padding: var(--d4n-space-3);
+  color: var(--d4n-color-text-muted);
+  font-family: var(--d4n-font-family-ui);
+  font-size: var(--d4n-font-size-ui-sm);
+  content: 'Not paused';
+}

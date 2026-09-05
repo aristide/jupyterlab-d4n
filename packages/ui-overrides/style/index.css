@@ -64,6 +64,14 @@
 @import url('./surfaces/extension-manager.css');
 @import url('./surfaces/command-palette.css');
 @import url('./surfaces/log-console.css');
+
+/* debugger.css follows sidebar.css, which owns the panel header and the
+ * accordion title for EVERY side panel. This file only dresses what sits
+ * below that band, and several of its rules answer an upstream rule of equal
+ * specificity (the callstack's white-on-brand selection, the breakpoint path's
+ * wrong-end truncation), so it has to come after the debugger's own sheet in
+ * source order — which it does, because core's styles load first. */
+@import url('./surfaces/debugger.css');
 @import url('./surfaces/launcher.css');
 @import url('./surfaces/status-bar.css');
 @import url('./surfaces/notifications.css');

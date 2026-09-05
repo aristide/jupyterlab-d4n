@@ -77,20 +77,43 @@ file` and Playwright reports it as "browser has been closed", which does not
   `git status`. The file is committed, so this dirties the tree rather than
   losing anything, but it is silent. Check the notebook and `git checkout` it
   after any probe that edits a cell.
-- **Never run `jlpm build` while `test:galata` is running either, and this is
-  the one that produced the confusing failures.** The build rewrites
-  `jupyterlab_d4n/labextensions/@d4n/theme-light/themes/@d4n/theme-light/index.css`
-  in place, which is the exact file the browser fetches, so a page loading in
-  that window gets a 404 and JupyterLab raises **"Neither theme Data4Now Light
-  nor default Data4Now Light loaded"**. Every test that waits for a themed body
-  then times out, and the status bar never settles long enough to screenshot.
-  Measured on 2026-09-05: two runs with a background build failed on
-  `application frame` and `status bar`; the same suite, same tree, nothing else
-  running, passed 14 of 14. An earlier note blamed a cold server and worker
-  contention, then a startup race. All three were wrong. `jlpm watch` is NOT the
-  culprit — its log showed no rebuild for eleven minutes before a failing run.
-  Treat the suite as needing exclusive use of the WORKING TREE, not just of the
-  server.
+- **`test:galata` needs the WORKING TREE to be still, and the readiness check
+  that matters is the watch log — not the server.** This is the fourth diagnosis
+  of the same flake and the first one that is measured end to end.
+  _What fails._ The suite's FIRST test — `application frame`, sometimes plus
+  `status bar` — times out on `page.waitForFunction`, and the page snapshot in
+  `test-results/*/error-context.md` shows a dialog reading **"Neither theme
+  Data4Now Light nor default Data4Now Light loaded"** or **"Stylesheet failed to
+  load: .../themes/@d4n/theme-light/index.css"**. It is not a snapshot
+  comparison, so there is no `-actual.png` or `-diff.png` to look at, and it does
+  not look like a CSS regression at all.
+  _Why._ Anything that rewrites `jupyterlab_d4n/labextensions/**` while a page is
+  loading takes the theme extension out from under it: the hashed bundles are
+  deleted and rewritten, the fetch 404s, and `ThemeManager` gives up. Two things
+  do that. An explicit `jlpm build` is the obvious one. The one that actually
+  bit is **`jlpm watch`'s initial rebuild after a container restart** — the
+  entrypoint wipes and relinks the labextensions, then starts the watch, which
+  rebuilds all eight federated extensions.
+  _Measured on 2026-09-05._ Container started 22:02:23. The theme stylesheet
+  answered 200 about fifteen seconds later, so a readiness gate keyed on that
+  passed immediately and the suite began. `jlpm watch` did not finish its initial
+  rebuild until **22:04:51**. The first test failed; every test after 22:04:51
+  passed, 13 of 14. A run started on a settled server passes 14 of 14. With a
+  background `jlpm build` as well, the window is longer and two tests fail.
+  _So the gate to use is not `curl /lab` and not `curl` on the theme CSS._ Both
+  only prove the symlinks exist, and they fire about two minutes early. Wait for
+  the watch to go quiet:
+
+  ```
+  docker exec d4n-tmp bash -lc \
+    'until [ $(( $(date +%s) - $(stat -c %Y /tmp/jlpm-watch.log) )) -ge 60 ]; \
+     do sleep 10; done'
+  ```
+
+  _Three earlier notes here were describing this without naming it._ A cold
+  server, worker contention, and a startup race were each blamed in turn. All
+  three were the same rebuild window.
+
 - **Never run a browser probe while `test:galata` is running.** This is the same
   hazard as the one above and it is the one that actually bit. A probe that
   opens a terminal changes the status bar, which the suite screenshots, so the
@@ -1206,8 +1229,76 @@ green including D4.
       _Budget the boot._ One browser start is ~70s in this container, whose
       steady state is eight `build-labextension --watch` processes at ~170% CPU.
       Reuse one page across the measurements rather than launching per step.
-- [ ] **P3-09** Debugger panel shell, callstack, breakpoints and sources. Every
-      section gets a designed empty state. No section body is blank (D6).
+- [x] **P3-09** Debugger panel shell, callstack, breakpoints and sources.
+      _Done on 2026-09-05_ as `ui-overrides/style/surfaces/debugger.css`. Full
+      record and every measurement in **D-036**. **D6 is only partly met, and the
+      remainder is P3-19** — see the accounting below.
+      **The panel shell was already done.** `sidebar.css` dresses
+      `.jp-SidePanel-header > h2` and `.jp-AccordionPanel-title` for every side
+      panel, debugger included (P2-04), so this file starts below the title band.
+      **Three sources disagree about this surface, and only one of them renders.**
+      Section header: §8.6 says 28px, the design draws 9.5px text, and the
+      accordion title measures **32px written INLINE** by Lumino's
+      `AccordionLayout` from a `titleSpace` JupyterLab hardcodes to 32. CSS
+      cannot win that without `!important` against an inline style, and the
+      layout would still position against its own 32. Left at 32, which is what
+      every other panel header already uses. Callstack row: §8.6 says 24px, the
+      design draws a two-line ~44px row with a depth chip and an arrow that have
+      no elements, upstream measured **26px** padding-driven. Shipped 24px on
+      upstream's one-line shape. Breakpoint glyph column: §8.6 says 20px, the
+      design says 12px, upstream measured **16px with no width at all**. Shipped
+      20px, using the file browser's column technique.
+      **Three upstream defects this had to answer.**
+      `lib/panels/kernelSources/index.js` adds `jp-DebuggerKenelSources` — no
+      `r` — while its own stylesheet targets the correct spelling, so upstream's
+      rule matches nothing; both spellings are written. `.jp-left-truncated` sets
+      `direction: ltr`, which ellipsizes the RIGHT end and throws the filename
+      away — the opposite of what its name and §8.6.3 promise. And the active
+      frame is painted white on `--jp-brand-color1`, the same inversion the file
+      browser needed undoing.
+      _Measured in both modes,_ with a kernel stopped on a breakpoint: chevron
+      12×12 with `transform 0.12s`; callstack row 24px, padding `0 12px`, plate
+      `#D6EFEF` light and `#123745` dark with a `2px` inset bar in `#167C7C` and
+      `#4FD1D1`, text `#2C3E55` and `#E4E9F0` — not white; frame name JetBrains
+      Mono 13px, location mono 11px muted; breakpoint row 24px with a **20px**
+      glyph column, up from 16px.
+      **§8.6.1 was right about the debug controls, and this measured why.** In a
+      200px sidebar the Callstack toolbar is **244px wide** with six buttons, so
+      its label collapses to **0px** and the sixth control is clipped. The user
+      loses both the word "Callstack" and the Evaluate button, at the default
+      width, with no session running. That is upstream's layout, not ours, and it
+      is exactly the failure §8.6.1 legislates against by asking for a dedicated
+      control row above the sections. Not papered over: `flex-shrink: 0` on the
+      label would only trade the word for more clipped buttons, because the
+      toolbar already overflows by 44px.
+      **D6, honestly.** §8.6.3 gives three empty-state strings for five sections
+      and one of the three has nowhere to go. Breakpoints (`:empty`) and
+      Callstack (`:has(> ul:empty)`, because React always renders the `<ul>`) both
+      ship. Sources has copy but no hook — Lumino HIDES its editor rather than
+      removing it, so the body always has a child. Variables and Kernel sources
+      have no copy at all. The rest is **P3-19**.
+- [ ] **P3-19** The debugger panel's remainder (split out of P3-09, **D-036**).
+      Four things P3-09 measured and deliberately did not build.
+      **D6 for the other three sections.** Sources has PRD copy ("No sources")
+      and no reachable mount; Variables and Kernel sources have no copy at all.
+      Writing two strings is design work and **P5-05** owns panel empty states,
+      so this waits on that or supersedes it for this panel.
+      **The debug controls need their own row.** §8.6.1 asks for continue,
+      terminate and the three steps in a dedicated toolbar row above the
+      sections. Upstream mounts all six on the Callstack section's toolbar,
+      which `AccordionToolbar` re-parents into that section's accordion title.
+      Measured: 244px of buttons in a 200px band, label 0px, one control clipped.
+      Moving them is a plugin, not a stylesheet.
+      **A selected breakpoint has no hook, and a disabled or conditional one has
+      no representation.** `BreakpointComponent` swaps `breakpointIcon` for
+      `selectedBreakpointIcon`; the row's class is a constant. §8.6.3's hollow
+      glyph at 50% opacity and the design's conditional treatment have no
+      element, attribute or model field behind them — and D-035 records that
+      debugpy never produces the unverified state anyway.
+      **Sources is not a file tree.** §8.6.3 says it matches the file browser row
+      spec. `SourcesBody` is one read-only CodeMirror widget, so there are no
+      rows, and the section is absent unless a setting turns it on.
+      _Done when:_ each of the four is built or refused in writing.
 - [ ] **P3-10** Debugger variables **tree** view. The value colors must match the
       CM6 `HighlightStyle` for the same types (D5). They already share the
       `color.syntax.*` tokens, so use those tokens instead of new choices.

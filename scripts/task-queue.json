@@ -37,17 +37,6 @@
     },
     {
       "order": 4,
-      "id": "P3-09",
-      "title": "Debugger panel shell, callstack, breakpoints, sources, empty states",
-      "runnable": true,
-      "risk": "low",
-      "dependsOn": [],
-      "blockerKind": "none",
-      "reason": "PRD §8.6.1 and §8.6.3 give the geometry and the exact empty-state copy (\"No breakpoints set\", \"Not paused\", \"No sources\"), so nothing must be invented; note the overlap with P5-05, which IS flagged as net-new design work for other panels.",
-      "riskReason": "A new panel-scoped stylesheet plus generated empty-state content; confined to the debugger sidebar and revertable, though the empty states put English strings into CSS content, which a reviewer may want to relocate."
-    },
-    {
-      "order": 5,
       "id": "P3-17",
       "title": "Debugger decorations do not honour AC10 - the --jp-* fallbacks are not mode-relative",
       "runnable": true,
@@ -58,7 +47,7 @@
       "riskReason": "Whichever route is chosen changes what every editor decoration does under a non-Data4Now theme, and the contrast audit cannot see fallbacks at all, so the work has to bring its own measurement."
     },
     {
-      "order": 6,
+      "order": 5,
       "id": "P3-18",
       "title": "The Sources panel never gets our execution line (path versus content hash)",
       "runnable": true,
@@ -69,7 +58,7 @@
       "riskReason": "It changes which editors get a decoration, so a wrong match paints the stopped line in an unrelated file; and verifying it needs a step into library code, which is a longer drive than a breakpoint."
     },
     {
-      "order": 7,
+      "order": 6,
       "id": "P3-10",
       "title": "Debugger variables tree view",
       "runnable": true,
@@ -78,6 +67,17 @@
       "blockerKind": "none",
       "reason": "The task removes the only judgement call itself — value colours must reuse the existing color.syntax.* tokens rather than new choices — leaving row geometry and states an agent can measure.",
       "riskReason": "Additive CSS on one sidebar section using tokens that already exist and are already audited; no JS, no plugin and no token source involved."
+    },
+    {
+      "order": 7,
+      "id": "P3-19",
+      "title": "The debugger panel's remainder: D6 for three sections, the control row, the missing hooks",
+      "runnable": false,
+      "risk": "medium",
+      "dependsOn": [],
+      "blockerKind": "design_work",
+      "reason": "P3-09 built everything reachable and measured why the rest is not. Two of the five empty states have no copy anywhere and writing it is design work that P5-05 already owns; the debug-control row is a plugin change to a surface 8.6.1 and upstream disagree about; and the selected, disabled and conditional breakpoint states have no DOM hook at all, so there is nothing for CSS to select.",
+      "riskReason": "The control-row half means re-parenting another plugin's toolbar or replacing the sidebar, on the panel a user watches while debugging; the empty-state half puts two invented English strings into shipped CSS content, which is neither translatable nor reviewable by a designer after the fact."
     },
     {
       "order": 8,

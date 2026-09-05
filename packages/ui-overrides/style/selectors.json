@@ -78,7 +78,8 @@
     "toast-visible": "A notification toast on screen. JupyterLab raises the Jupyter-news prompt on a first boot with a fresh profile, so this is reachable but not deterministic; the entries are optional until the harness can raise one on demand.",
     "console-open": "A code console open in the dock with a connected kernel, so the banner is filled, and at least two executed entries above the prompt.",
     "completer-open": "The autocomplete popup showing at least two matches. Needs a LIVE KERNEL: the completions come back over the kernel's complete_request, so this state cannot be driven from stored state the way notebook-open can. Verified by hand for P3-07 with `os.pa` + Tab in the fixture notebook.",
-    "tooltip-open": "The inline signature popover showing, from Shift+Tab on a resolvable name. Needs a live kernel for the same reason as completer-open. Verified by hand for P3-07 with `print` + Shift+Tab."
+    "tooltip-open": "The inline signature popover showing, from Shift+Tab on a resolvable name. Needs a live kernel for the same reason as completer-open. Verified by hand for P3-07 with `print` + Shift+Tab.",
+    "debugger-stopped": "The debugger panel open AND the kernel stopped on a breakpoint. Needs a notebook, a kernel with debugpy, a breakpoint that binds and a thread that holds, so the harness cannot create it. Measured by hand for P3-09 and P3-16; see docs/decisions.md D-035 and D-036."
   },
   "surfaces": [
     {
@@ -1867,6 +1868,138 @@
         ".jp-Launcher-filterInput::placeholder",
         ".jp-Launcher-filterInput:hover",
         ".jp-Launcher-filterInput:focus-visible"
+      ]
+    },
+    {
+      "file": "style/surfaces/debugger.css",
+      "upstream": [
+        "@jupyterlab/debugger 4.6.3 style/*.css, lib/panels/**, lib/sidebar.js",
+        "@jupyterlab/ui-components 4.6.3 style/sidepanel.css, accordiontoolbar.js",
+        "@lumino/widgets 2.x AccordionLayout"
+      ],
+      "note": "Debugger panel, PRD 8.6.1 and 8.6.3 (P3-09, docs/decisions.md D-036). The panel SHELL is sidebar.css, not this file. Every state here needs a live kernel with debugpy, so the harness cannot drive any of it: debugger-open needs the sidebar mounted, and debugger-stopped needs a breakpoint that binds and a thread that holds. All entries are therefore optional and report as skipped. They were measured by hand on 2026-09-05, in both modes, and the numbers are in D-036.",
+      "selectors": [
+        {
+          "selector": ".jp-DebuggerSidebar",
+          "state": "debugger-open",
+          "optional": true,
+          "note": "The sidebar root. Its id is `jp-debugger-sidebar`, NOT `jp-debugger` -- upstream's own base.css targets `#jp-debugger`, which nothing in 4.6.3 creates, so that rule matches zero elements. Optional because the panel mounts only once the debugger extension has been opened."
+        },
+        {
+          "selector": ".jp-DebuggerSidebar .jp-AccordionPanel-title .lm-AccordionPanel-titleCollapser",
+          "state": "debugger-open",
+          "optional": true,
+          "note": "The section chevron. Upstream already rotates it on expand and gives it no transition; this file supplies the 12px size and the 120ms."
+        },
+        {
+          "selector": ".jp-DebuggerBreakpoints-body",
+          "state": "debugger-open",
+          "optional": true,
+          "note": "Carries the \"No breakpoints set\" empty state on `:empty`."
+        },
+        {
+          "selector": ".jp-DebuggerCallstack-body",
+          "state": "debugger-open",
+          "optional": true,
+          "note": "Carries the \"Not paused\" empty state, and the condition is on the LIST rather than the body: React always renders the `<ul>`, so the body is never empty and `:has(> ul:empty)` is what actually holds."
+        },
+        {
+          "selector": ".jp-DebuggerCallstack-body ul",
+          "state": "debugger-open",
+          "optional": true
+        },
+        {
+          "selector": "li.jp-DebuggerCallstackFrame",
+          "state": "debugger-stopped",
+          "optional": true,
+          "note": "One per stack frame; none exist until the kernel stops."
+        },
+        {
+          "selector": ".jp-DebuggerCallstack-body li.jp-DebuggerCallstackFrame.selected",
+          "state": "debugger-stopped",
+          "optional": true,
+          "note": "The active frame. The hook is a BARE `selected` class -- not `jp-mod-selected` -- concatenated in front of the component class in the React render, so it is qualified here rather than used alone. This rule undoes core's white-on-brand inversion."
+        },
+        {
+          "selector": ".jp-DebuggerCallstackFrame-name",
+          "state": "debugger-stopped",
+          "optional": true
+        },
+        {
+          "selector": ".jp-DebuggerCallstackFrame-location",
+          "state": "debugger-stopped",
+          "optional": true
+        },
+        {
+          "selector": ".jp-DebuggerBreakpoint",
+          "state": "debugger-stopped",
+          "optional": true,
+          "note": "One per breakpoint. A SELECTED breakpoint carries no class at all -- upstream swaps the icon component instead -- so there is no selected-row rule to register."
+        },
+        {
+          "selector": ".jp-DebuggerBreakpoint-container",
+          "state": "debugger-stopped",
+          "optional": true,
+          "note": "The leading glyph column. Upstream gives it no width, so paths do not start on one vertical line; fixed at 20px here."
+        },
+        {
+          "selector": ".jp-DebuggerBreakpoint-source",
+          "state": "debugger-stopped",
+          "optional": true,
+          "note": "Truncated from the LEFT. Upstream ships `.jp-left-truncated` on this very span and sets `direction: ltr`, which ellipsizes the wrong end and throws the filename away."
+        },
+        {
+          "selector": ".jp-DebuggerBreakpoint-line",
+          "state": "debugger-stopped",
+          "optional": true
+        },
+        {
+          "selector": ".jp-DebuggerKenelSources",
+          "state": "debugger-open",
+          "optional": true,
+          "note": "MISSPELLED UPSTREAM, and this is the spelling that renders. `lib/panels/kernelSources/index.js` calls `addClass('jp-DebuggerKenelSources')` while its own stylesheet targets the correct spelling, so upstream's rule matches nothing in 4.6.3."
+        },
+        {
+          "selector": ".jp-DebuggerKernelSources",
+          "state": "debugger-open",
+          "optional": true,
+          "note": "The CORRECT spelling, which nothing emits in 4.6.3. Registered because it is what a fixed upstream will emit, and because a skipped entry names the gap instead of hiding it."
+        },
+        {
+          "selector": ".jp-DebuggerKernelSources-body",
+          "state": "debugger-open",
+          "optional": true
+        },
+        {
+          "selector": ".jp-DebuggerKernelSource-source",
+          "state": "debugger-stopped",
+          "optional": true,
+          "note": "One per module, after the kernel reports its sources."
+        },
+        {
+          "selector": ".jp-DebuggerSources-body",
+          "state": "debugger-stopped",
+          "optional": true,
+          "note": "The Sources section is absent unless a setting turns it on -- `DebuggerSidebar` constructs with `_showSourcesPanel = false`."
+        },
+        {
+          "selector": ".jp-DebuggerSources-header-path",
+          "state": "debugger-stopped",
+          "optional": true
+        },
+        {
+          "selector": ".jp-DebuggerVariables-body",
+          "state": "debugger-open",
+          "optional": true,
+          "note": "Plate only; the tree and the grid are P3-10 and P3-11."
+        }
+      ],
+      "nonQueryable": [
+        ".jp-DebuggerBreakpoints-body:empty::after",
+        ".jp-DebuggerCallstack-body:has(> ul:empty)::after",
+        ".jp-DebuggerBreakpoint:hover",
+        "li.jp-DebuggerCallstackFrame:hover:not(.selected)",
+        ".jp-DebuggerKernelSource-source:hover"
       ]
     }
   ]

@@ -2197,6 +2197,186 @@ were committed, because in every case the heading did not yet exist. It cannot
 catch a reference that resolves to the **wrong** decision, so the rule that goes
 with it is: **write the record in the same change that first cites it.**
 
+## D-036 — The debugger panel: three sources disagree, and only one of them renders
+
+**Decided.** `packages/ui-overrides/style/surfaces/debugger.css` styles the
+debugger sidebar as a T2 surface. Where §8.6.1/§8.6.3, the imported design and
+JupyterLab's own markup disagree, this entry records which one was followed and
+why. TODO.md **P3-09**; what could not be reached is **P3-19**.
+
+**Nothing here re-styles the panel shell.** `sidebar.css` already dresses
+`.jp-SidePanel-header > h2` and `.jp-AccordionPanel-title` for every side panel,
+debugger included (P2-04). This file starts below the title band.
+
+### The three-way disagreement, measured
+
+| Element                 | §8.6 says | The design draws | 4.6.3 renders            | Shipped |
+| ----------------------- | --------- | ---------------- | ------------------------ | ------- |
+| Section header height   | 28px      | 9.5px text       | **32px, written inline** | 32px    |
+| Callstack row           | 24px      | ~44px, two lines | **26px**, padding-driven | 24px    |
+| Breakpoint glyph column | 20px      | 12px             | **16px**, no width       | 20px    |
+
+**The 28px header is not reachable from CSS, and that is a fact about Lumino
+rather than a preference.** `AccordionLayout.updateItemPosition` writes
+`titleStyle.height = '<titleSpace>px'` as an INLINE style on every resize, and
+`@jupyterlab/ui-components`'s `AccordionToolbar` hardcodes `titleSpace: 32`. The
+title also carries inline `position: absolute` and `contain: strict`. A
+stylesheet could beat the inline height with `!important`, but the layout would
+still position everything against its own 32, so the band and its contents would
+disagree. 32px is left alone — and it is what `--d4n-sidebar-header-height`
+already gives every other panel header, so the two kinds of header agree with
+each other, which is the more valuable consistency.
+
+**The callstack row takes the PRD's number on upstream's shape.** The design's
+row is a three-column grid with two stacked lines, a leading arrow and a
+right-hand depth chip. Upstream's `<li>` has exactly two children — a name and a
+location — so there is nothing to fill a two-line row and no element to hang the
+chip or the arrow on. 24px on the one-line shape is the only combination with
+content behind it.
+
+**The breakpoint glyph column is the PRD's 20px, using the file browser's
+technique.** Upstream gives the span no width at all and pushes it with
+`margin-right: 10px`, so the column is as wide as whichever icon landed in it
+and the paths do not start on one vertical line. That is the same defect the
+file browser's icon column already answers: a fixed 20px column holding a 16px
+glyph, the inset being what keeps a fixed column from reading as an icon strip.
+
+### Three upstream defects this surface has to answer
+
+1. **`.jp-DebuggerKenelSources` is misspelled in upstream's own source.**
+   `lib/panels/kernelSources/index.js` calls
+   `this.addClass('jp-DebuggerKenelSources')` — no `r` — while
+   `style/kernelSources.css` targets `.jp-DebuggerKernelSources`. Upstream's own
+   rule therefore matches nothing in 4.6.3. Both spellings are written here: the
+   misspelled one is what renders today, the correct one is what a fixed
+   upstream will emit, and neither is load-bearing alone.
+2. **`.jp-left-truncated` truncates the wrong end.** It sets `direction: ltr`,
+   which ellipsizes on the RIGHT and throws the filename away — the opposite of
+   what §8.6.3 asks for and of what the class name promises. The `direction: rtl`
+   rule here is the answer to that class, not an addition to it.
+3. **The active callstack frame is painted white on brand.** Upstream's
+   `li.selected { color: white; background: var(--jp-brand-color1) }` measured
+   `rgb(15, 61, 110)` with white text. Same inversion the file browser needed
+   undoing, same fix: tinted plate, unchanged text ramp, leading accent bar as an
+   inset box-shadow so it costs no layout.
+
+**One deliberate divergence from the PRD.** §8.6.3 names `color.surface.selected`
+for the active frame. Both shipped list surfaces — the file browser and the
+running panel — paint selection with `color.selection.active` instead. Following
+the PRD here would make the debugger the only list in the product that
+highlights differently, so the shipped precedent wins. Stated rather than done
+quietly.
+
+**The hook is a bare `selected` class.** Not `jp-mod-selected`, not `lm-mod-*`:
+`body.js` concatenates `'selected jp-DebuggerCallstackFrame'`. The rule qualifies
+it with the component class so a word that common cannot reach anything else.
+
+### D6 cannot be met, and this is the accounting
+
+§8.6.5 **D6** requires every section to have a designed empty state. §8.6.3
+supplies three strings for five sections, and one of those three has nowhere to
+go:
+
+| Section        | Copy in the PRD      | Reachable?                                             |
+| -------------- | -------------------- | ------------------------------------------------------ |
+| Breakpoints    | "No breakpoints set" | **yes** — bare fragment of rows, so `:empty` holds     |
+| Callstack      | "Not paused"         | **yes** — always renders `<ul>`, so `:has(> ul:empty)` |
+| Sources        | "No sources"         | **no** — Lumino HIDES the editor, never removes it     |
+| Variables      | none                 | no copy                                                |
+| Kernel sources | none                 | no copy                                                |
+
+The two that are both specified and reachable ship here. The rest is **P3-19**,
+and the two missing strings are design work that **P5-05** already owns.
+
+**The copy lives in `content`, which is neither translatable nor
+interpolatable.** That is a known cost of the pattern and it is recorded with the
+running panel's empty state too. The accordion title directly above says which
+thing is empty, so the line only has to supply the "none".
+
+### What has no DOM hook at all
+
+- **A selected breakpoint carries no class.** `BreakpointComponent` chooses
+  between `breakpointIcon` and `selectedBreakpointIcon`; the row's `className` is
+  a constant. Selection is a swapped React component, not a state.
+- **Disabled and conditional breakpoints are not represented in the list.**
+  §8.6.3 specifies a hollow glyph at 50% opacity for disabled, and the design
+  draws a conditional treatment §8.6.3 never mentions. Neither has an element,
+  an attribute or a model field behind it — and D-035 records that debugpy never
+  produces the unverified state those glyphs would show anyway.
+- **There is no global debug-control row above the sections.** §8.6.1 puts
+  continue, terminate and the three steps in "a dedicated toolbar row above the
+  sections". Upstream mounts all six as `CommandToolbarButton`s on the CALLSTACK
+  section's own toolbar, which `AccordionToolbar` then re-parents into that
+  section's accordion title. Their disabled state needs nothing from this file:
+  `buttons.css` already takes `.jp-ToolbarButtonComponent[disabled]` to
+  `--d4n-button-disabled-opacity`, which is the 40% §8.6.1 asks for.
+- **Sources is not a file tree.** §8.6.3 says it matches the file browser row
+  spec. `SourcesBody` is one read-only CodeMirror widget, so there are no rows.
+  It is also absent unless a setting turns it on — `DebuggerSidebar` constructs
+  with `_showSourcesPanel = false`.
+
+### Verified in a running 4.6.3, both modes
+
+Driven with a notebook, a live kernel, the debugger enabled, a breakpoint on
+`b = a + 1` and the kernel stopped on it.
+
+| Measured                | Light                     | Dark                      |
+| ----------------------- | ------------------------- | ------------------------- |
+| chevron                 | 12×12, `transform 0.12s`  | 12×12, `transform 0.12s`  |
+| callstack row           | 24px, padding `0 12px`    | 24px, padding `0 12px`    |
+| active frame plate      | `#D6EFEF`                 | `#123745`                 |
+| active frame text       | `#2C3E55`                 | `#E4E9F0`                 |
+| active frame bar        | `2px inset #167C7C`       | `2px inset #4FD1D1`       |
+| frame name              | JetBrains Mono 13px       | JetBrains Mono 13px       |
+| frame location          | JetBrains Mono 11px muted | JetBrains Mono 11px muted |
+| breakpoint row          | 24px, padding `0 12px`    | 24px, padding `0 12px`    |
+| breakpoint glyph column | **20px**                  | **20px**                  |
+| "No breakpoints set"    | `#5A6B82`, 12px padding   | `#A6B2C4`, 12px padding   |
+| "Not paused"            | `#5A6B82`, 12px padding   | `#A6B2C4`, 12px padding   |
+
+The white-on-brand undo works: the selected frame reads `#2C3E55` on `#D6EFEF`
+in light and `#E4E9F0` on `#123745` in dark, where upstream painted white on
+`rgb(15, 61, 110)`. The glyph column measured 16px before this file and 20px
+after. Both empty states fired on their intended conditions — the breakpoints
+body with zero children, and the callstack body with `> ul:empty` while the
+`<ul>` itself was still present.
+
+### The Callstack section has no label, and §8.6.1 was right about why
+
+Measured in a 200px sidebar, with no session running:
+
+| Section        | Label width | Toolbar width | Items |
+| -------------- | ----------- | ------------- | ----- |
+| Variables      | 53px        | 131px         | 3     |
+| **Callstack**  | **0px**     | **244px**     | **6** |
+| Breakpoints    | 88px        | 84px          | 2     |
+| Kernel Sources | 58px        | 126px         | 1     |
+
+The Callstack toolbar is **244px wide inside a 200px band**. The label is
+`flex: 0 1 auto` with `overflow: hidden`, so it shrinks to nothing first, and
+the sixth control is clipped off the right edge as well. The user loses both the
+word "Callstack" and the Evaluate button, at the default sidebar width, with no
+session running.
+
+None of that is ours: the button count, the toolbar width and the label's flex
+come from upstream. But it is the exact failure **§8.6.1 legislates against** by
+putting continue, terminate and the three steps in "a dedicated toolbar row
+above the sections". Six controls do not fit in a section header, and upstream
+puts them there anyway.
+
+**Not papered over.** The obvious CSS mitigation — `flex-shrink: 0` on the label
+so it cannot collapse — only trades the word for more clipped buttons, since the
+toolbar already overflows by 44px. Both halves are already being lost; a
+stylesheet can only choose which. Moving the controls to their own row is a
+plugin change, so it is **P3-19**.
+
+### Section geometry is Lumino's, not ours
+
+§8.6.1 asks for "max-height proportional, independent scroll" on section bodies.
+Both are `AccordionLayout` geometry driven from JavaScript sizing, so a CSS
+height here would be overwritten on the next resize. Upstream's `overflow: auto`
+stays and this file sets only the plate and the type.
+
 ---
 
 ## Still open
