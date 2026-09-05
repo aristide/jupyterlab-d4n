@@ -1092,43 +1092,32 @@ green including D4.
       here. Driving them needs a kernel: open a console, run `import os`, type
       `os.pa` and press Tab. A first attempt with `pri` returned an empty
       completer ten times in a row — the namespace was too thin, not the styling.
-- [ ] **P3-08** Wire the CM6 breakpoint gutter and the execution-line decorations
-      to the debugger. They are already built in
-      `packages/editor-theme/src/debugDecorations.ts`. They live in the editor
-      theme, **not** in CSS. In CSS they break on the next CodeMirror version.
-      _Started 2026-09-04, NOT finished. The code is committed; the decorations
-      have never been seen on screen._ The autonomous runner reached a
-      90-minute wall and stopped before it verified anything, so what is on disk
-      passes every gate and proves nothing about whether a breakpoint draws.
-      _What landed._ `src/debugBridge.ts` follows an `IDebugger` session and
-      turns DAP breakpoints and the stop event into CodeMirror effects.
-      `IDebugger` is `optional`, so a deployment without the debugger extension
-      still activates the plugin and registers nothing. `index.ts` now exports
-      two plugins with separate ids, so disabling the decorations leaves the
-      editor colours alone. `style/selectors.json` is new — this package had no
-      manifest at all, which P3-05 recorded as a gap.
-      _A real bug was found on the way, and it had been shipping._ Four
-      variables in `debugDecorations.ts` kept camelCase through the project-wide
-      rename to kebab-case: `breakpointConditional`, `breakpointDisabled`,
-      `executionLineBg`, `executionLineBorder`. Each resolved to nothing and
-      silently used its `--jp-*` fallback. Nobody noticed because the
-      decorations were never wired to anything that drew them.
-      _Two lints were hardened so it cannot recur._ `lint:vars` now reads `.ts`
-      as well as `.css`, because `editor-theme` writes its CSS through
-      `EditorView.baseTheme()` and no stylesheet lint could ever see it — 70
-      files scanned now, not 44. And a fallback no longer excuses an
-      unresolvable name: a fallback answers "this layer can be out of scope",
-      which is the AC10 case, not "this name is misspelled". `lint:important`
-      gained the same `.ts` reach plus `cm-` and `@codemirror/` as upstream
-      names.
-      _What blocks verification, measured._ The notebook toolbar carries **no
-      debugger toggle** until a kernel advertises debug support, and with no
-      kernel started there are no CodeMirror gutters at all — not ours, not
-      upstream's. So the sequence has to be: open a notebook, **start the
-      kernel and wait for it**, then the bug button appears, then set a
-      breakpoint and run to it. Only then can
-      `.cm-breakpoint-gutter` being hidden and our gutter being mounted be
-      confirmed. Budget a session for it; boot alone is ~70s here.
+- [ ] **P3-08** Breakpoint gutter, wired to the debugger. **Split on 2026-09-05:
+      the execution-line half is now P3-16.** They were one task and it died at
+      the 90-minute runner ceiling twice, at `90m 0s` and `90m 1s`, without ever
+      verifying anything. The two halves cost very different amounts to check,
+      and that is the seam: **a breakpoint can be set as soon as a
+      debug-capable kernel is up, while an execution line needs the program to
+      actually stop.** Keeping them together meant paying the second price to
+      test the first.
+      _The code for both halves is already committed_ (`src/debugBridge.ts`,
+      `src/debugDecorations.ts`). Neither has been seen on screen. What is left
+      is verification, and fixing whatever it finds.
+      _This task is the gutter:_ ours mounted, upstream's `.cm-breakpoint-gutter`
+      hidden, and the three §8.6.4 glyph states — set, disabled, conditional.
+      `glyphState()` maps `verified === false` onto `disabled`, because debugpy
+      answers a breakpoint on a line it cannot bind by returning the breakpoint
+      unverified rather than dropping it.
+      _Done when:_ a breakpoint set in a notebook cell shows our glyph and not
+      upstream's, in both modes. **No stop event needed.**
+      _The sequence, measured, because it is not obvious._ The notebook toolbar
+      carries **no debugger toggle** until a kernel advertises debug support,
+      and with no kernel started there are no CodeMirror gutters at all — not
+      ours, not upstream's. So: open a notebook, **start the kernel and wait for
+      it**, then the bug button appears, then click the gutter.
+      _Budget the boot._ One browser start is ~70s in this container, whose
+      steady state is eight `build-labextension --watch` processes at ~170% CPU.
+      Reuse one page across the measurements rather than launching per step.
 - [ ] **P3-09** Debugger panel shell, callstack, breakpoints and sources. Every
       section gets a designed empty state. No section body is blank (D6).
 - [ ] **P3-10** Debugger variables **tree** view. The value colors must match the
@@ -1157,6 +1146,30 @@ green including D4.
 
 ## P4 — Forms, settings, dialogs
 
+- [ ] **P3-16** Execution-line decoration, wired to the debugger (split out of
+      P3-08 on 2026-09-05). The line the program is stopped on, plus upstream's
+      own `jp-DebuggerEditor-highlight` suppressed so there is one highlight
+      rather than two.
+      _The code is committed and inert_ — `src/debugBridge.ts` turns the DAP
+      stop event into the effect, and `src/debugDecorations.ts` owns the state
+      field and the base theme that hides upstream's class.
+      _It is a separate task because it costs more to verify than the gutter._
+      A breakpoint can be set as soon as a debug-capable kernel is up. An
+      execution line needs the program to run and **stop**, which means a
+      breakpoint that actually binds, a cell that reaches it, and a session that
+      holds there while the measurement is taken.
+      _Done when:_ running a cell to a breakpoint highlights the stopped line in
+      both modes, and upstream's highlight does not also draw.
+      _Watch the contrast gate._ The execution-line plate sits under live syntax
+      tokens, and `color.debug.executionLineBg` is already one of the
+      `CODE_BACKDROPS` the A4 block audits at 4.5:1 against every syntax colour.
+      A change to that token moves 15 pairings at once.
+      _Two of its four tokens were dead until 2026-09-04._
+      `--d4n-color-debug-executionLineBg` and `-executionLineBorder` kept
+      camelCase through the kebab-case rename and silently resolved to their
+      `--jp-*` fallbacks. `lint:vars` now reads `.ts` and no longer lets a
+      fallback excuse an unresolvable name, so this cannot recur — but it means
+      **nobody has ever seen these decorations in their designed colours.**
 - [ ] **P4-01** RJSF global CSS pass against the stable class names. PRD §7.7
       estimates about 85% coverage. It is scaffolded in
       `packages/settings-forms/`.
