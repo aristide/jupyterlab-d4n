@@ -75,8 +75,14 @@ file` and Playwright reports it as "browser has been closed", which does not
 - **A probe that types into a notebook gets autosaved.** JupyterLab's autosave
   wrote a probe's typing into `notebooks/fixture.ipynb` and it appeared in
   `git status`. The file is committed, so this dirties the tree rather than
-  losing anything, but it is silent. Check the notebook and `git checkout` it
-  after any probe that edits a cell.
+  losing anything, but it is silent. Check the notebook after any probe that
+  edits a cell.
+  _Read the diff before reverting it, because not all of it is churn._ The
+  second time this happened the only change left after the typing was two cell
+  `id` fields. `fixture.ipynb` is **nbformat 4.5, where cell ids are required**,
+  and the committed copy had none — so the autosave was fixing the file, not
+  damaging it. Those two ids are kept on purpose (commit `c30b8a9`). A blanket
+  `git checkout` would have thrown a schema fix away.
 - **`test:galata` needs the WORKING TREE to be still, and the readiness check
   that matters is the watch log — not the server.** This is the fourth diagnosis
   of the same flake and the first one that is measured end to end.
