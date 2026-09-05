@@ -56,6 +56,11 @@ them:
   is harder to notice. Check with `curl -s .../api/terminals` and
   `.../api/kernels`. The DELETE endpoints need an auth token, so the reliable
   cleanup is `docker compose restart jupyter`. This has now cost two sessions.
+- **A probe that types into a notebook gets autosaved.** JupyterLab's autosave
+  wrote a probe's typing into `notebooks/fixture.ipynb` and it appeared in
+  `git status`. The file is committed, so this dirties the tree rather than
+  losing anything, but it is silent. Check the notebook and `git checkout` it
+  after any probe that edits a cell.
 - **Never run a browser probe while `test:galata` is running.** This is the same
   hazard as the one above and it is the one that actually bit. A probe that
   opens a terminal changes the status bar, which the suite screenshots, so the
@@ -1118,29 +1123,56 @@ green including D4.
       here. Driving them needs a kernel: open a console, run `import os`, type
       `os.pa` and press Tab. A first attempt with `pri` returned an empty
       completer ten times in a row — the namespace was too thin, not the styling.
-- [ ] **P3-08** Breakpoint gutter, wired to the debugger. **Split on 2026-09-05:
-      the execution-line half is now P3-16.** They were one task and it died at
-      the 90-minute runner ceiling twice, at `90m 0s` and `90m 1s`, without ever
-      verifying anything. The two halves cost very different amounts to check,
-      and that is the seam: **a breakpoint can be set as soon as a
-      debug-capable kernel is up, while an execution line needs the program to
-      actually stop.** Keeping them together meant paying the second price to
-      test the first.
-      _The code for both halves is already committed_ (`src/debugBridge.ts`,
-      `src/debugDecorations.ts`). Neither has been seen on screen. What is left
-      is verification, and fixing whatever it finds.
-      _This task is the gutter:_ ours mounted, upstream's `.cm-breakpoint-gutter`
-      hidden, and the three §8.6.4 glyph states — set, disabled, conditional.
-      `glyphState()` maps `verified === false` onto `disabled`, because debugpy
-      answers a breakpoint on a line it cannot bind by returning the breakpoint
-      unverified rather than dropping it.
-      _Done when:_ a breakpoint set in a notebook cell shows our glyph and not
-      upstream's, in both modes. **No stop event needed.**
-      _The sequence, measured, because it is not obvious._ The notebook toolbar
-      carries **no debugger toggle** until a kernel advertises debug support,
-      and with no kernel started there are no CodeMirror gutters at all — not
-      ours, not upstream's. So: open a notebook, **start the kernel and wait for
-      it**, then the bug button appears, then click the gutter.
+- [x] **P3-08** Breakpoint gutter, wired to the debugger. The execution-line
+      half is **P3-16**.
+      _Done on 2026-09-05._ The gutter was already committed and had never been
+      on screen. It works. Full record and every measurement in **D-035**.
+      _Measured in both modes:_ `.cm-d4n-breakpointGutter` mounts at 16px in
+      gutter order `cm-breakpoint-gutter` (hidden), ours, `cm-lineNumbers` — so
+      `Prec.high` really does put it left of the line numbers. Upstream's column
+      computes `display: none`, width 0, 0 markers. The `set` glyph is a filled
+      disc r=4.5 on a 12×12 canvas, `#C4274A` light and `#FF6B86` dark; the hover
+      ghost is an 8px pill at opacity 0.5 and stays off lines that already carry
+      a breakpoint.
+      **One gap found and closed: a blank line was not a blank line to us.**
+      Upstream's `_getEffectiveClickedLine` walks back from a blank line to the
+      nearest non-blank line above and sets nothing when there is none. Our
+      `toggleBreakpoint` did not, so clicking blank space asked the kernel for a
+      breakpoint upstream would never have requested. `effectiveLine()` now makes
+      the same choice, with a range guard beside it. After the fix, clicking the
+      blank line under a breakpointed line toggles that line off — identical to
+      upstream, zero console errors.
+      **`disabled` is unreachable, and the reason is new.** The old wording here
+      said `glyphState()` maps `verified === false` onto `disabled` because
+      debugpy returns an unbindable breakpoint unverified. **It does not.**
+      Measured: a breakpoint on a comment line comes back with **line 0**, and
+      the debugger panel then holds `Cell [1] 0` beside `Cell [1] 3`. So that
+      branch never runs against debugpy, exactly as `conditional` never runs
+      against a 4.6 that has no interface to set a condition. Both glyphs stay:
+      they are the correct reading of the protocol, and another adapter may use
+      them.
+      **The line-0 breakpoint crashes UPSTREAM, not us.**
+      `@jupyterlab/debugger/src/handlers/editor.ts:410` calls
+      `doc.line(b.line!)` with no range guard, so it throws on line 0.
+      Ours filters it and paints correctly. Attribution was
+      measured, not assumed: with every `@d4n` extension disabled through
+      `JUPYTERLAB_D4N=0`, the same `RangeError` fired four times **before any
+      click**, while upstream restored the stale breakpoint from the kernel.
+      _Two hazards for the next person._ **Typing into `fixture.ipynb` gets
+      autosaved.** JupyterLab's autosave wrote the probe's typing to disk and it
+      turned up in `git status`; check the notebook and `git checkout` it after
+      any probe that edits a cell. And **`JUPYTERLAB_D4N=0` boots behind an
+      "Error Loading Theme" dialog**, because the shipped `overrides.json` still
+      pins `Data4Now Light` while the theme extensions are off — dismiss it
+      before the probe touches anything.
+      _The sequence, and the last step is the one that bites._ The notebook
+      toolbar carries a debugger toggle from the start, but its title reads
+      "Select a kernel that supports debugging to enable debugger" until the
+      kernel advertises support. Waiting for `/debug/i` in a title matches that
+      string and clicks a dead button. Wait for the title to be exactly
+      **"Enable Debugger"**, and check it before clicking — a restored session
+      can leave it reading "Disable Debugger", in which case a click turns the
+      debugger OFF and no gutter ever mounts.
       _Budget the boot._ One browser start is ~70s in this container, whose
       steady state is eight `build-labextension --watch` processes at ~170% CPU.
       Reuse one page across the measurements rather than launching per step.

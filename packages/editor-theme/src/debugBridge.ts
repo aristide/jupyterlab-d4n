@@ -1,4 +1,4 @@
-import type { Extension } from '@codemirror/state';
+import type { Extension, Text } from '@codemirror/state';
 import { StateEffect } from '@codemirror/state';
 import type { EditorView, ViewUpdate } from '@codemirror/view';
 import { ViewPlugin } from '@codemirror/view';
@@ -133,6 +133,35 @@ function executionLineFor(service: IDebugger, codeId: string): number | null {
 }
 
 /**
+ * The line a click on `clicked` should actually toggle, or `null` for none.
+ *
+ * A BLANK LINE IS NOT A BREAKPOINT, AND UPSTREAM ALREADY KNEW THAT. Its
+ * `_getEffectiveClickedLine` walks back from a blank line to the nearest
+ * non-blank line above it, and sets nothing when there is none. Our gutter
+ * replaces upstream's, so it has to make the same choice — otherwise clicking
+ * blank space asks the kernel for a breakpoint upstream would never have
+ * requested, and the model fills up with lines nothing can bind.
+ *
+ * The range guard is the second half. `syncView` computes the line from a
+ * gutter cell so it is in range by construction today, but a breakpoint line
+ * that leaves the document is the exact shape of the fault this file already
+ * defends against elsewhere, and upstream's own painter does NOT guard: at
+ * `handlers/editor.ts:410` it calls `doc.line(b.line!)` unguarded, which throws
+ * `RangeError: Invalid line number 0` (measured on 2026-09-05, and reproduced
+ * with every `@d4n` extension disabled — see D-035).
+ */
+function effectiveLine(doc: Text, clicked: number): number | null {
+  if (!Number.isInteger(clicked) || clicked < 1 || clicked > doc.lines) {
+    return null;
+  }
+  let line = clicked;
+  while (line >= 1 && doc.line(line).text.trim() === '') {
+    line -= 1;
+  }
+  return line >= 1 ? line : null;
+}
+
+/**
  * Toggle the breakpoint on `line`, through the debugger service.
  *
  * Upstream's gutter is hidden, so its click handler is out of reach and this
@@ -150,17 +179,22 @@ function toggleBreakpoint(
   if (!service.isStarted) {
     return;
   }
+  const target = effectiveLine(view.state.doc, line);
+  if (target === null) {
+    return;
+  }
   const code = view.state.doc.toString();
   const codeId = service.getCodeId(code);
   if (!codeId) {
     return;
   }
   const existing = service.model.breakpoints.getBreakpoints(codeId);
-  const next = existing.some(breakpoint => breakpoint.line === line)
-    ? existing.filter(breakpoint => breakpoint.line !== line)
-    : [...existing, { line, verified: true, source: { path: codeId } }].sort(
-        (a, b) => (a.line ?? 0) - (b.line ?? 0)
-      );
+  const next = existing.some(breakpoint => breakpoint.line === target)
+    ? existing.filter(breakpoint => breakpoint.line !== target)
+    : [
+        ...existing,
+        { line: target, verified: true, source: { path: codeId } }
+      ].sort((a, b) => (a.line ?? 0) - (b.line ?? 0));
 
   void service.updateBreakpoints(code, next);
 }

@@ -2005,6 +2005,71 @@ a precondition the harness cannot create: it needs a notebook, a kernel with
 debugpy, a breakpoint and a stopped thread. Both report as SKIPPED with that
 reason, which is the point — a skip names the gap instead of hiding it.
 
+### P3-08 verification, 2026-09-05 — the gutter, in both modes
+
+**Done.** A breakpoint set in a notebook cell shows our glyph and not upstream's,
+in both modes. `.cm-d4n-breakpointGutter` mounts at **16px**, in gutter order
+`cm-breakpoint-gutter` (hidden), ours, `cm-lineNumbers` — so `Prec.high` really
+does put it left of the line numbers. Upstream's column computes
+`display: none`, width **0**, and holds **0 markers**.
+
+| Measured        | Light                 | Dark                  |
+| --------------- | --------------------- | --------------------- |
+| `set` glyph     | `#C4274A` disc, r=4.5 | `#FF6B86` disc, r=4.5 |
+| hover ghost     | 8px pill, opacity 0.5 | 8px pill, opacity 0.5 |
+| glyph canvas    | 12×12                 | 12×12                 |
+| upstream gutter | `display: none`, 0px  | `display: none`, 0px  |
+
+The hover ghost only appears on cells without a breakpoint, which is what
+`:not(.cm-d4n-hasBreakpoint)` is for, and the element carrying a glyph does get
+that class.
+
+**A behavioural gap this found and closed: a blank line was not a blank line to
+us.** Upstream's `_getEffectiveClickedLine` walks back from a blank line to the
+nearest non-blank line above and sets nothing when there is none. Our
+`toggleBreakpoint` did not, so clicking blank space asked the kernel for a
+breakpoint upstream would never have requested. `effectiveLine()` now makes the
+same choice, with a range guard beside it. Measured after the fix: with a
+breakpoint on `x = 2` (line 3), clicking the blank line 4 below it toggles line 3
+**off** rather than adding a line-4 breakpoint — identical to upstream, and zero
+console errors.
+
+**`disabled` and `conditional` are both unreachable against debugpy in 4.6, and
+the reasons differ.** `conditional` was already known: `IDebugger.IBreakpoint`
+extends the DAP _response_ type, which carries no `condition`. `disabled` turns
+out to be unreachable too, but for a reason nothing in the repository had
+recorded: **debugpy does not answer an unbindable line with `verified: false`, it
+answers with line 0.** Measured on the fixture cell, clicking the gutter beside
+the comment on line 1 left the debugger panel holding two rows —
+`Cell [1] 0` and `Cell [1] 3` — so `glyphState()`'s `verified === false`
+branch never runs. The mapping stays, because it is the correct reading of the
+protocol and another adapter may well use it; it is simply dead against debugpy.
+
+**And that line-0 breakpoint crashes upstream, not us.**
+`@jupyterlab/debugger/src/handlers/editor.ts:410` computes
+`editor.state.doc.line(b.line!).from` with no range guard, so a line-0 breakpoint
+throws `RangeError: Invalid line number 0 in 2-line document`. Our own gutter
+filters it — `buildBreakpointSet` drops any mark outside `[1, doc.lines]` — and
+paints the remaining breakpoint correctly.
+
+**The attribution was measured, not assumed.** Re-run with every `@d4n`
+extension disabled through the project's own `JUPYTERLAB_D4N=0` opt-out, the same
+`RangeError` fired **four times before any click**, while upstream restored the
+stale line-0 breakpoint from the kernel. None of our code was loaded. It is an
+upstream defect that our replacement happens to tolerate.
+
+**One thing the opt-out itself showed.** `JUPYTERLAB_D4N=0` disables the theme
+extensions but leaves the shipped `overrides.json` pinning `Data4Now Light`, so
+stock boots behind an "Error Loading Theme" dialog. Harmless, and it blocks a
+scripted probe until dismissed. Recorded rather than fixed: the escape hatch is a
+diagnostic, and adding a theme override to it is a change to the thing being
+diagnosed.
+
+**Gates.** Build clean, `lint:check` green, `lint:design` 8 of 8,
+`test:contrast` 529 pairings 0 failing, `test:selectors` 102 matched 0 broken,
+`pytest` 5 passed, `test:galata` 14 of 14. The execution line is **P3-16** and is
+not covered here: it needs the program to stop.
+
 ### The `D-033` collision, and the lint that now prevents it
 
 Three separate pieces of work each cited `D-033` for a decision none of them
