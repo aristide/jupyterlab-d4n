@@ -422,7 +422,7 @@ function buildChecks(mode, t) {
   //
   // That ramp inverts with the mode, so the letter has to invert with it too.
   // Core hardcodes `color: white`, which measured 1.08:1 on the dark-mode badge
-  // — see docs/decisions.md D-033. `text.inverse0` is the one token defined to
+  // — see docs/decisions.md D-034. `text.inverse0` is the one token defined to
   // flip, and these ten pairings are what make that claim checkable rather than
   // asserted: nothing else in this audit puts inverse0 on a syntax hue.
   const COMPLETER_BADGE_HUES = [

@@ -643,7 +643,7 @@
         {
           "selector": ".jp-Completer-item .jp-Completer-monogram",
           "state": "completer-open",
-          "note": "The badge letter. Core hardcodes `color: white`, which is invisible on the light-in-dark-mode syntax hues the badge takes (1.08:1 measured). See docs/decisions.md D-033."
+          "note": "The badge letter. Core hardcodes `color: white`, which is invisible on the light-in-dark-mode syntax hues the badge takes (1.08:1 measured). See docs/decisions.md D-034."
         },
         {
           "selector": ".jp-Completer-loading-bar-container",

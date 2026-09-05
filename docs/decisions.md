@@ -285,8 +285,15 @@ Review did not catch it in two of the four files.
 
 **The fix is the lint, not the discipline.** `tests/lint/lint-var-names.mjs`
 resolves every `var(--d4n-*)` against what is actually declared, and it is in the
-`lint:design` chain. A reference with an explicit fallback is exempt, because a
-fallback is a deliberate "this may not exist".
+`lint:design` chain.
+
+**Amended by P3-08 (D-035): a fallback no longer exempts a reference.** This
+entry used to say one did, because a fallback is a deliberate "this may not
+exist". P3-08 found four camelCase names in `debugDecorations.ts` that had
+survived the rename and were silently resolving to their `--jp-*` fallbacks, so
+the decorations had never once painted in Data4Now colours. A fallback answers
+"this layer can be out of scope", which is the AC10 case. It does not answer
+"this name is misspelled". The lint now reads `.ts` as well as `.css`.
 
 **Revisit if:** a reason appears to make the two sides agree. Kebab-casing the TS
 export would mean `t.color.ansi['bright-red']`, which is worse; camelCasing the
@@ -1825,6 +1832,197 @@ T3 swap. AC10 promises a stock **look**, not a stock plugin set.
   pairings, 0 failing — five are new, and the block's border is gated **VIS**
   rather than A3, because 1.4.11 gates the boundary that identifies a component
   and this block is identified by its tint, its glyph and its title.
+
+## D-034 — The completer badge letter inverts with the mode; core's white does not
+
+**Decided under P3-07 and written down on 2026-09-05.** `.jp-Completer-monogram`
+takes `color.text.inverse0`, not core's hardcoded `color: white`.
+
+**Written late, and the reason matters.** P3-07 landed the rule, the ten contrast
+pairings and the manifest note, and every one of them cited "D-033" for the
+argument. That record was never written, and D-033 was later allocated to the
+launcher (P2-15). This entry is reconstructed from what the repository itself
+states — `packages/ui-overrides/style/surfaces/completer.css`,
+`tests/contrast/audit.mjs` and `packages/ui-overrides/style/selectors.json` — and
+adds nothing that is not already measured there. See the note at the end of
+D-035 for the collision and the rule that now prevents it.
+
+**The problem.** The badge behind the letter is
+`--jp-completer-type-background0..10`, which the Tier-4 adapter points at the ten
+`color.syntax.*` hues, so the swatch beside `def` is the colour the editor paints
+a function name with. That ramp is **dark-on-light in light mode and
+light-on-dark in dark mode**. A fixed white letter is therefore correct in one
+mode and invisible in the other. Measured on a live completion list in dark mode,
+before `completer.css` existed:
+
+| Badge                    | Hue       | White on it |
+| ------------------------ | --------- | ----------- |
+| `ci=2` `syntax.name`     | `#F4F6FA` | **1.08:1**  |
+| `ci=1` `syntax.function` | `#9CD4D4` | **1.64:1**  |
+| `ci=4` `syntax.meta`     | `#FF6B86` | **2.73:1**  |
+
+**The answer.** `color.text.inverse0` is the one token in the system defined to
+flip with the mode — `{color.palette.neutral.0}` in
+`packages/tokens/src/semantic-light.tokens.json` and
+`{color.palette.neutral.900}` in `semantic-dark.tokens.json`. Putting the letter
+on it makes every one of the ten badges legible in both modes. The tightest
+pairings are light `syntax.comment` at **5.44:1** and dark `syntax.meta` at
+**6.08:1**; the loosest are light `syntax.name` at 16.57:1 and dark
+`syntax.name` at 15.32:1.
+
+**The claim is gated, not asserted.** `tests/contrast/audit.mjs` registers ten
+A1 pairings — `text.inverse0` on each of `syntax.function`, `name`, `type`,
+`meta`, `keyword`, `string`, `number`, `property`, `regexp` and `comment` — in
+both modes. Nothing else in the audit puts `inverse0` on a syntax hue, so those
+twenty rows are the only thing that would catch the token losing its inversion.
+
+**Why the syntax ramp and not an accent set** is settled in
+`mapping/jp-adapter.yaml`: the badge is a recognition swatch sitting beside
+`.jp-Completer-typeExtended`, which prints the type name in text, so colour is
+never the sole carrier here and A7 is already satisfied.
+
+**Not decided here.** The rule also sets `font-family: var(--d4n-font-family-ui)`
+and `font-weight: var(--d4n-font-weight-semibold)`. The weight is measured — the
+monogram renders at 600 — but the family choice is unexplained in the repository
+and is not claimed as a decision.
+
+## D-035 — The debugger keeps its handler; we replace only the two things it draws
+
+**Decided under P3-08 when `debugBridge.ts` and `debugDecorations.ts` landed
+(commit 104d88c), and written down on 2026-09-05.** PRD §8.6.4 puts the
+breakpoint gutter and the execution line inside the CodeMirror 6 theme, not in a
+stylesheet. `packages/editor-theme` owns both.
+
+**Written late, for the same reason as D-034.** The code, the selectors manifest
+and TODO all cite "D-033" for this argument; that record was never written and
+the id later went to the launcher. This entry is reconstructed from the committed
+code and adds nothing it does not already state. P3-08's verification is appended
+below when it runs.
+
+**What we replace, and what we leave alone.** `@jupyterlab/debugger` attaches an
+`EditorHandler` to every editor it debugs, and that handler owns the whole round
+trip: it dumps the cell, sends `setBreakpoints` over DAP, restores state after a
+kernel restart, and matches a stack frame's source path to an editor. None of
+that is design-system work, so **it keeps running**. We take over exactly two
+things it draws:
+
+| Upstream class                 | What it draws         | What we do                                |
+| ------------------------------ | --------------------- | ----------------------------------------- |
+| `.cm-breakpoint-gutter`        | its breakpoint column | `display: none !important`, mount our own |
+| `.jp-DebuggerEditor-highlight` | its stopped-line band | suppress `outline` and `text-shadow` only |
+
+Without the first, the user sees **two** breakpoint columns. Without the second,
+a brown `--md-brown-100` band draws under our warning tint.
+
+**The `!important` is not laziness.** `@codemirror/view`'s own base theme carries
+`.cm-gutter { display: flex !important }`. Measured: a plain `display: none` lost
+to it, and the column survived at 0px width only by accident of its markers
+having no intrinsic size. Both declarations are in the same generated stylesheet
+and ours is written later, so at equal weight and equal specificity ours wins.
+
+**Only `outline` and `text-shadow` are suppressed, and only on lines that carry
+both classes.** Upstream's `background-color` needs no answer: its rule is
+`body[data-jp-theme-light='…'] .jp-DebuggerEditor-highlight` at (0,2,1) against
+the (0,3,0) of our own line rule. The first version of the suppression said
+`background: none` and **blanked our own execution line**, because at (0,3,0) it
+tied with our rule and came later in the sheet — the left bar survived and the
+tint did not. Restricting it to lines carrying both classes also keeps the
+degraded path honest: if upstream renames the gutter class we never mount, our
+line class is never set, and upstream's highlight renders whole rather than
+half-suppressed.
+
+**How an editor is found, and why not through the widget trackers.** The
+extension is registered in `IEditorExtensionRegistry`, so every editor JupyterLab
+builds gets it, and a `ViewPlugin` inside it reports the `EditorView` back.
+Walking `INotebookTracker`, `IConsoleTracker` and `IEditorTracker` instead would
+have missed the read-only editors the debugger opens for a stack frame in its
+Sources panel, and would have duplicated upstream's cell lifecycle.
+`.cm-breakpoint-gutter` is then used as the signal "the debugger attached a
+handler here" — it is the precise set we want, because `data-jp-debugger` sits on
+the whole notebook panel and cannot tell a code cell from a markdown cell.
+
+**Three glyphs, and shape carries the state.** Filled disc, hollow ring, notched
+disc, on a 12×12 canvas (D3, A7). The notch is **painted** in the editor's own
+background colour rather than clipped, which keeps the glyph a single path in
+every renderer. Every glyph is `aria-hidden`: the state is announced by the
+debugger's breakpoint list, and a per-line graphic in a gutter is noise for a
+screen reader (A10).
+
+**`verified === false` maps to `disabled`.** `verified` is the adapter's answer
+to "could this breakpoint be set". debugpy returns `false` for a line it will not
+stop on, and upstream keeps such a breakpoint in the model rather than dropping
+it, so the hollow ring is the honest glyph for it.
+
+**`conditional` is unreachable in JupyterLab 4.6, and that is not an oversight.**
+`IDebugger.IBreakpoint` extends the DAP **response** type
+`DebugProtocol.Breakpoint`, which carries no `condition`, and JupyterLab ships no
+user interface that sets one. The glyph is specified, built and measured.
+Nothing in 4.6 can ask for it.
+
+**Colours are CSS custom properties; metrics are not.** The module is registered
+once and shared by both modes, so a resolved colour would freeze the decorations
+at whichever mode was active when the extension was built — and D7 requires them
+to repaint on a mid-session theme switch. Metrics come from `@d4n/tokens`
+directly, because those tiers are identical in both modes. Each colour falls back
+to the nearest stock `--jp-*` variable, so the markers still render in stock
+Jupyter colours on a non-Data4Now theme (AC10).
+
+**The gutter is compartmented rather than always on.** A CodeMirror gutter
+renders its column whether or not it has markers, so an always-on breakpoint
+gutter would put an empty 16px strip down the left of every editor in the
+application — including files nobody is debugging. The fields and the line
+decoration have no such cost and stay installed.
+
+**The anti-loop guard is load-bearing.** Our own dispatch is a transaction, a
+transaction is a view update, and a view update runs the sweep again. The
+`painted` comparison is what stops the pair looping forever, and the sweep is
+coalesced onto a microtask because the debugger emits `restored`, then `changed`,
+then `currentFrameChanged` for one user action.
+
+**The execution line is stored as a raw line number, not a mapped position.**
+While a kernel is stopped the document does not change, and the debugger re-sends
+the location on every stop event. An edit made while stopped therefore leaves the
+highlight where it was rather than dragging it — preferable to a highlight that
+silently drifts onto an unrelated statement.
+
+**The tint value is not chosen here.** `color.debug.executionLineBg` holds the
+same value as `color.search.unselectedMatchBg` in each mode, and **D-011** is the
+record for that: PRD S3 and D4 impose the identical 4.5:1 gate against every
+syntax token, and the palette supports exactly one warning-tinted highlight that
+satisfies it. It is `#FBEFD8` in light and `#3D2E10` in dark.
+
+**What P3-08 hardened along the way.** Four `var(--d4n-*)` names in
+`debugDecorations.ts` kept camelCase through the project-wide rename to
+kebab-case and resolved silently to their `--jp-*` fallbacks. `lint:vars` now
+reads `.ts` as well as `.css`, and **a fallback no longer exempts a reference**
+— which supersedes the last sentence of D-013. A fallback answers "this layer can
+be out of scope", the AC10 case; it does not answer "this name is misspelled".
+
+**Two selectors, permanently skipped by the harness.** `.cm-breakpoint-gutter`
+and `.jp-DebuggerEditor-highlight` are registered in
+`packages/editor-theme/style/selectors.json` under the state `debugger-stopped`,
+a precondition the harness cannot create: it needs a notebook, a kernel with
+debugpy, a breakpoint and a stopped thread. Both report as SKIPPED with that
+reason, which is the point — a skip names the gap instead of hiding it.
+
+### The `D-033` collision, and the lint that now prevents it
+
+Three separate pieces of work each cited `D-033` for a decision none of them
+wrote: the completer badge (P3-07, commit c8e6d04, 2026-09-04), these debugger
+decorations (P3-08, commit 104d88c, 2026-09-05), and the launcher (P2-15, commit
+ac8aee7, the same day). Only the launcher wrote a record, so the other two
+citations silently pointed at somebody else's decision.
+
+The launcher keeps `D-033`: it is cited from eleven places against the debugger's
+four and the completer's three, and it is the only one of the three that was ever
+written. The other two are renumbered here, oldest claim first — the completer to
+**D-034** and the debugger to **D-035**.
+
+`jlpm lint:decisions` now fails the build on any `D-0NN` reference with no
+matching heading in this file. It would have caught all three at the moment they
+were committed, because in every case the heading did not yet exist. It cannot
+catch a reference that resolves to the **wrong** decision, so the rule that goes
+with it is: **write the record in the same change that first cites it.**
 
 ---
 

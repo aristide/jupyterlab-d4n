@@ -24,7 +24,7 @@
  * The letter is `color.text.inverse0` here instead, which is white in light and
  * near-black in dark — the one token defined to invert with the mode. Every one
  * of the ten pairings then clears 4.5:1; the tightest are light `syntax.comment`
- * at 5.44:1 and dark `syntax.meta` at 6.08:1 (docs/decisions.md D-033).
+ * at 5.44:1 and dark `syntax.meta` at 6.08:1 (docs/decisions.md D-034).
  *
  * WHY THE ACTIVE ROW LOSES CORE'S BRAND FILL
  *

@@ -29,7 +29,7 @@ import {
  * is driving, and turns DAP breakpoints and the stop event into the effects
  * those fields read.
  *
- * WE KEEP UPSTREAM'S HANDLER AND REPLACE ONLY ITS TWO VISUALS (D-033)
+ * WE KEEP UPSTREAM'S HANDLER AND REPLACE ONLY ITS TWO VISUALS (D-035)
  * ------------------------------------------------------------------
  * `@jupyterlab/debugger` attaches an `EditorHandler` to every editor it debugs.
  * That handler owns the whole round trip: it dumps the cell, sends
@@ -92,7 +92,7 @@ const NOTHING_PAINTED = '-';
  * honest glyph for it.
  *
  * `'conditional'` is unreachable today, and that is not an oversight — see
- * D-033. `IDebugger.IBreakpoint` extends the DAP *response* type
+ * D-035. `IDebugger.IBreakpoint` extends the DAP *response* type
  * `DebugProtocol.Breakpoint`, which carries no `condition`, and JupyterLab has
  * no user interface that sets one. The glyph is specified, built and measured.
  * Nothing in JupyterLab 4.6 can ask for it.

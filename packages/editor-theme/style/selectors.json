@@ -37,7 +37,7 @@
         {
           "selector": ".cm-breakpoint-gutter",
           "state": "debugger-stopped",
-          "note": "Upstream's own breakpoint gutter column. We hide it and replace it with .cm-d4n-breakpointGutter (D-033). It is ALSO the signal debugBridge.ts uses to decide which editors the debugger drives, so a rename costs us twice: the gutter is never mounted and upstream's own renders instead. That degrades to stock JupyterLab rather than breaking, which is the AC10 answer, but it is a silent loss of the design."
+          "note": "Upstream's own breakpoint gutter column. We hide it and replace it with .cm-d4n-breakpointGutter (D-035). It is ALSO the signal debugBridge.ts uses to decide which editors the debugger drives, so a rename costs us twice: the gutter is never mounted and upstream's own renders instead. That degrades to stock JupyterLab rather than breaking, which is the AC10 answer, but it is a silent loss of the design."
         },
         {
           "selector": ".jp-DebuggerEditor-highlight",

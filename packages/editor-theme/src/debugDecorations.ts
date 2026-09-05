@@ -347,7 +347,7 @@ const decorationTheme = EditorView.baseTheme({
   },
 
   // ---------------------------------------------------------------------
-  // The two upstream decorations we replace (P3-08, D-033).
+  // The two upstream decorations we replace (P3-08, D-035).
   //
   // `@jupyterlab/debugger`'s own `EditorHandler` stays attached to every editor
   // it manages, and it injects a `cm-breakpoint-gutter` column and a
