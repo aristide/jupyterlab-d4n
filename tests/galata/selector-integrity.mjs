@@ -74,6 +74,21 @@ const PRECONDITIONS = {
     await row.waitFor({ timeout: 20_000 });
     await row.dblclick();
     await page.waitForSelector('.jp-Notebook', { timeout: 30_000 });
+    // WAIT FOR THE MARKDOWN TO RENDER, not just for the notebook to exist.
+    //
+    // `.jp-Notebook` appears while the cells are still being built. The fixture
+    // carries a table, a blockquote, a fenced block and a `kbd` precisely so
+    // that markdown.css has something to match, and measured here, NONE of them
+    // exist 5s after the notebook appears while all of them exist by 20s.
+    //
+    // Without this wait the five markdown selectors report as BROKEN and the
+    // job prints "Upstream markup moved" with a note about promoting the
+    // surface from T2 to T3. That is a false alarm pointing at a regression
+    // that does not exist, and it is expensive: someone goes looking for a
+    // rendermime change that never happened.
+    await page.waitForSelector('.jp-RenderedHTMLCommon table', {
+      timeout: 60_000
+    });
     // Put a cell in the active state so the cell toolbar, input area and prompt
     // are rendered rather than merely present in the model.
     await page.locator('.jp-Notebook .jp-Cell').first().click();
@@ -201,11 +216,26 @@ try {
   // tabs from an earlier session, each firing a 404 and changing which
   // selectors happened to be present. A verification job has to start from a
   // known state or it measures the previous run instead of the build.
+  // THE WAIT IS 180s, AND 60s WAS MEASURED TO BE TOO SHORT.
+  //
+  // The dev container runs `jlpm watch`: eight `build-labextension --watch`
+  // processes polling a bind-mounted tree, which is its steady state rather
+  // than a burst — they hold the container above 100% CPU indefinitely, and
+  // TypeScript output stops changing long before they go quiet. Under that
+  // load, time-to-#main measured 66s, 69s, 73s, 75s, 75s and 78s across two
+  // builds. So a 60s cap does not test the product at all; it reports whatever
+  // the machine was doing.
+  //
+  // It failed as a TIMEOUT ON #main, which reads like the application is
+  // broken. That cost real time here: the same symptom was read in turn as a
+  // plugin deadlock, a bundling problem and a missing chunk before the number
+  // was measured. A verification job must not fail in a way that looks like a
+  // product defect when it is only impatient.
   await page.goto(`${BASE}/lab?reset=1`, {
     waitUntil: 'networkidle',
-    timeout: 60_000
+    timeout: 180_000
   });
-  await page.waitForSelector('#main', { timeout: 60_000 });
+  await page.waitForSelector('#main', { timeout: 180_000 });
 
   // `#main` exists before the shell has finished populating. The dock panel
   // creates its tab bar only when the first widget lands in it, so querying at
