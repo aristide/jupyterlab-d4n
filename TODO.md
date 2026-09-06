@@ -72,6 +72,12 @@ them:
   without the second, Chromium dies on `libnspr4.so: cannot open shared object
 file` and Playwright reports it as "browser has been closed", which does not
   look like a missing package.
+- **A probe that launches something leaves the FILE behind, not just a kernel.**
+  An empty `notebooks/Untitled.ipynb` reached a commit on 2026-09-06 because a
+  probe clicked a launcher card. The existing rule covers kernels and terminals,
+  which the server holds; this is the other half — a Notebook or Text File card
+  writes a real file into `notebooks/`, and `docker compose restart` does not
+  remove it. Check `git status` before every commit, not only the server.
 - **A probe that types into a notebook gets autosaved.** JupyterLab's autosave
   wrote a probe's typing into `notebooks/fixture.ipynb` and it appeared in
   `git status`. The file is committed, so this dirties the tree rather than
