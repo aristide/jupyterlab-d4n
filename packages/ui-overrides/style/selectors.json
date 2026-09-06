@@ -2042,6 +2042,95 @@
         ".jp-DebuggerVariables .jp-TreeItem::part(expand-collapse-button)",
         ".jp-DebuggerVariables-name::after"
       ]
+    },
+    {
+      "file": "style/surfaces/search.css",
+      "upstream": [
+        "@jupyterlab/documentsearch 4.6.3 style/base.css, src/searchview.tsx",
+        "@jupyter/web-components 0.16.6 jp-search (shadow parts)"
+      ],
+      "note": "PRD 8.8 and 8.8.2 (P3-12, docs/decisions.md D-039). inputs.css owns the BASE input that four of the six mounts join; this file adds the overlay chrome and the two mounts that are a <jp-search> web component. The component rules are ::part() and are recorded under nonQueryable, since querySelectorAll cannot evaluate a shadow part -- the host `jp-search` is the queryable anchor for all of them.",
+      "selectors": [
+        {
+          "selector": "jp-search",
+          "state": "boot",
+          "note": "The host of every ::part() rule. Deliberately the ELEMENT and not .jp-FilterBox: the debugger filter is <jp-search class=\"jp-Debugger-KernelSources-Filter\"> with no jp-FilterBox class, so a class rule would leave one of the six S1 mounts behind. Measured 3 at boot."
+        },
+        {
+          "selector": ".jp-DocumentSearch-overlay",
+          "state": "document-search-open",
+          "note": "Upstream gives this no radius and no shadow -- the card, the full border and the space.3 inset are all additive, and the inset is what S6 turns on."
+        },
+        {
+          "selector": ".jp-DocumentSearch-input-wrapper",
+          "state": "document-search-open",
+          "note": "The VISIBLE field. .jp-DocumentSearch-input is a <textarea> that upstream strips to background:none;border:none so its auto-grow mirror works, so the plate and the focus ring live here."
+        },
+        {
+          "selector": ".jp-DocumentSearch-index-counter",
+          "state": "document-search-open",
+          "note": "The match count. Renders \"-/-\" with no matches, not 8.8.2's \"0/0\", and it is a React text node with no state class -- CSS can restyle it but cannot rewrite it. See D-039."
+        },
+        {
+          "selector": ".jp-DocumentSearch-input-button-off",
+          "state": "document-search-open",
+          "note": "Also used by the Preserve Case toggle in the replace row."
+        },
+        {
+          "selector": ".jp-DocumentSearch-input-button-on",
+          "state": "document-search-open",
+          "optional": true,
+          "note": "The S2 state, and it exists only once a toggle has been clicked. Upstream expresses on-versus-off as background and text colour ONLY; the ring this file adds is what makes S2 true."
+        },
+        {
+          "selector": ".jp-DocumentSearch-button-wrapper",
+          "state": "document-search-open",
+          "note": "SEVEN different controls share this one class -- prev, next, the three toggles, the filter funnel and close. The close button has no class of its own, so it is styled as one of the seven."
+        },
+        {
+          "selector": ".jp-DocumentSearch-up-down-wrapper button",
+          "state": "document-search-open",
+          "note": "Prev and next, distinguishable only by position. :disabled is the right hook, but upstream disables on an EMPTY QUERY rather than at zero matches -- measured enabled on a 0-match query."
+        },
+        {
+          "selector": ".jp-DocumentSearch-replace-button-wrapper",
+          "state": "document-search-open",
+          "optional": true,
+          "note": "Replace and Replace All, CLASS-IDENTICAL, so 8.8.2's secondary versus danger split is positional. Present only once the replace row is expanded."
+        },
+        {
+          "selector": ".jp-DocumentSearch-replace-wrapper-class",
+          "state": "document-search-open",
+          "optional": true,
+          "note": "The literal `-class` suffix is upstream's own class name, not a typo to trim. Present only when the replace row is expanded."
+        },
+        {
+          "selector": ".jp-DocumentSearch-search-options",
+          "state": "document-search-open",
+          "optional": true,
+          "note": "The notebook-only filter grid. In the DOM only once the funnel toggle has been clicked -- it is not merely hidden."
+        },
+        {
+          "selector": ".jp-DocumentSearch-search-filter-disabled",
+          "state": "document-search-open",
+          "optional": true,
+          "note": "A filter the current mode cannot honour -- in practice \"Search Cell Outputs\" while the replace row is open, because that provider declares supportReplace: false."
+        }
+      ],
+      "nonQueryable": [
+        "jp-search::part(root)",
+        "jp-search:hover::part(root)",
+        "jp-search:focus-within::part(root)",
+        "jp-search::part(control)",
+        "jp-search::part(control)::placeholder",
+        "jp-search::part(clear-button)",
+        ".jp-DocumentSearch-input-wrapper:focus-within",
+        ".jp-DocumentSearch-button-wrapper:hover",
+        ".jp-DocumentSearch-button-wrapper:focus-visible",
+        ".jp-DocumentSearch-up-down-wrapper button:disabled",
+        ".jp-DocumentSearch-replace-button-wrapper:hover",
+        ".jp-DocumentSearch-replace-wrapper-class > button.jp-DocumentSearch-replace-button-wrapper:last-of-type"
+      ]
     }
   ]
 }

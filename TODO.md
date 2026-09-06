@@ -1396,9 +1396,68 @@ green including D4.
       _One deliberate divergence:_ `horizontalAlignment` is `left` where upstream
       right-aligns every region including headers. A CSV's first column is
       usually a label.
-- [ ] **P3-12** Notebook search overlay (PRD §8.8.2) and the other five search
-      mounts. One component, six configurations. S1 requires no search styling of
-      its own.
+- [x] **P3-12** Notebook search overlay (PRD §8.8.2) and the other five search
+      mounts. One component, six configurations.
+      _Done on 2026-09-06_ as `ui-overrides/style/surfaces/search.css`. Full
+      record in **D-039**. `inputs.css` already owned §8.8.1's base input for the
+      four plain-DOM mounts; this file adds the overlay CHROME and the two mounts
+      that are a `<jp-search>` web component.
+      **S1 was violated between the web-component mounts themselves.** Measured
+      at boot, the three `<jp-search>` elements rendered at TWO different
+      appearances and neither was ours — FAST toolkit greys, `#FFFFFF` and
+      `rgb(247,247,247)` plates with `rgb(117,117,117)` / `rgb(112,112,112)`
+      borders — while `.jp-DocumentSearch-input` two panels away was on `#F4F6FA`.
+      Radius, border width and font already came through via `applyJupyterTheme`;
+      the colours did not. After: all three read `#F4F6FA`/`#2C3E55` in light and
+      `#0B1F38`/`#E4E9F0` in dark, identical to each other and to the four
+      plain-DOM mounts.
+      **The selector is `jp-search`, not `.jp-FilterBox`** — the debugger's filter
+      carries no `jp-FilterBox` class, so a class rule would leave one of the six
+      behind. **And the route is `::part()`, not the toolkit's design tokens**,
+      which `applyJupyterTheme` assigns as INLINE STYLE on `body` and on
+      intermediate elements; the seven exposed parts are the public API and need
+      no `!important`.
+      **S2 was not satisfiable as upstream ships it.** The on/off difference was
+      background and text colour ONLY — `#F4F6FA` on `#2C3E55` versus `#3B5C87`
+      on `#F4F6FA`. The class is a real hook, so the on-state now also takes a
+      `1px color.action.default` ring: shape carries the state and colour
+      reinforces it, the same answer D3 got for the breakpoint glyphs.
+      _Measured in both modes:_ overlay radius 6px with the two-stop elevation-3
+      shadow on `surface.overlay`, border `#E4E9F0` light and `#142E50` dark,
+      inset `space.3` on both axes (which is what S6 turns on — upstream pins
+      `top: 0; right: 0` and sits ON the first cell). Counter JetBrains Mono 11px
+      muted with tabular figures. Toggle ON ring `rgb(22,124,124)` light and
+      `rgb(79,209,209)` dark.
+      **Four §8.8.2 items have no hook, and one is a behaviour difference.** The
+      count renders `-/-` not `0/0` and is a React text node CSS cannot rewrite;
+      the no-matches state has no class, attribute or `aria-invalid`; prev/next
+      are disabled on an EMPTY QUERY rather than at zero matches (measured
+      enabled on a 0-match query); and the replace chevron's collapsed state
+      differs only by which SVG is inlined. Those are **P3-21**.
+      **One thing no stylesheet can fix:** the overlay contains not one `aria-*`
+      or `role`. S2's visual half is met; its programmatic half is an upstream
+      accessibility gap and belongs with **P6-01**, not counted as satisfied here.
+- [ ] **P3-21** Search overlay: the four §8.8.2 items with no DOM hook (split out
+      of P3-12, **D-039**).
+      **The match count reads `-/-`, not `0/0`.** A React text node with no state
+      class. Faking it with `font-size: 0` plus `::after` breaks under
+      translation and is wrong for the `M/N` case.
+      **The no-matches state cannot be reached.** §8.8.2 wants a
+      `color.warning.default` input border and "colour is not the only signal",
+      but there is no class, attribute or `aria-invalid` for a valid query with
+      zero matches. The only error hook is the regex parse error, which is a
+      different condition.
+      **Prev/next disable on the wrong condition.** §8.8.2 says "disabled at 0
+      matches"; upstream disables them when the query box is empty. Measured
+      enabled on a 0-match query.
+      **The replace chevron has no state.** Collapsed versus expanded differs
+      only by the inlined SVG — the button class, the span class and the
+      attributes are byte-identical, and there is no `aria-expanded`. The row
+      itself IS reachable (`:has(.jp-DocumentSearch-replace-wrapper-class)` on
+      the always-rendered second row), so a chevron rule could be driven from it.
+      _Done when:_ each of the four is built through a `documentsearch` renderer
+      change or refused in writing. All four are the same shape as D-037's: the
+      information exists in the model and never reaches the DOM.
 - [ ] **P3-13** ipywidgets. The `--jp-widgets-*` mapping lives in `compat-shim`.
       We excluded it from the adapter on purpose, because those variables belong
       to ipywidgets and not to core. Sliders and file-upload need CSS beyond the

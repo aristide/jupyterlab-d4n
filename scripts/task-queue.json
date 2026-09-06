@@ -81,14 +81,14 @@
     },
     {
       "order": 8,
-      "id": "P3-12",
-      "title": "Notebook search overlay and the other five search mounts",
+      "id": "P3-21",
+      "title": "Search overlay: the four 8.8.2 items with no DOM hook",
       "runnable": true,
       "risk": "medium",
       "dependsOn": [],
       "blockerKind": "none",
-      "reason": "S1's \"one component, six configurations\" is a consolidation job against stable class names, with the base input already partly in inputs.css; the S4 and S5 behaviours are testable in a browser without a person.",
-      "riskReason": "S1 forces the change into the shared inputs.css that all six mounts consume, so one regression hits the command palette, file-browser filter, settings search and extension-manager search at once; the overlay also floats over the document where a bad offset can occlude the first cell."
+      "reason": "Nothing to invent and nobody to ask: 8.8.2 gives the exact count format, the exact no-match treatment and the exact disable condition. P3-12 measured that none of the four reaches the DOM, so the work is a documentsearch renderer change, which is engineering.",
+      "riskReason": "It replaces the render of the surface every Ctrl+F lands on, in six providers at once, and the overlay has no aria at all today - so a change there is also the natural place to add it, which widens the blast radius beyond the four items."
     },
     {
       "order": 9,

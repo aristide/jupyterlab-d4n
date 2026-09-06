@@ -1,0 +1,252 @@
+/* SURFACE: search — the document-search overlay and the web-component mounts
+ * (PRD §8.8, §8.8.2, TODO.md P3-12)
+ *
+ * Upstream selectors verified against:
+ *   @jupyterlab/documentsearch 4.6.3  style/base.css, src/searchview.tsx
+ *   @jupyter/web-components    0.16.6 jp-search (shadow parts)
+ *   (declared range: @jupyterlab/* ^4.5.0)
+ *
+ * Every selector is mirrored in ../selectors.json (PRD §7.4(5)).
+ *
+ * `inputs.css` OWNS THE BASE INPUT AND THIS FILE DOES NOT RESTATE IT. §8.8.1 is
+ * written there as one selector list that four of the six mounts join. This file
+ * adds the two things that file deferred: the OVERLAY CHROME around the input,
+ * and the mounts that are a web component rather than an `<input>`.
+ *
+ * S1 IS VIOLATED TODAY, AND NOT ONLY AGAINST THE PLAIN INPUTS. Measured at boot
+ * before this file existed, the three `<jp-search>` mounts rendered in FAST
+ * toolkit greys — `#FFFFFF` / `rgb(247,247,247)` plates with `rgb(117,117,117)`
+ * and `rgb(112,112,112)` borders and `rgb(43,43,43)` / `rgb(38,38,38)` text —
+ * while `.jp-DocumentSearch-input` two panels away was on `#F4F6FA` with our
+ * border. Radius, border width and font already came through, because
+ * `applyJupyterTheme` maps those from `--jp-*`; the colours did not.
+ *
+ * THE MOUNT SELECTOR IS `jp-search`, NOT `.jp-FilterBox`. The debugger's
+ * kernel-sources filter is `<jp-search class="jp-Debugger-KernelSources-Filter">`
+ * with no `jp-FilterBox` class at all, so a class-based rule would leave one of
+ * the six mounts behind — which is precisely the criterion S1 states.
+ *
+ * AND THE ROUTE IS `::part()`, NOT THE TOOLKIT'S DESIGN TOKENS. The component
+ * reads FAST tokens such as `--neutral-fill-input-rest`, and those are assigned
+ * as INLINE STYLE by `applyJupyterTheme` on `document.body` and on intermediate
+ * elements — so a token override is a fight with inline declarations, against
+ * names that are internal to a dependency. The seven exposed parts (`label`,
+ * `root`, `start`, `input-wrapper`, `control`, `clear-button`, `end`) are the
+ * component's public API, they beat the shadow tree's own rules for normal
+ * declarations, and they need no `!important`. `running.css` uses the same route
+ * for `jp-tree-item`.
+ */
+
+/* --- The six mounts that are a web component (§8.8, S1) ------------------- */
+
+body[data-jp-theme-name^='Data4Now'] jp-search::part(root) {
+  height: var(--d4n-input-height);
+  background: var(--d4n-input-bg);
+  border-color: var(--d4n-input-border);
+  border-radius: var(--d4n-input-radius);
+}
+
+body[data-jp-theme-name^='Data4Now'] jp-search:hover::part(root) {
+  background: var(--d4n-input-bg-hover);
+}
+
+/* `:focus-within` on the HOST, because the real focus lands on the input inside
+ * the shadow root and `delegatesFocus` forwards it. State on the host is also
+ * the only shape `::part()` allows — it cannot take a descendant on its right. */
+body[data-jp-theme-name^='Data4Now'] jp-search:focus-within::part(root) {
+  background: var(--d4n-input-bg-active);
+  border-color: var(--d4n-input-border-active);
+}
+
+body[data-jp-theme-name^='Data4Now'] jp-search::part(control) {
+  padding: var(--d4n-space-0) var(--d4n-input-padding-x);
+  color: var(--d4n-input-fg);
+  font-family: var(--d4n-font-family-ui);
+  font-size: var(--d4n-input-font-size);
+}
+
+/* §8.8.1 is explicit that a placeholder is text and never drops below 4.5:1,
+ * which is why it takes the muted ramp rather than an opacity. */
+body[data-jp-theme-name^='Data4Now'] jp-search::part(control)::placeholder {
+  color: var(--d4n-input-placeholder);
+  opacity: 1;
+}
+
+/* The clear affordance, §8.8.1's "16px, appears only when non-empty". The
+ * appearing is the component's own; only the colour is ours. */
+body[data-jp-theme-name^='Data4Now'] jp-search::part(clear-button) {
+  color: var(--d4n-color-text-muted);
+}
+
+/* --- Document-search overlay: the surface (§8.8.2) ------------------------ */
+
+/* Upstream gives this no radius and no shadow at all — it is a flush,
+ * square-cornered toolbar strip pinned to the top-right corner. §8.8.2 wants a
+ * floating card, so the radius, the elevation and the inset are all additive.
+ *
+ * The inset is what S6 turns on: upstream pins `top: 0; right: 0`, so the
+ * overlay sits ON the first cell rather than beside it. `space.3` on both axes
+ * lifts it clear without moving it out of the corner it belongs in. */
+body[data-jp-theme-name^='Data4Now'] .jp-DocumentSearch-overlay {
+  top: var(--d4n-space-3);
+  right: var(--d4n-space-3);
+  padding: var(--d4n-space-1);
+  background: var(--d4n-color-surface-overlay);
+  border: var(--d4n-border-width-thin) solid var(--d4n-color-border-subtle);
+  border-radius: var(--d4n-menu-radius);
+  box-shadow: var(--d4n-elevation-3);
+}
+
+/* --- The field inside the overlay ----------------------------------------- */
+
+/* THE VISIBLE FIELD IS THE WRAPPER, NOT THE TEXTAREA. `.jp-DocumentSearch-input`
+ * is a `<textarea>` that upstream strips to `background: none; border: none` so
+ * it can auto-grow against a hidden `::after` mirror; the plate and the focus
+ * ring a user sees belong to `.jp-DocumentSearch-input-wrapper`. `inputs.css`
+ * styles the textarea as one of the six mounts, which is right for the type and
+ * the metrics — this pair is what makes the surface agree with it. */
+body[data-jp-theme-name^='Data4Now'] .jp-DocumentSearch-input-wrapper {
+  background: var(--d4n-input-bg);
+  border-color: var(--d4n-input-border);
+  border-radius: var(--d4n-input-radius);
+}
+
+body[data-jp-theme-name^='Data4Now']
+  .jp-DocumentSearch-input-wrapper:focus-within {
+  border-color: var(--d4n-input-border-active);
+}
+
+/* --- Match count (§8.8.2) -------------------------------------------------- */
+
+/* Mono with tabular figures because it is a counter that changes as you type:
+ * proportional digits make `9/9` and `10/10` different widths and the row
+ * jitters. Muted, because it is a readout beside the thing you are doing.
+ *
+ * The FORMAT is upstream's and cannot be changed from here. §8.8.2 asks for
+ * `0/0` when empty; the component renders `-/-`, and it is a React text node
+ * with no state class — CSS can restyle it but cannot rewrite it. Recorded in
+ * D-039 rather than faked with a `::after`. */
+body[data-jp-theme-name^='Data4Now'] .jp-DocumentSearch-index-counter {
+  color: var(--d4n-color-text-muted);
+  font-family: var(--d4n-font-family-mono);
+  font-size: var(--d4n-font-size-ui-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- Filter toggles: Aa, \b, .* and Preserve Case (§8.8.2, S2) ------------ */
+
+/* S2 SAYS THE ON-STATE MUST BE DISTINGUISHABLE WITHOUT COLOUR, AND UPSTREAM'S
+ * IS NOT. It swaps `jp-DocumentSearch-input-button-off` for `-on` and expresses
+ * the difference as background plus text colour only — measured, off is
+ * `#F4F6FA` on `#2C3E55` and on is `#3B5C87` on `#F4F6FA`. A user who cannot
+ * separate those two sees no difference at all.
+ *
+ * The class IS the hook, though, so the fix is cheap: the on-state also takes a
+ * ring. Shape carries the state and colour reinforces it, which is the same
+ * answer D3 got for the breakpoint glyphs.
+ *
+ * The same pair of classes is used by the Preserve Case toggle in the replace
+ * row, so these two rules cover four toggles, not three. */
+body[data-jp-theme-name^='Data4Now'] .jp-DocumentSearch-input-button-off {
+  color: var(--d4n-color-text-muted);
+  background: transparent;
+  border-radius: var(--d4n-radius-sm);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-DocumentSearch-input-button-on {
+  color: var(--d4n-color-text-primary);
+  background: var(--d4n-color-surface-active);
+  border: var(--d4n-border-width-thin) solid var(--d4n-color-action-default);
+  border-radius: var(--d4n-radius-sm);
+}
+
+/* --- Buttons (§8.8.2) ------------------------------------------------------ */
+
+/* EVERY BUTTON SIZE UPSTREAM COMES FROM ONE PRIVATE VARIABLE,
+ * `--jp-private-document-search-button-height`, declared on the overlay root.
+ * §7.4(3) forbids touching a `--jp-private-*`, so the sizes are restated on the
+ * buttons themselves rather than by redefining it. That is more rules, and it is
+ * the rule the project already made.
+ *
+ * `.jp-DocumentSearch-button-wrapper` is SEVEN different controls — prev, next,
+ * the three toggles, the filter funnel and close — so a single hover rule here
+ * is deliberate: they are one control type wearing different glyphs. */
+body[data-jp-theme-name^='Data4Now'] .jp-DocumentSearch-button-wrapper {
+  border-radius: var(--d4n-radius-sm);
+}
+
+body[data-jp-theme-name^='Data4Now'] .jp-DocumentSearch-button-wrapper:hover {
+  background: var(--d4n-color-surface-hover);
+}
+
+body[data-jp-theme-name^='Data4Now']
+  .jp-DocumentSearch-button-wrapper:focus-visible {
+  outline: var(--d4n-focus-ring-width) var(--d4n-focus-ring-style)
+    var(--d4n-focus-ring-color);
+  outline-offset: var(--d4n-focus-ring-offset);
+}
+
+/* Prev and next. `:disabled` is the right hook and it works — but the BEHAVIOUR
+ * behind it is not what §8.8.2 describes: upstream disables these when the query
+ * box is EMPTY, not at zero matches. Measured with a 0-match query, both render
+ * enabled. That is a behaviour difference, not a styling one, and it is recorded
+ * in D-039. */
+body[data-jp-theme-name^='Data4Now']
+  .jp-DocumentSearch-up-down-wrapper
+  button:disabled {
+  opacity: var(--d4n-button-disabled-opacity);
+}
+
+/* --- Replace row (§8.8.2) ------------------------------------------------- */
+
+/* "Replace" and "Replace All" carry the SAME class, so §8.8.2's secondary
+ * versus danger-adjacent split can only be positional. `:last-of-type` is the
+ * All, and it is deliberately NOT painted danger-red: it is a two-click
+ * destructive action inside a panel the user opened on purpose, and a red button
+ * in a search bar reads as an error state. It takes the strong text ramp and a
+ * border instead, which is the same weight the dialog's secondary action uses. */
+body[data-jp-theme-name^='Data4Now'] .jp-DocumentSearch-replace-button-wrapper {
+  border-radius: var(--d4n-radius-sm);
+  color: var(--d4n-color-text-primary);
+  font-family: var(--d4n-font-family-ui);
+  font-size: var(--d4n-font-size-ui-xs);
+}
+
+body[data-jp-theme-name^='Data4Now']
+  .jp-DocumentSearch-replace-button-wrapper:hover {
+  background: var(--d4n-color-surface-hover);
+}
+
+body[data-jp-theme-name^='Data4Now']
+  .jp-DocumentSearch-replace-wrapper-class
+  > button.jp-DocumentSearch-replace-button-wrapper:last-of-type {
+  color: var(--d4n-color-text-strong);
+  border: var(--d4n-border-width-thin) solid var(--d4n-color-border-default);
+}
+
+/* --- Notebook-only filters (§8.8.2) --------------------------------------- */
+
+/* The two checkbox rows, present only once the funnel is open. Upstream lays
+ * them out with `padding: 0 8px` and no `box-sizing`, so the grid runs wider
+ * than the overlay's content box. */
+body[data-jp-theme-name^='Data4Now'] .jp-DocumentSearch-search-options {
+  box-sizing: border-box;
+  padding: var(--d4n-space-1) var(--d4n-space-2);
+  color: var(--d4n-color-text-primary);
+  font-family: var(--d4n-font-family-ui);
+  font-size: var(--d4n-font-size-ui-xs);
+}
+
+/* A filter the current mode cannot honour — "Search Cell Outputs" while the
+ * replace row is open, because that provider declares `supportReplace: false`.
+ * It is disabled, not absent, so it takes the disabled ramp rather than
+ * disappearing and reflowing the grid. */
+body[data-jp-theme-name^='Data4Now'] .jp-DocumentSearch-search-filter-disabled {
+  opacity: var(--d4n-button-disabled-opacity);
+}
+
+/* --- Invalid regex (§8.8.1) ----------------------------------------------- */
+
+/* Already styled in `inputs.css` as part of the base input's invalid state. The
+ * rule is not repeated here; this comment exists so the next reader looking for
+ * it in the search file finds the pointer instead of adding a second one. */

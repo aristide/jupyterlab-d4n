@@ -2561,6 +2561,139 @@ visible at a glance in a screenshot.
 - **Edit ▸ Go to Line** is present and enabled over a CSV.
 - The delimiter dropdown offers all five upstream options.
 
+## D-039 — Six search mounts, one appearance; and four §8.8.2 items with no hook
+
+**Decided.** `packages/ui-overrides/style/surfaces/search.css` adds the
+document-search overlay chrome and brings the `<jp-search>` mounts onto the base
+input `inputs.css` already defines. TODO.md **P3-12**. Four items of §8.8.2 are
+not reachable and are **P3-21**.
+
+### S1 was violated between the web-component mounts themselves
+
+`inputs.css` writes §8.8.1 once as a selector list that four mounts join. The
+other two are `<jp-search>` web components whose input lives in a shadow root,
+and that file deferred them here, correctly noting that `.jp-FilterBox input`
+"would look right, match nothing, and quietly fail".
+
+Measured at boot, before this file existed, the three `<jp-search>` elements on
+screen rendered at **two different appearances, neither of them ours**:
+
+| Mount                          | Plate              | Border             | Text            |
+| ------------------------------ | ------------------ | ------------------ | --------------- |
+| file browser filter (disabled) | `#FFFFFF`          | `rgb(117,117,117)` | `rgb(43,43,43)` |
+| file browser filter            | `rgb(247,247,247)` | `rgb(112,112,112)` | `rgb(38,38,38)` |
+| debugger kernel-sources filter | `rgb(247,247,247)` | `rgb(112,112,112)` | `rgb(38,38,38)` |
+
+Those are FAST toolkit greys. Radius, border width and font already came through,
+because `applyJupyterTheme` maps them from `--jp-*`; the colours did not. Two
+panels away, `.jp-DocumentSearch-input` was on `#F4F6FA` with our border.
+
+**After: all three read `#F4F6FA` / `rgb(107,123,145)` / `#2C3E55` in light and
+`#0B1F38` / `rgb(107,123,145)` / `#E4E9F0` in dark — identical to each other and
+to the four plain-DOM mounts.**
+
+**The selector is `jp-search`, not `.jp-FilterBox`.** The debugger's filter is
+`<jp-search class="jp-Debugger-KernelSources-Filter">` with no `jp-FilterBox`
+class at all, so a class-based rule would have left one of the six behind —
+which is exactly what S1 forbids.
+
+**The route is `::part()`, not the toolkit's design tokens.** The component reads
+FAST tokens such as `--neutral-fill-input-rest`, and `applyJupyterTheme` assigns
+those as **inline style** on `document.body` and on intermediate elements — so a
+token override is a fight with inline declarations, against names internal to a
+dependency. The seven exposed parts (`label`, `root`, `start`, `input-wrapper`,
+`control`, `clear-button`, `end`) are the component's public API, they beat the
+shadow tree's own rules for normal declarations, and they need no `!important`.
+`running.css` already uses that route for `jp-tree-item`.
+
+### S2 was not satisfiable as upstream ships it, and the fix is a ring
+
+§8.8.5 **S2** requires the filter toggle's on-state to be distinguishable without
+colour. Upstream swaps `jp-DocumentSearch-input-button-off` for `-on` and
+expresses the whole difference as background plus text colour — measured, off was
+`#F4F6FA` on `#2C3E55`, on was `#3B5C87` on `#F4F6FA`. Two plates and two text
+colours; nothing else. A user who cannot separate those sees no state at all.
+
+The class **is** a real hook, though, so the fix is one declaration: the on-state
+also takes a `1px color.action.default` ring. Shape carries the state and colour
+reinforces it — the same answer D3 got for the breakpoint glyphs. Measured on:
+`border: 1px solid rgb(22,124,124)` light and `rgb(79,209,209)` dark, against an
+off-state with no border at all.
+
+The same class pair drives the **Preserve Case** toggle in the replace row, so
+those two rules cover four toggles rather than three.
+
+### The overlay was a flush strip, not a floating card
+
+Upstream pins it `top: 0; right: 0` with **no radius and no shadow** — measured
+`radius: 0px`, `box-shadow: none`, and a border on the bottom and left only. So
+§8.8.2's card is entirely additive: `radius.md`, `elevation.3`, a full
+`border.subtle` outline and a `space.3` inset on both axes. Measured after:
+radius 6px, the two-stop elevation-3 shadow, `#E4E9F0` border on all sides in
+light and `#142E50` in dark, on `surface.overlay`.
+
+That inset is what **S6** turns on. Upstream's `top: 0; right: 0` puts the
+overlay _on_ the first cell; `space.3` lifts it clear without moving it out of
+the corner it belongs in.
+
+### The visible field is the wrapper, not the textarea
+
+`.jp-DocumentSearch-input` is a `<textarea>` — it supports multi-line queries and
+auto-grows against a hidden `::after` mirror — and upstream strips it to
+`background: none; border: none` so the mirror works. The plate and the focus
+ring a user sees belong to `.jp-DocumentSearch-input-wrapper`. `inputs.css`
+styles the textarea, which is right for the type and the metrics; the pair added
+here is what makes the surface around it agree.
+
+### Four §8.8.2 items have no hook, and one is a behaviour difference
+
+| §8.8.2 asks for                                             | What upstream does                                                                    |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| count reads `0/0` when empty                                | renders **`-/-`**, a React text node with no state class                              |
+| no-matches: warning border, "colour is not the only signal" | **no class, attribute or `aria-invalid`** exists for a valid zero-match query         |
+| prev/next "disabled at 0 matches"                           | disabled when the QUERY BOX IS EMPTY — measured enabled on a 0-match query            |
+| replace chevron shows collapsed vs expanded                 | only the inlined **SVG** differs; class, span class and attributes are byte-identical |
+
+The counter format is the sharpest of these: CSS can restyle the element but
+cannot rewrite its text, and faking `0/0` with a `font-size: 0` plus `::after`
+would break under translation and would be wrong for the `M/N` case. Left
+reading `-/-` and recorded.
+
+The expanded state _is_ reachable indirectly — the second overlay row is always
+rendered and is **empty** when the replace row is collapsed, so
+`:has(.jp-DocumentSearch-replace-wrapper-class)` works on the row. Nothing here
+needs it yet; it is written down so the next person does not conclude it is
+impossible.
+
+### One thing no stylesheet can fix
+
+The overlay contains **not one `aria-*` attribute or `role`**. The toggle
+on-state, the collapsed replace row, the invalid regex and the match count are
+all invisible to assistive technology. S2's visual half is met here; its
+programmatic half is an upstream accessibility gap, not a theming one, and it
+belongs with the A1–A13 audit at **P6-01** rather than being quietly counted as
+satisfied.
+
+### Two more positional dependencies, stated because they are fragile
+
+"Replace" and "Replace All" carry the **same class**, so §8.8.2's
+secondary-versus-danger split can only be positional (`:last-of-type`). The All
+is deliberately _not_ painted danger-red: it is a two-click action inside a panel
+the user opened on purpose, and a red button in a search bar reads as an error
+state. It takes the strong text ramp and a border instead.
+
+The **close** button has no dedicated class either — it shares
+`.jp-DocumentSearch-button-wrapper` with six other controls. It is styled as one
+of the seven rather than singled out, which is honest: they are one control type
+wearing different glyphs.
+
+### Every button size comes from a private variable
+
+`--jp-private-document-search-button-height: 20px` on the overlay root drives
+every button dimension upstream. §7.4(3) forbids touching a `--jp-private-*`, so
+sizes are restated on the buttons themselves. More rules, and the rule the
+project already made.
+
 ---
 
 ## Still open
