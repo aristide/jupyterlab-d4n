@@ -7,6 +7,7 @@ import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { ITerminalTracker } from '@jupyterlab/terminal';
 
 import { activateAdaptiveTheme } from './adaptiveTheme';
+import { csvViewerPlugin, tsvViewerPlugin } from './csvViewer';
 import { activateEditorThemeSync } from './editorThemeSync';
 import { faviconPlugin } from './favicon';
 import { launcherPlugin } from './launcher';
@@ -98,7 +99,9 @@ const plugins: JupyterFrontEndPlugin<unknown>[] = [
   splashPlugin,
   menuBarOverflowPlugin,
   faviconPlugin,
-  launcherPlugin
+  launcherPlugin,
+  csvViewerPlugin,
+  tsvViewerPlugin
 ];
 
 export default plugins;
@@ -112,13 +115,18 @@ export {
 } from './adaptiveTheme';
 export { density } from './density';
 export type { D4nDensity } from './density';
-export { buildGridStyle, buildTextRenderer } from './gridStyle';
+export {
+  buildGridStyle,
+  buildTextRenderer,
+  buildTextRenderConfig
+} from './gridStyle';
 export { buildTerminalTheme } from './terminalBridge';
 
 export { SPLASH_PLUGIN_ID, buildSplashNode } from './splash';
 export { MENU_BAR_OVERFLOW_PLUGIN_ID } from './menuBarOverflow';
 
 export { LAUNCHER_PLUGIN_ID } from './launcher';
+export { CSV_PLUGIN_ID, TSV_PLUGIN_ID } from './csvViewer';
 
 // An id reserved for work that has not landed. It registers no plugin, and it is
 // no longer a T3 replacement: the status bar's swap was decided against outright

@@ -85,6 +85,47 @@ export function buildTextRenderer(isLight: boolean): TextRenderer {
 }
 
 /**
+ * The CSV/TSV viewer's shape of the same idea (PRD §8.6.2 D2, TODO P3-11).
+ *
+ * IT DOES NOT TAKE A `TextRenderer`, AND THAT IS WHY THIS EXISTS.
+ * `CSVViewer.rendererConfig` accepts a `TextRenderConfig` — a plain bag of
+ * strings — and builds its own `TextRenderer` from it, feeding
+ * `backgroundColor` from `GridSearchService.cellBackgroundColorRendererFunc`.
+ * So {@link buildTextRenderer} cannot be handed to it: the type is wrong, and
+ * handing it one anyway would take the SEARCH HIGHLIGHT with it, because that
+ * highlight is painted by the renderer's `backgroundColor` and by nothing else.
+ *
+ * The two match colours are therefore part of the contract, not decoration.
+ * They come from the same `color.search.*` group the document-search overlay
+ * uses, so a match looks the same in a grid as it does in a notebook.
+ *
+ * `horizontalAlignment` is `'left'`, where upstream right-aligns EVERY region
+ * including the headers. A CSV's first column is usually a label, and right
+ * aligning labels is a worse default than left aligning numbers — and every
+ * other list surface in this design system is left aligned.
+ */
+export function buildTextRenderConfig(isLight: boolean): {
+  textColor: string;
+  matchBackgroundColor: string;
+  currentMatchBackgroundColor: string;
+  horizontalAlignment: 'left';
+  fontSize: string;
+  fontFamily: string;
+} {
+  const t = tokensFor(isLight);
+  return {
+    textColor: t.color.grid.text,
+    matchBackgroundColor: t.color.search.unselectedMatchBg,
+    currentMatchBackgroundColor: t.color.search.selectedMatchBg,
+    horizontalAlignment: 'left',
+    // The canvas font is assembled by the viewer as `size family`, with no
+    // weight component — so these two are the whole typographic contract.
+    fontSize: t.font.size.codeCompact,
+    fontFamily: t.font.family.mono
+  };
+}
+
+/**
  * Lumino's scroll shadow is a three-stop gradient, and §8.6.2 gives one token.
  * Deriving the ramp by scaling that token's alpha keeps the shadow tied to the
  * palette instead of introducing a literal the CI lint would (rightly) reject.

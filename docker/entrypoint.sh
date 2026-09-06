@@ -35,6 +35,7 @@ REPLACED_CORE_PLUGINS=(
     "@jupyterlab/statusbar-extension:plugin"
     "@jupyterlab/launcher-extension:plugin"
     "@jupyterlab/csvviewer-extension:csv"
+    "@jupyterlab/csvviewer-extension:tsv"
 )
 
 echo "==> Installing JupyterLab + build tooling"

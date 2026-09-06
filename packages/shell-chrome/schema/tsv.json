@@ -1,0 +1,52 @@
+{
+  "title": "TSV Viewer",
+  "description": "Data4Now TSV viewer. Replaces @jupyterlab/csvviewer-extension:tsv (PRD 7.9 and 8.6.2, TODO P3-11, docs/decisions.md D-038). This schema re-declares the delimiter toolbar item core's schema declared, because createToolbarFactory reads jupyter.lab.toolbars from the schema of the plugin id it is given, and a disabled plugin's schema is not served - measured under D-033.",
+  "jupyter.lab.setting-icon": "ui-components:spreadsheet",
+  "jupyter.lab.setting-icon-label": "TSV Viewer",
+  "jupyter.lab.toolbars": {
+    "TSVTable": [{ "name": "delimiter", "rank": 10 }]
+  },
+  "jupyter.lab.transform": true,
+  "properties": {
+    "toolbar": {
+      "title": "TSV viewer toolbar items",
+      "description": "Toolbar description:",
+      "items": { "$ref": "#/definitions/toolbarItem" },
+      "type": "array",
+      "default": []
+    }
+  },
+  "additionalProperties": false,
+  "type": "object",
+  "definitions": {
+    "toolbarItem": {
+      "properties": {
+        "name": { "title": "Unique name", "type": "string" },
+        "args": { "title": "Command arguments", "type": "object" },
+        "command": { "title": "Command id", "type": "string", "default": "" },
+        "disabled": {
+          "title": "Whether the item is ignored or not",
+          "type": "boolean",
+          "default": false
+        },
+        "icon": { "title": "Item icon id", "type": "string" },
+        "label": { "title": "Item label", "type": "string" },
+        "caption": { "title": "Item caption", "type": "string" },
+        "type": {
+          "title": "Item type",
+          "type": "string",
+          "enum": ["command", "spacer"]
+        },
+        "rank": {
+          "title": "Item rank",
+          "type": "number",
+          "minimum": 0,
+          "default": 50
+        }
+      },
+      "required": ["name"],
+      "additionalProperties": false,
+      "type": "object"
+    }
+  }
+}

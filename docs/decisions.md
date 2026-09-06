@@ -2451,6 +2451,116 @@ and it cannot take a descendant on its right-hand side, so state goes on the
 host. Both hold here unchanged, which is why this file is separate from
 `debugger.css`, whose rows are plain DOM.
 
+## D-038 — Two DataGrids, opposite answers: one is already themed, one needs a swap
+
+**Decided.** `@d4n/shell-chrome:csv` and `@d4n/shell-chrome:tsv` replace
+`@jupyterlab/csvviewer-extension:csv` and `:tsv`, which are disabled in the same
+change. The debugger's variables **grid** is left alone. TODO.md **P3-11**.
+
+§7.9 names two DataGrid surfaces and says writing the bridge twice "is how the
+two grids end up one shade apart". P3-11 read that as "apply the same two
+factories to both". Measured, they need opposite treatment, and only one of them
+needs anything at all.
+
+### The debugger's grid is already themed, and nothing here touches it
+
+Upstream creates a hidden `.jp-DebuggerVariables-colorPalette` div, appends it to
+`document.body`, reads **seven** classes with `getComputedStyle`, and removes it
+again. Every one of those seven resolves through a `--jp-*` variable that
+`jp-adapter.css` already maps to a `--d4n-*` token, and the probe is a child of
+the very `<body>` the adapter is scoped to, so D-003's scoping does not break it.
+
+The cell **font** is themed too, by an accident worth knowing:
+`--jp-datagrid-font-family` and `--jp-datagrid-font-size` appear nowhere in
+JupyterLab except that one debugger stylesheet — upstream never defines them.
+Our adapter does, so the grid's text is already our mono at 12px.
+
+So D1 and D2 already hold there. Applying our factories would change almost
+nothing in light mode, would fill in five fields upstream leaves `undefined`,
+and would need **four hops through unexported private structure** to reach the
+grid — the inner `Grid` class is not exported, and there is no signal announcing
+that it exists. That is the private reach §7.4(3) forbids for variables, bought
+for a near-no-op. Left alone.
+
+### The CSV/TSV viewer keeps its colours in frozen JavaScript
+
+`Private.LIGHT_STYLE` and `DARK_STYLE` are objects of hex literals inside the
+extension. There is no CSS path into them and no public seam to intercept: the
+style is applied on `widgetCreated` and re-applied by the extension's own
+`themeChanged` handler, so a bridge that set the style from outside would be
+overwritten by core on the next theme change. The plugin has to be ours.
+
+### Five things the task as written would have got wrong
+
+1. **It said to disable `:csv`.** The package ships **two** plugins, and `:tsv`
+   carries a complete second copy of the stock palette. Disabling one would put a
+   Data4Now `.csv` grid beside a stock `.tsv` grid — precisely the "one shade
+   apart" failure §7.9 warns about. Both are disabled, and
+   `docker/entrypoint.sh`'s opt-out list is updated to match so
+   `JUPYTERLAB_D4N=0` still restores stock.
+2. **It said to apply `buildTextRenderer()`.** The viewer does not accept a
+   `TextRenderer`. `CSVViewer.rendererConfig` takes a `TextRenderConfig` — a bag
+   of strings — and builds its own renderer, feeding `backgroundColor` from
+   `GridSearchService.cellBackgroundColorRendererFunc`. Handing it ours would not
+   merely fail to type-check: `buildTextRenderer` leaves `backgroundColor` unset
+   on purpose, so it would have **deleted the search-match highlight**.
+   `buildTextRenderConfig()` exists for this and carries the two match colours
+   from the same `color.search.*` group the notebook overlay uses.
+3. **The toolbar is schema-driven.** `createToolbarFactory` reads
+   `jupyter.lab.toolbars` from the schema of _the plugin id it is given_, so
+   `schema/csv.json` and `schema/tsv.json` re-declare the delimiter item core's
+   schemas declared. Same trap as D-033.
+4. **The factory names are not ours to rename.** `ILayoutRestorer` stores
+   `{ path, factory: 'CSVTable' }` in the saved workspace, so a rename orphans
+   every restored tab a user already has. `CSVTable`, `TSVTable`,
+   `csv:go-to-line` and `tsv:go-to-line` are all kept.
+5. **`IMainMenu` is not optional decoration, and dropping it cost a capability.**
+   The first version of this plugin left it out. Edit ▸ Go to Line does not
+   resolve the command id — `mainmenu-extension` builds that item from the
+   `editMenu.goToLiners` semantic group and asks each member's own `isEnabled`
+   which applies. Without the registration the command still worked from the
+   palette and the menu item was dead over a CSV. Caught by driving the menu, not
+   by reading the code.
+
+### Two upstream details kept, and one fixed
+
+**Kept:** the file types are NOT registered here. `csv` and `tsv` come from
+`DocumentRegistry.getDefaultFileTypes()`, installed by the registry's own
+constructor, so disabling core's plugin leaves the extension, the mime type and
+the spreadsheet icon in place.
+
+**Kept:** style and renderer are applied only after `await widget.content.ready`.
+`@lumino/datagrid` and the DSV model are dynamic imports, so the grid does not
+exist yet and assigning `.style` earlier throws.
+
+**Fixed:** core refreshes the Go to Line command's enabled state on
+`shell.currentChanged` for CSV but not for TSV, so the TSV command's state goes
+stale when focus leaves it. Both get it.
+
+### One deliberate divergence from upstream
+
+`horizontalAlignment` is `'left'`; upstream right-aligns **every** region,
+headers included. A CSV's first column is usually a label, and right-aligning
+labels is a worse default than left-aligning numbers — and every other list
+surface in this design system is left-aligned. This is also how the swap is
+visible at a glance in a screenshot.
+
+### Verified in a running 4.6.3, both modes
+
+- `.csv` and `.tsv` both open, with the spreadsheet icon on the tab and the
+  Delimiter control in the toolbar. The TSV's delimiter reads **tab** and its
+  columns parse on tabs.
+- The grid paints **our** tokens, not upstream's. Light: header `#F4F6FA`,
+  rows alternating `#FFFFFF` and `#F4F6FA`. Dark: `#0E2542` and `#122A47`,
+  against upstream's `#111111` / `#212121`. Cell text is mono and left-aligned in
+  both, which is D2 — a themed frame around stock black text is what that
+  criterion exists to catch.
+- **The search highlight survives**, which is the whole reason for
+  `buildTextRenderConfig`. Searching `gamma` painted **771 pixels of `#E0A04A`**
+  — `color.search.selectedMatchBg` — in a band that had none before.
+- **Edit ▸ Go to Line** is present and enabled over a CSV.
+- The delimiter dropdown offers all five upstream options.
+
 ---
 
 ## Still open

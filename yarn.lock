@@ -401,13 +401,19 @@ __metadata:
     "@jupyterlab/application": ^4.5.0
     "@jupyterlab/apputils": ^4.5.0
     "@jupyterlab/builder": ^4.5.0
+    "@jupyterlab/csvviewer": ^4.5.0
+    "@jupyterlab/csvviewer-extension": ^4.5.0
+    "@jupyterlab/docregistry": ^4.5.0
+    "@jupyterlab/documentsearch": ^4.5.0
     "@jupyterlab/filebrowser": ^4.5.0
     "@jupyterlab/launcher": ^4.5.0
+    "@jupyterlab/mainmenu": ^4.5.0
     "@jupyterlab/services": ^7.5.0
     "@jupyterlab/settingregistry": ^4.5.0
     "@jupyterlab/terminal": ^4.5.0
     "@jupyterlab/translation": ^4.5.0
     "@jupyterlab/ui-components": ^4.5.0
+    "@lumino/algorithm": ^2.0.0
     "@lumino/coreutils": ^2.0.0
     "@lumino/datagrid": ^2.0.0
     "@lumino/disposable": ^2.0.0
@@ -923,6 +929,43 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@jupyterlab/csvviewer-extension@npm:^4.5.0":
+  version: 4.6.3
+  resolution: "@jupyterlab/csvviewer-extension@npm:4.6.3"
+  dependencies:
+    "@jupyterlab/application": ^4.6.3
+    "@jupyterlab/apputils": ^4.7.3
+    "@jupyterlab/csvviewer": ^4.6.3
+    "@jupyterlab/docregistry": ^4.6.3
+    "@jupyterlab/documentsearch": ^4.6.3
+    "@jupyterlab/mainmenu": ^4.6.3
+    "@jupyterlab/observables": ^5.6.3
+    "@jupyterlab/settingregistry": ^4.6.3
+    "@jupyterlab/translation": ^4.6.3
+    "@lumino/datagrid": ^2.5.7
+    "@lumino/widgets": ^2.8.0
+  checksum: a21eca23114ceee1a5cda5e5ce3721f5bdfcb6beb2f7f102f32f7205f834fa3c81b24fc2103d88f86d244a5a15f7c4091a46bd9e524420183c4b28cec0950e2e
+  languageName: node
+  linkType: hard
+
+"@jupyterlab/csvviewer@npm:^4.5.0, @jupyterlab/csvviewer@npm:^4.6.3":
+  version: 4.6.3
+  resolution: "@jupyterlab/csvviewer@npm:4.6.3"
+  dependencies:
+    "@jupyterlab/coreutils": ^6.6.3
+    "@jupyterlab/docregistry": ^4.6.3
+    "@jupyterlab/translation": ^4.6.3
+    "@jupyterlab/ui-components": ^4.6.3
+    "@lumino/coreutils": ^2.2.2
+    "@lumino/datagrid": ^2.5.7
+    "@lumino/disposable": ^2.1.5
+    "@lumino/messaging": ^2.0.4
+    "@lumino/signaling": ^2.1.5
+    "@lumino/widgets": ^2.8.0
+  checksum: 2da8befb06b4abc964ade6dc734d87bf7a9bf3f1293e4bc1b0b5a3b06a9afd32d011b073227f52c873849fb446962039a423343896b564ef9abf0dac05eee6c4
+  languageName: node
+  linkType: hard
+
 "@jupyterlab/debugger@npm:^4.5.0, @jupyterlab/debugger@npm:^4.6.3":
   version: 4.6.3
   resolution: "@jupyterlab/debugger@npm:4.6.3"
@@ -988,7 +1031,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jupyterlab/docregistry@npm:^4.6.3":
+"@jupyterlab/docregistry@npm:^4.5.0, @jupyterlab/docregistry@npm:^4.6.3":
   version: 4.6.3
   resolution: "@jupyterlab/docregistry@npm:4.6.3"
   dependencies:
@@ -1014,7 +1057,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jupyterlab/documentsearch@npm:^4.6.3":
+"@jupyterlab/documentsearch@npm:^4.5.0, @jupyterlab/documentsearch@npm:^4.6.3":
   version: 4.6.3
   resolution: "@jupyterlab/documentsearch@npm:4.6.3"
   dependencies:
@@ -1152,6 +1195,21 @@ __metadata:
     vscode-languageserver-protocol: ^3.17.0
     vscode-ws-jsonrpc: ~1.0.2
   checksum: f1b8eede90afdc52ed1a32985b9c760f4ac59f16a295746b8a648b0f8bac73cc158744ee2f34d2fd87088fedb7305b785a6357bcfe56c1143eeb906c0fdf2dad
+  languageName: node
+  linkType: hard
+
+"@jupyterlab/mainmenu@npm:^4.5.0, @jupyterlab/mainmenu@npm:^4.6.3":
+  version: 4.6.3
+  resolution: "@jupyterlab/mainmenu@npm:4.6.3"
+  dependencies:
+    "@jupyterlab/apputils": ^4.7.3
+    "@jupyterlab/translation": ^4.6.3
+    "@jupyterlab/ui-components": ^4.6.3
+    "@lumino/algorithm": ^2.0.4
+    "@lumino/commands": ^2.3.3
+    "@lumino/coreutils": ^2.2.2
+    "@lumino/widgets": ^2.8.0
+  checksum: a9de4b5ca79308a568a222173e606aecb91d0fc45f480c8c1f5954d399478f777ce67eb21bf59f14a2beb73efca64c40d16f471e4d15e7658857b0c2b65f3514
   languageName: node
   linkType: hard
 
@@ -1615,7 +1673,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@lumino/algorithm@npm:^2.0.4, @lumino/algorithm@npm:^2.0.5":
+"@lumino/algorithm@npm:^2.0.0, @lumino/algorithm@npm:^2.0.4, @lumino/algorithm@npm:^2.0.5":
   version: 2.0.5
   resolution: "@lumino/algorithm@npm:2.0.5"
   checksum: 16e54e15048a00f2b546d7a397a77b3a7fad1d6984dc8fcbddc78a678696544b6c2ddaa5e2c90a0400bcda0dc8064a68980336a68e73dc3aeeccc01a41dec8bf

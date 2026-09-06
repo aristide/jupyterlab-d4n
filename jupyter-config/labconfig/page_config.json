@@ -1,6 +1,8 @@
 {
   "disabledExtensions": {
     "@jupyterlab/apputils-extension:splash": true,
-    "@jupyterlab/launcher-extension:plugin": true
+    "@jupyterlab/launcher-extension:plugin": true,
+    "@jupyterlab/csvviewer-extension:csv": true,
+    "@jupyterlab/csvviewer-extension:tsv": true
   }
 }

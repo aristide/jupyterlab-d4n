@@ -1350,13 +1350,52 @@ green including D4.
       _Done when:_ a number, a string and a bool render in three different syntax
       colours in both modes, the badge is on screen, and a truncated value shows
       its full text on hover. Or each is refused in writing.
-- [ ] **P3-11** **T3/T4: DataGrid.** Apply the shared `buildGridStyle()` and
-      `buildTextRenderer()` from `packages/shell-chrome/src/gridStyle.ts` to BOTH
-      the CSV/TSV viewer and the debugger variables grid.
-      _Done when:_ D1 and D2 hold. The two grids are identical in chrome, pixel
-      for pixel, and **the renderer themes the cell text**, not only the frame. A
-      themed frame around stock black text is the failure here.
-      Disable `@jupyterlab/csvviewer-extension:csv` in the same change.
+- [x] **P3-11** **T3/T4: DataGrid.**
+      _Done on 2026-09-06._ Full record and every measurement in **D-038**.
+      **The two grids needed OPPOSITE treatment, and this task assumed they
+      needed the same.** §7.9 warns that writing the bridge twice is how the two
+      grids end up one shade apart; measured, only one of them needs a bridge at
+      all.
+      **The debugger's variables grid is already themed, frame AND cell text, and
+      nothing was done to it.** Upstream creates a hidden
+      `.jp-DebuggerVariables-colorPalette` div, reads seven classes with
+      `getComputedStyle` and removes it. All seven resolve through `--jp-*`
+      variables the Tier-4 adapter already maps, and the probe is a child of the
+      very `<body>` the adapter is scoped to. The FONT is themed by an accident
+      worth knowing: `--jp-datagrid-font-family` and `-font-size` appear nowhere
+      in JupyterLab except that one debugger stylesheet, and our adapter defines
+      them. Reaching the grid to "improve" it needs four hops through unexported
+      private structure, for a light-mode near-no-op. Left alone.
+      **The CSV/TSV viewer keeps its colours in frozen JavaScript**, applied on
+      `widgetCreated` and re-applied by core's own `themeChanged` handler — no
+      CSS path and no seam to intercept. So that half is a real T3 swap:
+      `@d4n/shell-chrome:csv` and `:tsv`.
+      **Five things this task's wording would have got wrong.** (1) It said to
+      disable `:csv`; the package ships TWO plugins and `:tsv` carries a second
+      copy of the stock palette, so both are disabled and the `JUPYTERLAB_D4N=0`
+      list is updated to match. (2) It said to apply `buildTextRenderer()`; the
+      viewer takes a `TextRenderConfig`, and ours leaves `backgroundColor` unset,
+      so that would have DELETED the search-match highlight —
+      `buildTextRenderConfig()` is new and carries the two match colours. (3) The
+      toolbar is schema-driven off the plugin id, so `schema/csv.json` and
+      `schema/tsv.json` re-declare the delimiter item (the D-033 trap). (4) The
+      factory names `CSVTable` and `TSVTable` are stored in saved workspaces by
+      `ILayoutRestorer` and cannot be renamed. (5) `IMainMenu` was dropped in the
+      first version and that cost a capability: Edit ▸ Go to Line resolves
+      through the `editMenu.goToLiners` group, not the command id, so the menu
+      item was dead over a CSV while the palette entry still worked. Caught by
+      driving the menu, not by reading the code.
+      _Measured in both modes:_ both file types open with the spreadsheet icon
+      and the Delimiter control; the TSV reads **tab** and parses on tabs. The
+      grid paints our tokens — light header `#F4F6FA` with rows alternating
+      `#FFFFFF` and `#F4F6FA`, dark `#0E2542` and `#122A47` — against upstream's
+      `#111111`/`#212121`, and the cell text is mono and left-aligned, which is
+      D2. Searching `gamma` painted **771 pixels of `#E0A04A`**
+      (`search.selectedMatchBg`) in a band that had none before, so the highlight
+      survives. Edit ▸ Go to Line is present and enabled over a CSV.
+      _One deliberate divergence:_ `horizontalAlignment` is `left` where upstream
+      right-aligns every region including headers. A CSV's first column is
+      usually a label.
 - [ ] **P3-12** Notebook search overlay (PRD §8.8.2) and the other five search
       mounts. One component, six configurations. S1 requires no search styling of
       its own.
